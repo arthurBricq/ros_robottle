@@ -30,6 +30,10 @@ class Slam(Node):
     INPUT
     - Bottle detected by the Neuron
     - Lidar detections
+
+    OUTPUT
+    - Robot position: /robot_pos
+    - Map as a byte array: /world_map
     """
     def __init__(self):
         super().__init__('slam_node')
