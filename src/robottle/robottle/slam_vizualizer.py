@@ -37,21 +37,22 @@ class SlamVizualizer(Node):
         # setup the vizualistion tool (it will open a window showing the map and the robot within the map)
         self.viz = MapVisualizer(MAP_SIZE_PIXELS, MAP_SIZE_METERS, "SLAM")
 
-
+        # keep track of where is the robot within the class
+        self.x = 0
+        self.y = 0
+        self.theta = 0 
 
     def listener_callback_map(self, map_message):
-        self.get_logger().info("map received from SLAM ! Let's draw it.")
         map_data = bytearray(map_message.map_data)
-        self.get_logger().info(str(len(map_data)))
-        
-        if not self.viz.display(0, 0, 0, map_data):
+        if not self.viz.display(self.x, self.y, self.theta, map_data):
             exit(0)
 
 
-    def listener_callback_position(self, map_message):
-        self.get_logger().info("position received from SLAM")
-        # todo: include the position of the robot in the map, using class variables. 
-
+    def listener_callback_position(self, pos):
+        self.x = pos.x / 1000
+        self.y = pos.y / 1000
+        self.theta = pos.theta
+        self.get_logger().info("position received from SLAM: {}, {}, {}  ".format(self.x,self.y,self.theta))
 
 def main(args=None):
     rclpy.init(args=args)

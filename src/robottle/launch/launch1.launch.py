@@ -15,11 +15,15 @@ def generate_launch_description():
         Node(
             package="robottle",
             node_executable="slam_viz",
-            name="slam_viz"
+            name="slam_viz",
+            output="screen",
+            emulate_tty=True
             ),
         Node(
             package="robottle",
             node_executable="lidar",
-            name="lidar"
+            name="lidar",
+            output="screen",
+            emulate_tty=True
             )
         ])

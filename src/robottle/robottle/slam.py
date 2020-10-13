@@ -16,10 +16,9 @@ from breezyslam.sensors import RPLidarA1 as LaserModel
 
 
 # Constants for run time
-MIN_SAMPLES = 200 
+MIN_SAMPLES = 100 
 MAP_SIZE_PIXELS         = 500
 MAP_SIZE_METERS         = 10
-
 
 class Slam(Node):
     """

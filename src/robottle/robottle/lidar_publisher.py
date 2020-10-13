@@ -29,22 +29,26 @@ MAP_SIZE_METERS         = 10
 LIDAR_DEVICE = '/dev/ttyUSB0'
 
 
-class MinimalPublisher(Node):
+class LidarPublisher(Node):
 
     def __init__(self):
         super().__init__('minimal_publisher')
         # create publisher
         self.publisher_ = self.create_publisher(LidarData, 'lidar_data', 10)
         
-        # create timer
-        timer_period = 0.5  # seconds
-        self.timer = self.create_timer(timer_period, self.timer_callback)
+        # create timer that will triger reading the data
+        #timer_period = 0.1  # seconds
+        #self.timer = self.create_timer(timer_period, self.timer_callback)
         self.i = 0
 
         # setup the lidar object
         self.lidar = Lidar(LIDAR_DEVICE)
-        self.iterator = self.lidar.iter_scans()
+        self.iterator = self.lidar.iter_scans(max_buf_meas = 850)
         next(self.iterator)
+
+        # launch infinite loop here 
+        while True:
+            self.timer_callback()
 
 
     def timer_callback(self):
@@ -67,9 +71,9 @@ class MinimalPublisher(Node):
 def main(args=None):
     rclpy.init(args=args)
 
-    minimal_publisher = MinimalPublisher()
+    lidar_publisher = LidarPublisher()
 
-    rclpy.spin(minimal_publisher)
+    rclpy.spin(lidar_publisher)
 
     # Destroy the node explicitly
     # (optional - otherwise it will be done automatically
