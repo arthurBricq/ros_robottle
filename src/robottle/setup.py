@@ -25,6 +25,7 @@ setup(
 		    'lidar = robottle.lidar_publisher:main',
 		    'listener = robottle.subscriber:main',
 		    'slam = robottle.slam:main',
+		    'slam2 = robottle.slam2:main',
                     'slam_viz = robottle.slam_vizualizer:main'
 
         ],
