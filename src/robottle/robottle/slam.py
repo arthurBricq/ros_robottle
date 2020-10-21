@@ -37,6 +37,7 @@ class Slam(Node):
     def __init__(self):
         super().__init__('slam_node')
 
+
         # Create first subscripton (detectnet results)
         self.subscription1 = self.create_subscription(
             Detection2DArray,
@@ -63,6 +64,7 @@ class Slam(Node):
         self.mapbytes = bytearray(MAP_SIZE_PIXELS * MAP_SIZE_PIXELS)
         self.previous_distances = None
         self.previous_angles    = None
+        self.map_index = 0 
 
  
 
@@ -85,9 +87,6 @@ class Slam(Node):
 
         # Get current robot position
         x, y, theta = self.slam.getpos()
-        self.get_logger().info("output of slam")
-        self.get_logger().info(str(x))
-        self.get_logger().info(str(y))
         
         # Get current map bytes as grayscale
         self.slam.getmap(self.mapbytes)
@@ -101,11 +100,12 @@ class Slam(Node):
         
         # Send the map in a topic
         map_message = Map()
-        self.get_logger().info("Sending map to subscribers -- " + str(type(self.mapbytes[0])))
+        self.get_logger().info("Sending map {} to subscribers -- ".format(self.map_index) + str(type(self.mapbytes[0])))
         map_message.map_data = self.mapbytes
-        self.get_logger().info(str(len(map_message.map_data)))
+        map_message.index = self.map_index
         # the size of this map is indeed 500 X 500 = 250 000
         self.publisher_map.publish(map_message)
+        self.map_index += 1 
 
 
 
