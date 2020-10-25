@@ -37,8 +37,6 @@ class LidarPublisher(Node):
         self.publisher_ = self.create_publisher(LidarData, 'lidar_data', 10)
         
         # create timer that will triger reading the data
-        #timer_period = 0.1  # seconds
-        #self.timer = self.create_timer(timer_period, self.timer_callback)
         self.i = 0
 
         # setup the lidar object
@@ -64,7 +62,6 @@ class LidarPublisher(Node):
 
         # publish the message
         self.publisher_.publish(msg)
-        self.get_logger().info('Publishing data to SLAM')
         self.i += 1
 
 

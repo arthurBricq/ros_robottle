@@ -45,6 +45,7 @@ class ControllerOpenLoop(Node):
 
 
     def listener_callback_position(self, pos):
+        # receive the position from the SLAM
         self.x = pos.x / 1000
         self.y = pos.y / 1000
         self.theta = pos.theta
@@ -64,7 +65,6 @@ class ControllerOpenLoop(Node):
                 occupancy_grid,
                 robot_position = (self.x, self.y, self.theta),
                 length = 2)
-        self.get_logger().info("has obstacle : {}".format(has_obstacle))
         
         # publish it to the uart node
         msg = String()

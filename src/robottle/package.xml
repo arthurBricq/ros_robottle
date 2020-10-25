@@ -15,12 +15,16 @@
   <test_depend>python3-pytest</test_depend>
 
   <exec_depend>rclpy</exec_depend>	
+  <exec_depend>numpy</exec_depend>	
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>interfaces</exec_depend>
   <exec_depend>vision_msgs</exec_depend>
   <exec_depend>rplidar</exec_depend>
   <exec_depend>breezyslam</exec_depend>
   <exec_depend>roboviz</exec_depend> 
+  <exec_depend>robottle_utils</exec_depend> 
+  <exec_depend>time</exec_depend> 
+  <exec_depend>serial</exec_depend> 
 
   <export>
     <build_type>ament_python</build_type>
