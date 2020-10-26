@@ -28,12 +28,12 @@ class UARTMessenger(Node):
         # setup the uart port and wait a second for it
         self.serial_port = serial.Serial(
             port="/dev/ttyTHS1",
-            baudrate=115200)
+            baudrate=9600)
             
         time.sleep(1)
         
         self.i = 0
-        self.serial_port.write("hello arduino".encode())
+        #self.serial_port.write("hello arduino".encode())
 
     def listener_callback(self, msg):
         self.i += 1

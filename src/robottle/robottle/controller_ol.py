@@ -64,7 +64,7 @@ class ControllerOpenLoop(Node):
         has_obstacle = map_utils.inspect_line(
                 occupancy_grid,
                 robot_position = (self.x, self.y, self.theta),
-                length = 2)
+                length = 0.5)
         
         # publish it to the uart node
         msg = String()
