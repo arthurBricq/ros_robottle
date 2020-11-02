@@ -9,9 +9,14 @@ import serial
 MAP_SIZE_PIXELS         = 500
 MAP_SIZE_METERS         = 10
 
-class UARTMessenger(Node):
+class UARTSender(Node):
     """
-    This node receives String message and sends them to the UART channel for the Arduino
+    This node is in charge of the UART communication with the Arduino Mega
+    It's in charge of: 
+    * receiving orders from the ROS controller
+    * sending motor control commands (w,a,s,d,x) to Arduino, sent by the ROS controller
+    * reading the motor speed and send it to SLAM Node 
+        (rate of transfer is determined by the Arduino itself)
     """
 
     def __init__(self):
@@ -37,15 +42,15 @@ class UARTMessenger(Node):
 
     def listener_callback(self, msg):
         self.i += 1
-        if self.i % 5 == 0:
-            self.get_logger().info(msg.data)
-            self.serial_port.write(msg.data.encode())
+        #if self.i % 5 == 0:
+        self.get_logger().info(msg.data)
+        self.serial_port.write(msg.data.encode())
 
 
 
 def main(args=None):
     rclpy.init(args=args)
-    node = UARTMessenger()
+    node = UARTSender()
     rclpy.spin(node)
     rclpy.shutdown()
 

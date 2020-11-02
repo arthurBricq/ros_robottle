@@ -27,7 +27,8 @@ setup(
 		    'slam = robottle.slam:main',
                     'slam_viz = robottle.slam_vizualizer:main',
 		    'controller_ol = robottle.controller_ol:main',
-                    'uart = robottle.uart_messenger:main' 
+                    'uart_sender = robottle.uart_messenger:main' ,
+                    'uart_speed_reader = robottle.uart_speed_reader:main',
 
         ],
     },

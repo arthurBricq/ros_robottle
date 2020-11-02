@@ -23,6 +23,7 @@
   <exec_depend>breezyslam</exec_depend>
   <exec_depend>roboviz</exec_depend> 
   <exec_depend>robottle_utils</exec_depend> 
+  <exec_depend>datetime</exec_depend> 
   <exec_depend>time</exec_depend> 
   <exec_depend>serial</exec_depend> 
 

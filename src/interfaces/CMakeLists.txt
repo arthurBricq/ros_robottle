@@ -28,6 +28,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 	"msg/LidarData.msg"
     "msg/Position.msg"
     "msg/Map.msg"
+    "msg/MotorsSpeed.msg"
 	)
 
 
