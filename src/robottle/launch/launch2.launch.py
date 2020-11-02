@@ -28,7 +28,14 @@ def generate_launch_description():
             ),
         Node(
             package="robottle",
-            node_executable="uart",
+            node_executable="uart_sender",
+            name="uart",
+            output="screen",
+            emulate_tty=True
+            ),
+        Node(
+            package="robottle",
+            node_executable="uart_speed_reader",
             name="uart",
             output="screen",
             emulate_tty=True
