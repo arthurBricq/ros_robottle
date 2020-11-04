@@ -19,4 +19,4 @@ ros2 bag record /lidar_data /motors_speed
 
 There are differences between the different setups, because the Jetson has to do things that I will not try to replicate at home (and just there results)
 
-- ros_deep_learning: this is the ROS package for CUDA realtime accelerated neuron network. It is present only on the Jetson and not on the shared code. The only thing one has to include are the interfaces : "vision_msgs"
+- ros_deep_learning: this is the ROS package for CUDA realtime accelerated neuron network. It is present only on the Jetson and not on the shared code. The only thing one has to include are the interfaces : "vision_msgs" (https://github.com/Kukanani/vision_msgs)

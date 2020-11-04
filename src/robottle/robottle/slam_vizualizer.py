@@ -46,7 +46,7 @@ class SlamVizualizer(Node):
     def listener_callback_map(self, map_message):
         self.get_logger().info("map received : {}".format(map_message.index))
         map_data = bytearray(map_message.map_data)
-        # if not self.viz.display(self.x, self.y, self.theta, map_data): exit(0)
+        if not self.viz.display(self.x, self.y, self.theta, map_data): exit(0)
 
 
     def listener_callback_position(self, pos):
