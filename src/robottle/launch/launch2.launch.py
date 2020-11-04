@@ -19,13 +19,13 @@ def generate_launch_description():
             node_executable="slam",
             name="slam"
             ),
-        Node(
-            package="robottle",
-            node_executable="controller_ol",
-            name="controller_ol",
-            output="screen",
-            emulate_tty=True
-            ),
+        #Node(
+            #package="robottle",
+            #node_executable="controller_ol",
+            #name="controller_ol",
+            #output="screen",
+            #emulate_tty=True
+            #),
         Node(
             package="robottle",
             node_executable="uart_sender",
