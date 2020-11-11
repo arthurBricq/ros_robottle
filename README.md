@@ -8,7 +8,7 @@ Here are some commands quite useful with the ROS setup
 
 - topic publication to move the robot somewhere
 
-ros2 topic pub --once /uart_commands std_msgs/msg/String "w"
+ros2 topic pub --once /uart_commands std_msgs/msg/String "data: w"
 
 - bag files recording sensor inputs (lidar data + motors speed so far)
 

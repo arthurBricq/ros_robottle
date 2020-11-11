@@ -19,6 +19,7 @@ class LidarPublisher(Node):
         super().__init__('minimal_publisher')
         # create publisher
         self.publisher_ = self.create_publisher(LidarData, 'lidar_data', 10)
+        self.i = 0
 
         # setup the lidar object
         self.lidar = Lidar(LIDAR_DEVICE)
