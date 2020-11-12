@@ -95,7 +95,7 @@ class Slam(Node):
         dx_left = msg.RADIUS * msg.left * (0.1047) * msg.time_delta
         dx_right = msg.RADIUS * msg.right * (0.1047) * msg.time_delta
         delta_r = 1/2 * (dx_left + dx_right) # [mm]
-        delta_d =  dx_right - dx_left
+        delta_d =  - (dx_right - dx_left)
         delta_theta = np.arctan(delta_d / msg.LENGTH) * 57.2958 # [deg]
         self.robot_pose_change += [delta_r, delta_theta, msg.time_delta]
         self.get_logger().info("robot pose change: {}".format(self.robot_pose_change))
@@ -103,18 +103,18 @@ class Slam(Node):
     def listener_callback_lidar(self, msg):
         # UNCOMMENT this code to find indexes i1 and i2
 
-        (i1, i2) = lidar_utils.get_valid_lidar_range(distances = msg.distances, 
-                angles = msg.angles,
-                n_points = 10)
-        self.get_logger().info('indexes : {} : {} with angles {} - {}'
-                .format(i1,i2,msg.angles[i1], msg.angles[i2]))
+        #(i1, i2) = lidar_utils.get_valid_lidar_range(distances = msg.distances, 
+        #        angles = msg.angles,
+        #        n_points = 10)
+        #self.get_logger().info('indexes : {} : {} with angles {} - {}'
+        #        .format(i1,i2,msg.angles[i1], msg.angles[i2]))
 
-        # extract angles of interest
-        angles = list(msg.angles[i1:i2])
-        distances = list(msg.distances[i1:i2])
+        # transform angles to $FORMAT1
+        angles = np.array(msg.angles)
+        angles = list((angles + 180) % 360) # because LIDAR is facing the robot
 
-        # compute robot pose now
-        # todo
+        # angles = list(msg.angles)
+        distances = list(msg.distances)
 
         # Update SLAM with current Lidar scan and scan angles if adequate
         if len(distances) > MIN_SAMPLES:
