@@ -26,6 +26,10 @@
   <exec_depend>datetime</exec_depend> 
   <exec_depend>time</exec_depend> 
   <exec_depend>serial</exec_depend> 
+  <exec_depend>sys</exec_depend> 
+  <exec_depend>select</exec_depend> 
+  <exec_depend>termios</exec_depend> 
+  <exec_depend>tty</exec_depend> 
 
   <export>
     <build_type>ament_python</build_type>

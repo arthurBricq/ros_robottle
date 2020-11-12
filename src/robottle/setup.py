@@ -29,6 +29,7 @@ setup(
 		    'controller_ol = robottle.controller_ol:main',
                     'uart_sender = robottle.uart_messenger:main' ,
                     'uart_speed_reader = robottle.uart_speed_reader:main',
+                    'teleop = robottle.teleop:main',
 
         ],
     },

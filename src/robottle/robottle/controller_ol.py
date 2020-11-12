@@ -14,7 +14,8 @@ MAP_SIZE_METERS         = 10
 class ControllerOpenLoop(Node):
     """
     This node visualize the map received from the SLAM node.
-    This node is quite hard to use, because it slows down a lot the process. It should not be used in live with the Jetson 
+    This node is quite hard to use, because it slows down a lot the process. 
+    It should not be used in live with the Jetson 
     """
     def __init__(self):
         super().__init__("controller1")
