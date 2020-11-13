@@ -4,6 +4,8 @@ This repo contains the ROS source code to run the project, that was writen by my
 
 It works in pair with the [Robottle Python Package](https://github.com/arthurBricq/robottle_python_packages) where there are some helper functions and algorithms. 
 
+Here is the documentation of the [first controller](doc/controller1.md)
+
 ## ROS Nodes
 
 Here is a description of the nodes we created for the robot. 
@@ -16,7 +18,6 @@ Here is a description of the nodes we created for the robot.
 **Internal Nodes** (i.e. the brain)
 - slam.py: SLAM node (evaluate position and map)
 - controller_ol.py: most basic controller, will avoid obstacles merely based on the SLAM output.
-- controller1.py: first autonomous controller, find its [documentation](doc/controller1.md)
 
 **OutputNodes**
 - uart_messenger.py: sends UART message containing desired motor actions to Arduino Mega
@@ -25,12 +26,6 @@ Here is a description of the nodes we created for the robot.
 *Those nodes are not intended to be ran on the Jetson Nano**
 - slam_vizualiser.py: prints the map and the position in another window.
 - teleop.py: control the robot remotely using keyboard.
-
-**Nodes to remove**
-- slam2.py
-- subscriber.py
-
-
 
 
 ## Some useful commands 
