@@ -16,6 +16,7 @@ Here is a description of the nodes we created for the robot.
 **Internal Nodes** (i.e. the brain)
 - slam.py: SLAM node (evaluate position and map)
 - controller_ol.py: most basic controller, will avoid obstacles merely based on the SLAM output.
+- controller1.py: first autonomous controller, find its [documentation](doc/controller1.md)
 
 **OutputNodes**
 - uart_messenger.py: sends UART message containing desired motor actions to Arduino Mega
