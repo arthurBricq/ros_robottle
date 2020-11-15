@@ -10,7 +10,7 @@ Here is the documentation of the [first controller](doc/controller1.md), which i
 
 As the code of this repository and the code of the **Robottle Python Package** are constituting the **high-level controller**, the code of the Arduino Mega **low-level controller** is accessible [here](https://github.com/ljacqueroud/Robottle-low-level). 
 
-For the *Cuda-Accelerated* code for the **Neuron Network** to detect bottles was based on the [Jetson-Inference](https://github.com/dusty-nv/jetson-inference) code (*NVidea*) and especially with their detectnet code. Their ROS repository has a [documentation](https://github.com/dusty-nv/ros_deep_learning) that is quite complete ! *Howwever, it is writing all in C*
+For the *Cuda-Accelerated* code for the **Neuron Network** to detect bottles was based on the [Jetson-Inference](https://github.com/dusty-nv/jetson-inference) code (*NVidea*) and especially with their detectnet code. Their ROS repository has a [documentation](https://github.com/dusty-nv/ros_deep_learning) that is quite complete ! *However, it is writen all in C*
 
 
 
@@ -59,6 +59,8 @@ Here are some commands quite useful with the ROS setup
 *It's possible to have (or not) an output when this node is launched, but for it we must change the launch file. Later, I will integrate this in my own launch nodes*
 
 - launch the other ROS nodes (LIDAR, Motors Speed Reader, SLAM, Motors Commands)
+
+`ros2 launch robottle launch2.launch.py`
 
 ## Differences between Jetson and Personal Computer
 
