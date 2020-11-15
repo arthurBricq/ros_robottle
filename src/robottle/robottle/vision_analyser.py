@@ -25,7 +25,7 @@ class VisionAnalyser(Node):
 
 
         if request.should_save:
-            name = strftime("%m-%d_%H:%M:%S", gmtime())
+            name = strftime("%m-%d_%H-%M-%S", gmtime())
             vision_utils.take_picture(save = True, name = name)
 
 
