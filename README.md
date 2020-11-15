@@ -2,11 +2,18 @@
 
 This repo contains the ROS source code to run the project, that was writen by myself. It is the ROS2 workspace of our project !
 
-It works in pair with the [Robottle Python Package](https://github.com/arthurBricq/robottle_python_packages) where there are some helper functions and algorithms. 
+## Other repositories used ! 
 
-Here is the documentation of the [first controller](doc/controller1.md).
+The ROS code works in pair with the [Robottle Python Package](https://github.com/arthurBricq/robottle_python_packages) where there are some helper functions and algorithms. 
+
+Here is the documentation of the [first controller](doc/controller1.md), which is still under implementation.
 
 As the code of this repository and the code of the **Robottle Python Package** are constituting the **high-level controller**, the code of the Arduino Mega **low-level controller** is accessible [here](https://github.com/ljacqueroud/Robottle-low-level). 
+
+For the *Cuda-Accelerated* code for the **Neuron Network** to detect bottles was based on the [Jetson-Inference](https://github.com/dusty-nv/jetson-inference) code (*NVidea*) and especially with their detectnet code. Their ROS repository has a [documentation](https://github.com/dusty-nv/ros_deep_learning) that is quite complete ! *Howwever, it is writing all in C*
+
+
+
 
 
 ## ROS Nodes
@@ -19,7 +26,7 @@ Here is a description of the nodes we created for the robot.
 - *computer_vision_node*: Reads the camera and returns the bounding boxes. This package was made by NVidea and here is its [documentation](https://github.com/dusty-nv/ros_deep_learning)
 
 **Internal Nodes** (i.e. the brain)
-- slam.py: SLAM node (evaluate position and map). It outputs on topics `world_map` and `robot_pos`. 
+- slam.py: SLAM node (evaluate position and map). It outputs on topics `world_map` and `robot_pos`. It is an implementation of the 'TinySLAM' algorithm, which is built locally from this repository: [BreezySLAM](https://github.com/simondlevy/BreezySLAM). *Some portion of this code needs to be modified*
 - controller_ol.py: most basic controller, will avoid obstacles merely based on the SLAM output. It then communicates commands to the node *uart_messenger* (which then transfer them to the Arduino Mega)
 - vision_analyser.py: service manager that can (i) take a picture on demand and (ii) analyse it straigth away. Offered services are the followings:
     - 'find_map_corners': take a picture and return angle change from beacons present on the image.
