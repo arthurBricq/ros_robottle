@@ -23,7 +23,11 @@ Here is a description of the nodes we created for the robot.
 ### Input Nodes
 - **lidar_publisher.py**: Reads data from lidar as send them as collected in the topic `lidar_data`
 - **uart_speed_reader.py**: Reads the speed from the motors, using UART communications and send them in topic `uart_motors_speed`. 
-- **detectnet.py**: Reads the camera and returns the bounding boxes. This package was made by NVidea and here is its [documentation](https://github.com/dusty-nv/ros_deep_learning)
+- **detectnet.py**: Reads the camera and returns the bounding boxes. This package was made by NVidea and here is its [documentation](https://github.com/dusty-nv/ros_deep_learning). Here are different topics one other node can subscribe to
+    - *image_in*: simply the raw image
+    - *detections*: the bounding boxes
+    - *vision_info*: vision metadata
+    - *overlay*: the image with the bounding boxes drawn on top of it
 
 ### Internal Nodes (i.e. the brain)
 - **slam.py**: SLAM node (evaluate position and map). It outputs on topics `world_map` and `robot_pos`. It is an implementation of the 'TinySLAM' algorithm, which is built locally from this repository: [BreezySLAM](https://github.com/simondlevy/BreezySLAM). *Some portion of this code needs to be modified*
