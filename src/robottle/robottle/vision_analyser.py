@@ -1,6 +1,7 @@
 import rclpy
 from rclpy.node import Node
 
+from sensor_msgs.msg import Image
 from interfaces.srv import FindMapCorner
 
 from time import gmtime, strftime
@@ -18,20 +19,41 @@ class VisionAnalyser(Node):
     def __init__(self):
         super().__init__('minimal_service')
         self.srv = self.create_service(FindMapCorner, 'find_map_corner', self.find_map_corner)
+        self.has_to_get_image = False
+        
 
     def find_map_corner(self, request, response):
         print("Service received !: ", request)
-        # 1. take a picture
-
-
-        if request.should_save:
-            name = strftime("%m-%d_%H-%M-%S", gmtime())
-            vision_utils.take_picture(save = True, name = name)
-
-
-        response.response = "I have saved your picture"
+        # 1. create subscription to camera topic
+        self.subscription = self.create_subscription(
+                Image,
+                'video_source/raw',
+                self.raw_image_callback,
+                1000
+                )
+        response.response = "I have  asked to save your picture"
         print("Response: ", response)
+
         return response
+
+    def raw_image_callback(self, msg):
+        """Called when an image is received from 'video_source/raw'"""
+        print("Image received from vision input")
+        # destroy the subscription 
+        self.destroy_subscription(self.subscription)
+
+        # so let's analyse it here and then delete the subscription
+        rows = msg.height
+        step = msg.step
+        cols = msg.width
+        dim = int(step / cols)
+        pixels = msg.data # of size (steps, nrows)
+        name = strftime("%m-%d_%H-%M-%S", gmtime())
+
+        # save the image (later we will need to analyse it)
+        vision_utils.save_picture(pixels, rows, cols, dim, name)
+
+
 
 
 def main(args=None):
