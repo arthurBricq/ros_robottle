@@ -37,17 +37,17 @@ Here is a description of the nodes we created for the robot.
 
 Here are some commands quite useful with the ROS setup
 
-> topic publication to move the robot somewhere
+- topic publication to move the robot somewhere
 
 `ros2 topic pub --once /uart_commands std_msgs/msg/String "data: w"`
 
-> bag files recording sensor inputs (lidar data + motors speed so far)
+- bag files recording sensor inputs (lidar data + motors speed so far)
 
 `ros2 bag record /lidar_data /motors_speed`
 
-> launch the detectnet node (*with their launch files*)
+- launch the detectnet node (*with their launch files*)
 
-ros2 launch ros_deep_learning detectnet.ros2.launch input:=csi://0 output:=display://0
+`ros2 launch ros_deep_learning detectnet.ros2.launch input:=csi://0 output:=display://0`
 
 *It's possible to have (or not) an output when this node is launched, but for it we must change the launch file. Later, I will integrate this in my own launch nodes*
 
