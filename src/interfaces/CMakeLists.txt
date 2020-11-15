@@ -29,6 +29,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
     "msg/Position.msg"
     "msg/Map.msg"
     "msg/MotorsSpeed.msg"
+    "srv/FindMapCorner.srv"
 	)
 
 

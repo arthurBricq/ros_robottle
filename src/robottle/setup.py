@@ -30,6 +30,7 @@ setup(
                     'uart_sender = robottle.uart_messenger:main' ,
                     'uart_speed_reader = robottle.uart_speed_reader:main',
                     'teleop = robottle.teleop:main',
+                    'vision_analyser = robottle.vision_analyser:main'
 
         ],
     },

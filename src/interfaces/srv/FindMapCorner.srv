@@ -1,0 +1,3 @@
+bool should_save
+---
+string response
