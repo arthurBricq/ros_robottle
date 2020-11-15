@@ -20,24 +20,24 @@ For the *Cuda-Accelerated* code for the **Neuron Network** to detect bottles was
 
 Here is a description of the nodes we created for the robot. 
 
-**Input Nodes**
-- lidar_publisher.py: Reads data from lidar as send them as collected in the topic `lidar_data`
-- uart_speed_reader.py: Reads the speed from the motors, using UART communications and send them in topic `uart_motors_speed`. 
-- *computer_vision_node*: Reads the camera and returns the bounding boxes. This package was made by NVidea and here is its [documentation](https://github.com/dusty-nv/ros_deep_learning)
+### Input Nodes
+- **lidar_publisher.py**: Reads data from lidar as send them as collected in the topic `lidar_data`
+- **uart_speed_reader.py**: Reads the speed from the motors, using UART communications and send them in topic `uart_motors_speed`. 
+- **detectnet.py**: Reads the camera and returns the bounding boxes. This package was made by NVidea and here is its [documentation](https://github.com/dusty-nv/ros_deep_learning)
 
-**Internal Nodes** (i.e. the brain)
-- slam.py: SLAM node (evaluate position and map). It outputs on topics `world_map` and `robot_pos`. It is an implementation of the 'TinySLAM' algorithm, which is built locally from this repository: [BreezySLAM](https://github.com/simondlevy/BreezySLAM). *Some portion of this code needs to be modified*
-- controller_ol.py: most basic controller, will avoid obstacles merely based on the SLAM output. It then communicates commands to the node *uart_messenger* (which then transfer them to the Arduino Mega)
-- vision_analyser.py: service manager that can (i) take a picture on demand and (ii) analyse it straigth away. Offered services are the followings:
+### Internal Nodes (i.e. the brain)
+- **slam.py**: SLAM node (evaluate position and map). It outputs on topics `world_map` and `robot_pos`. It is an implementation of the 'TinySLAM' algorithm, which is built locally from this repository: [BreezySLAM](https://github.com/simondlevy/BreezySLAM). *Some portion of this code needs to be modified*
+- **controller_ol.py**: most basic controller, will avoid obstacles merely based on the SLAM output. It then communicates commands to the node *uart_messenger* (which then transfer them to the Arduino Mega)
+- **vision_analyser.py**: service manager that can (i) take a picture on demand and (ii) analyse it straigth away. Offered services are the followings:
     - 'find_map_corners': take a picture and return angle change from beacons present on the image.
 
-**OutputNodes**
-- uart_messenger.py: sends UART message containing desired motor actions to Arduino Mega. Reads from topic `uart_commands`
+### OutputNodes 
+- **uart_messenger.py**: sends UART message containing desired motor actions to Arduino Mega. Reads from topic `uart_commands`
 
-**Debugging Nodes**
+### Debugging Nodes
 *Those nodes are not intended to be ran on the Jetson Nano*
-- slam_vizualiser.py: prints the map and the position in another window.
-- teleop.py: controls the robot remotely using keyboard.
+- **slam_vizualiser.py**: prints the map and the position in another window.
+- **teleop.py**: controls the robot remotely using keyboard.
 
 
 ## Some useful commands 
@@ -58,6 +58,7 @@ Here are some commands quite useful with the ROS setup
 
 *It's possible to have (or not) an output when this node is launched, but for it we must change the launch file. Later, I will integrate this in my own launch nodes*
 
+- launch the other ROS nodes (LIDAR, Motors Speed Reader, SLAM, Motors Commands)
 
 ## Differences between Jetson and Personal Computer
 
