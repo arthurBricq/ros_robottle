@@ -28,7 +28,7 @@ Here is a description of the nodes we created for the robot.
 ### Internal Nodes (i.e. the brain)
 - **slam.py**: SLAM node (evaluate position and map). It outputs on topics `world_map` and `robot_pos`. It is an implementation of the 'TinySLAM' algorithm, which is built locally from this repository: [BreezySLAM](https://github.com/simondlevy/BreezySLAM). *Some portion of this code needs to be modified*
 - **controller_ol.py**: most basic controller, will avoid obstacles merely based on the SLAM output. It then communicates commands to the node *uart_messenger* (which then transfer them to the Arduino Mega)
-- **vision_analyser.py**: service manager that can (i) take a picture on demand and (ii) analyse it straigth away. Offered services are the followings:
+- **vision_analyser.py**: service manager that can (i) take a picture on demand and (ii) analyse it straigth away. At the moment, it not possible to use this node if **detectnet-py** also is open. Offered services are the followings:
     - 'find_map_corners': take a picture and return angle change from beacons present on the image.
 
 ### OutputNodes 
