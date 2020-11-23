@@ -1,8 +1,13 @@
+import sys
 import rclpy
 from rclpy.node import Node
 
 from interfaces.msg import Map
 from interfaces.msg import Position
+
+import matplotlib.pyplot as plt
+import numpy as np
+from robottle_utils import map_utils
 
 from roboviz import MapVisualizer
 
@@ -10,11 +15,12 @@ MAP_SIZE_PIXELS         = 500
 MAP_SIZE_METERS         = 10
 
 
-
 class SlamVizualizer(Node):
     """
-    This node visualize the map received from the SLAM node.
-    This node is quite hard to use, because it slows down a lot the process. It should not be used in live with the Jetson 
+    This node visualize the map received from the SLAM node, using the PyRoboViz librairie.
+    This node is quite hard to use, because it slows down a lot the process. It should not be used in live with the Jetson
+    This node also takes a parameter when launched, so that it can:
+    - first argument: name of the images to save
     """
     def __init__(self):
         super().__init__("slam_viz")
@@ -41,12 +47,43 @@ class SlamVizualizer(Node):
         # keep track of where is the robot within the class
         self.x = 0
         self.y = 0
-        self.theta = 0 
+        self.theta = 0
+
+        # set saving state (if True, then it will save some maps to a folder when they can be analysed)
+        args = sys.argv
+        if len(args) == 1: # it means no argument was passed to the ros node
+            self.is_saving = False
+        else:
+            self.is_saving = True
+            self.map_name = args[1]
+            self.saving_index = 0
+
 
     def listener_callback_map(self, map_message):
         self.get_logger().info("map received : {}".format(map_message.index))
+        # get the map data from the message
         map_data = bytearray(map_message.map_data)
+
+        # plot data using roboviz
         if not self.viz.display(self.x, self.y, self.theta, map_data): exit(0)
+
+        # save image for debugging
+        if self.is_saving:
+            if int(map_message.index) % 20 == 0: # do this times to times, else it's too many maps being saved ! 
+                # get the map 
+                m = map_utils.get_map(map_data)
+                # save it to files as raw (for later analysis)
+                np.save("/home/arthur/dev/ros/data/maps/" + self.map_name + str(self.saving_index) +  ".npy", m)
+                self.saving_index += 1
+
+                ### Image analysis happening here
+
+                # b. get rectangle 
+                map_utils.get_bounding_rect(occupancy = m, save_name = "/home/arthur/dev/ros/data/maps/rects/" + self.map_name + str(self.saving_index) + ".png")
+
+                # c. find points of interests (recycling, and 3 other corners)
+                # TODO 
+
 
 
     def listener_callback_position(self, pos):
@@ -54,6 +91,7 @@ class SlamVizualizer(Node):
         self.y = pos.y / 1000
         self.theta = pos.theta
         self.get_logger().info("position received from SLAM: {}, {}, {}  ".format(self.x,self.y,self.theta))
+
 
 def main(args=None):
     rclpy.init(args=args)

@@ -1,5 +1,5 @@
 # message constant
-float32 RADIUS = 60 # [mm]
+float32 RADIUS = 58 # [mm]
 float32 LENGTH = 390 # [mm]
 
 # message fields

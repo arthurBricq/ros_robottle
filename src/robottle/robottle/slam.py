@@ -72,17 +72,20 @@ class Slam(Node):
         self.publisher_map = self.create_publisher(Map, 'world_map', 10)
 
         # Initialize parameters for slam 
-        self.slam = RMHC_SLAM(LaserModel(), MAP_SIZE_PIXELS, MAP_SIZE_METERS)
+        laser = LaserModel(detection_margin = 70, offset_mm = 0)
+        self.slam = RMHC_SLAM(laser, MAP_SIZE_PIXELS, MAP_SIZE_METERS, map_quality = 50, hole_width_mm = 600)
         self.trajectory = []
         self.mapbytes = bytearray(MAP_SIZE_PIXELS * MAP_SIZE_PIXELS)
         self.previous_distances = None
         self.previous_angles    = None
-        self.map_index = 0
         self.robot_pose_change = np.array([0.0,0.0,0.0])
 
+        # DEBUG parameters
+        self.map_index = 0
+        self.previous_pos = (0,0,0)
 
     def listener_callback_detectnet(self, msg):
-        self.get_logger().info('I heard something from vision ! ')
+        return 
 
     def listener_callback_motorsspeed(self, msg):
         """
@@ -98,27 +101,17 @@ class Slam(Node):
         delta_d =  - (dx_right - dx_left)
         delta_theta = np.arctan(delta_d / msg.LENGTH) * 57.2958 # [deg]
         self.robot_pose_change += [delta_r, delta_theta, msg.time_delta]
-        self.get_logger().info("robot pose change: {}".format(self.robot_pose_change))
 
     def listener_callback_lidar(self, msg):
-        # UNCOMMENT this code to find indexes i1 and i2
-
-        #(i1, i2) = lidar_utils.get_valid_lidar_range(distances = msg.distances, 
-        #        angles = msg.angles,
-        #        n_points = 10)
-        #self.get_logger().info('indexes : {} : {} with angles {} - {}'
-        #        .format(i1,i2,msg.angles[i1], msg.angles[i2]))
-
         # transform angles to $FORMAT1
         angles = np.array(msg.angles)
         angles = list((angles + 180) % 360) # because LIDAR is facing the robot
-
-        # angles = list(msg.angles)
         distances = list(msg.distances)
 
         # Update SLAM with current Lidar scan and scan angles if adequate
         if len(distances) > MIN_SAMPLES:
-            self.slam.update(distances, scan_angles_degrees=angles, pose_change = tuple(self.robot_pose_change))
+            self.slam.update(distances, scan_angles_degrees=angles)#, pose_change = tuple(self.robot_pose_change))
+            self.analyse_odometry()
             self.robot_pose_change = np.array([0.0,0.0,0.0])
             self.previous_distances = distances.copy()
             self.previous_angles    = angles.copy()
@@ -126,26 +119,51 @@ class Slam(Node):
             # If not adequate, use previous
             self.slam.update(self.previous_distances, scan_angles_degrees=self.previous_angles)
 
-        # Get current robot position
+        # Get current robot position and current map bytes as grayscale
         x, y, theta = self.slam.getpos()
-
-        # Get current map bytes as grayscale
         self.slam.getmap(self.mapbytes)
 
-        # Send position in a topic 
+        # Send topics 
         pos = Position()
         pos.x = float(x)
         pos.y = float(y)
         pos.theta = float(theta)
         self.publisher_position.publish(pos)
-
-        # Send the map in a topic
+        
         map_message = Map()
-        # self.get_logger().info("Sending map {} to subscribers -- ".format(self.map_index) + str(type(self.mapbytes[0])))
         map_message.map_data = self.mapbytes
         map_message.index = self.map_index
         self.publisher_map.publish(map_message)
         self.map_index += 1
+
+
+    # debug functions here (do NOT call them on real runs)
+
+    def analyse_odometry(self):
+        """Compare the odometry resuls with the change in position according to SLAM. 
+        For this function to work, self.robot_pose_change must be set to something different than zero.
+        And the variabe self.previous_pos must exist
+        """
+        x, y, theta = self.slam.getpos()
+        x_old, y_old, theta_old = self.previous_pos
+        dr = np.sqrt((x - x_old) ** 2 + (y - y_old) ** 2)
+        dtheta = theta - theta_old
+        print("-------")
+        print("SLAM     change of pos: {:.3f}  {:.3f}".format(dr, dtheta))
+        print("Odometry change of pos: {:.3f}  {:.3f} ".format(self.robot_pose_change[0], self.robot_pose_change[1]))
+        self.previous_pos = (x,y,theta)
+
+
+    def find_lidar_range(self):
+        """Finds the critical angles of the LIDAR and prints them. 
+        Careful, this function works (currently) only with the previous angles format.
+        """
+        (i1, i2) = lidar_utils.get_valid_lidar_range(distances = msg.distances, 
+                angles = msg.angles,
+                n_points = 10)
+        self.get_logger().info('indexes : {} : {} with angles {} - {}'
+                .format(i1,i2,msg.angles[i1], msg.angles[i2]))
+
 
 
 

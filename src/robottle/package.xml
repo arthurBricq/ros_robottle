@@ -31,6 +31,7 @@
   <exec_depend>termios</exec_depend> 
   <exec_depend>tty</exec_depend> 
   <exec_depend>cv2</exec_depend> 
+  <exec_depend>matplotlib</exec_depend> 
 
   <export>
     <build_type>ament_python</build_type>

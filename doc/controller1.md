@@ -55,10 +55,17 @@ The Arduino mega will
 
 This mode will be writen when we have more empirical data on the problems and how to fix them. 
 
+# Debuging 
 
+## bag files
+- test0 mercantour: motors speed corructed hence SLAM is not working
+- test0 arena slow: 
+    - SLAM is constantly shifting to the right, it's quite weird.
+    - SLAM is not updated many times, it's stopping at some point when really it shouldn't. Looks like there is a problem with this dataset as well since once SLAM stops working then i can't close the simulation from running. Is it corrupted ? 
 
-
-
+## things to test
+- size of the lidar packages : are they too small ? maybe sometimes it is the case
+- how can we filter the map ? It looks like many times there are other lines. I need a better vizualisation tool which can plot a numpy array
 
 
 
