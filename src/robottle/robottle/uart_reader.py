@@ -18,7 +18,7 @@ class UARTReader(Node):
     """
 
     def __init__(self):
-        super().__init__("uart_messenger")
+        super().__init__("uart_reader")
 
 
         # Create a publication for the motors speed
@@ -30,19 +30,28 @@ class UARTReader(Node):
             baudrate=9600)
         time.sleep(1)
         
-        # read the speed here
-        # this code continuously check if there is something in the buffer
-        # and then if so try to cast it as a speed using the following convention
+        # Reads the UART here
+        # this code continuously check if there is a character in the buffer
+        # if so it first reads the type of message to cast it properly:
+        # s --> status will be returned in next character 
+        # (status is an Int which describes where is the robot )
         # l --> following bytes are left speed
         # r --> following bytes are right speed
+        # (speeds are recorded with a timestamp as well for odometry)
         last_datetime = datetime.now()
+        is_waiting_for_status = False
         while True:
             if self.serial_port.inWaiting() > 0:
                 datas = []
                 msg = MotorsSpeed()
                 while self.serial_port.inWaiting() > 0:
                     try:
+                        # data is a character
                         data = self.serial_port.read().decode('ascii')
+                        if is_waiting_for_status: 
+                            is_waiting_for_status = False
+                            self.status_received(data)
+                        if data == 's': is_waiting_for_status = True 
                         if data == 'l': direction="l"
                         elif data == 'r': direction="r"
                         elif data == '\r': # the number is finished
@@ -60,6 +69,17 @@ class UARTReader(Node):
                 msg.time_delta = (new_datetime - last_datetime).total_seconds()
                 self.speeds_publisher.publish(msg)
                 last_datetime = new_datetime
+
+    def status_received(self, data):
+        """
+        Call this function when a status is received from the Arduino. 
+        Arduino sends status when
+        0 = the task it was asked to do failed
+        1 = the task it was asked to do finished successfully
+        2 = a task was received and will be processed
+        """
+        status = int(data)
+
 
 
 

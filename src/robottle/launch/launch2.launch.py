@@ -9,8 +9,8 @@ def generate_launch_description():
     return launch.LaunchDescription([
         Node(
             package="robottle",
-            node_executable="uart_speed_reader",
-            name="uart",
+            node_executable="uart_reader",
+            name="uart reader",
             output="screen",
             emulate_tty=True
             ),

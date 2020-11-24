@@ -70,20 +70,23 @@ class SlamVizualizer(Node):
         # save image for debugging
         if self.is_saving:
             if int(map_message.index) % 20 == 0: # do this times to times, else it's too many maps being saved ! 
-                # get the map 
+                # get the map (and save it as raw, for debugging)
                 m = map_utils.get_map(map_data)
-                # save it to files as raw (for later analysis)
+                robot_pos = map_utils.pos_to_gridpos(self.x, self.y)
                 np.save("/home/arthur/dev/ros/data/maps/" + self.map_name + str(self.saving_index) +  ".npy", m)
                 self.saving_index += 1
 
                 ### Image analysis happening here
 
-                # b. get rectangle 
-                map_utils.get_bounding_rect(occupancy = m, save_name = "/home/arthur/dev/ros/data/maps/rects/" + self.map_name + str(self.saving_index) + ".png")
-
-                # c. find points of interests (recycling, and 3 other corners)
-                # TODO 
-
+                # a. filter the map 
+                binary = map_utils.filter_map(m)
+                # b. get rectangle around the map
+                corners, contours = map_utils.get_bounding_rect(binary)
+                # c. find zones 
+                zones = map_utils.get_zones(corners, robot_pos)
+                # d. make and save the nice figure
+                save_name = "/home/arthur/dev/ros/data/maps/rects/"+self.map_name+str(self.saving_index)+".png"
+                map_utils.make_nice_plot(binary, save_name, robot_pos, self.theta, contours, corners, zones)
 
 
     def listener_callback_position(self, pos):
