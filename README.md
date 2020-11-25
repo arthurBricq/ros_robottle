@@ -51,7 +51,7 @@ Here are some commands quite useful with the ROS setup
 
 - bag files recording sensor inputs (lidar data + motors speed so far)
 
-`ros2 bag record /lidar_data /motors_speed`
+`ros2 bag record -o name /lidar_data /motors_speed`
 
 - launch the detectnet node (*with its own launch files*)
 
@@ -62,6 +62,12 @@ Here are some commands quite useful with the ROS setup
 - launch the other ROS nodes (LIDAR, Motors Speed Reader, SLAM, Motors Commands)
 
 `ros2 launch robottle launch_controller.launch.py`
+
+- ssh command to register
+
+`ssh arthur@M00e04c3fd2f6.dyn.epfl.ch`
+
+`cd dev/rps/workspace1 ; . install/setup.bash ; `
 
 ## Differences between Jetson and Personal Computer
 
