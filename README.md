@@ -45,13 +45,23 @@ Here is a description of the nodes we created for the robot.
 
 Here are some commands quite useful with the ROS setup
 
-- topic publication to move the robot somewhere
+- ssh command to open a shell, go to proper directory, and open ros
 
-`ros2 topic pub --once /uart_commands std_msgs/msg/String "data: w"`
+`ssh arthur@M00e04c3fd2f6.dyn.epfl.ch`
+
+`cd dev/rps/workspace1 ; . install/setup.bash ; `
 
 - bag files recording sensor inputs (lidar data + motors speed so far)
 
 `ros2 bag record -o name /lidar_data /motors_speed`
+
+- run the teleop controller
+
+`ros2 run robottle teleop`
+
+- launch the other ROS nodes (LIDAR, Motors Speed Reader, SLAM, Motors Commands)
+
+`ros2 launch robottle launch_controller.launch.py`
 
 - launch the detectnet node (*with its own launch files*)
 
@@ -59,15 +69,9 @@ Here are some commands quite useful with the ROS setup
 
 *It's possible to have (or not) an output when this node is launched, but for it we must change the launch file. Later, I will integrate this in my own launch nodes*
 
-- launch the other ROS nodes (LIDAR, Motors Speed Reader, SLAM, Motors Commands)
+- topic publication to move the robot somewhere
 
-`ros2 launch robottle launch_controller.launch.py`
-
-- ssh command to register
-
-`ssh arthur@M00e04c3fd2f6.dyn.epfl.ch`
-
-`cd dev/rps/workspace1 ; . install/setup.bash ; `
+`ros2 topic pub --once /uart_commands std_msgs/msg/String "data: w"`
 
 ## Differences between Jetson and Personal Computer
 
