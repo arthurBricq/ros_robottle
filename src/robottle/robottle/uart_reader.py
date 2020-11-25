@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 
-from interfaces.msg import MotorsSpeed
+from interfaces.msg import MotorsSpeed, Status
 import time
 from datetime import datetime
 import serial
@@ -23,6 +23,7 @@ class UARTReader(Node):
 
         # Create a publication for the motors speed
         self.speeds_publisher = self.create_publisher(MotorsSpeed, 'motors_speed', 1000)
+        self.status_publisher = self.create_publisher(Status, 'arduino_status', 1000)
 
         # setup the uart port and wait a second for it
         self.serial_port = serial.Serial(
@@ -51,7 +52,9 @@ class UARTReader(Node):
                         if is_waiting_for_status: 
                             is_waiting_for_status = False
                             self.status_received(data)
-                        if data == 's': is_waiting_for_status = True 
+                        if data == 's': 
+                            is_waiting_for_status = True 
+                            continue
                         if data == 'l': direction="l"
                         elif data == 'r': direction="r"
                         elif data == '\r': # the number is finished
@@ -79,6 +82,10 @@ class UARTReader(Node):
         2 = a task was received and will be processed
         """
         status = int(data)
+        status_msg = Status()
+        status_msg.status = status
+        self.status_publisher.publish(status_msg)
+        print("Status received: ", status)
 
 
 

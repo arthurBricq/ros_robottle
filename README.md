@@ -2,7 +2,7 @@
 
 This repo contains the ROS source code to run the project, that was writen by myself. It is the ROS2 workspace of our project !
 
-## Other repositories used ! 
+## Other repositories used 
 
 The ROS code works in pair with the [Robottle Python Package](https://github.com/arthurBricq/robottle_python_packages) where there are some helper functions and algorithms. 
 
@@ -12,15 +12,12 @@ As the code of this repository and the code of the **Robottle Python Package** a
 
 For the *Cuda-Accelerated* code for the **Neuron Network** to detect bottles was based on the [Jetson-Inference](https://github.com/dusty-nv/jetson-inference) code (*NVidea*) and especially with their detectnet code. Their ROS repository has a [documentation](https://github.com/dusty-nv/ros_deep_learning) that is quite complete ! *However, it is writen all in C*
 
-
-
-
-
-## ROS Nodes
+## Our ROS Nodes
 
 Here is a description of the nodes we created for the robot. 
 
 ### Input Nodes
+
 - **lidar_publisher.py**: Reads data from lidar as send them as collected in the topic `lidar_data`
 - **uart_speed_reader.py**: Reads the speed from the motors, using UART communications and send them in topic `uart_motors_speed`. 
 - **detectnet.py**: Reads the camera and returns the bounding boxes. This package was made by NVidea and here is its [documentation](https://github.com/dusty-nv/ros_deep_learning). Here are different topics one other node can subscribe to
