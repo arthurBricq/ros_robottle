@@ -53,7 +53,7 @@ Here are some commands quite useful with the ROS setup
 
 `ros2 bag record /lidar_data /motors_speed`
 
-- launch the detectnet node (*with their launch files*)
+- launch the detectnet node (*with its own launch files*)
 
 `ros2 launch ros_deep_learning detectnet.ros2.launch input:=csi://0 output:=display://0`
 
@@ -61,7 +61,7 @@ Here are some commands quite useful with the ROS setup
 
 - launch the other ROS nodes (LIDAR, Motors Speed Reader, SLAM, Motors Commands)
 
-`ros2 launch robottle launch2.launch.py`
+`ros2 launch robottle launch_controller.launch.py`
 
 ## Differences between Jetson and Personal Computer
 
