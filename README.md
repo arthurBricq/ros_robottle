@@ -73,6 +73,10 @@ Here are some commands quite useful with the ROS setup
 
 `ros2 topic pub --once /uart_commands std_msgs/msg/String "data: w"`
 
+- copy the bag files to the flashdrive
+
+`ros2 bag record -o name /lidar_data /motors_speed`
+
 ## Differences between Jetson and Personal Computer
 
 There are differences between the different setups, because the Jetson has to do things that I will not try to replicate at home (and just there results)
