@@ -30,8 +30,8 @@ setup(
                     'uart_sender = robottle.uart_messenger:main' ,
                     'uart_reader = robottle.uart_reader:main',
                     'teleop = robottle.teleop:main',
-                    'vision_analyser = robottle.vision_analyser:main'
-
+                    'vision_analyser = robottle.vision_analyser:main',
+                    'controller1 = robottle.controller1:main',
         ],
     },
 )
