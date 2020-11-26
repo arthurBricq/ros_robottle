@@ -49,51 +49,18 @@ class SlamVizualizer(Node):
         self.y = 0
         self.theta = 0
 
-        # set saving state (if True, then it will save some maps to a folder when they can be analysed)
-        args = sys.argv
-        if len(args) == 1: # it means no argument was passed to the ros node
-            self.is_saving = False
-        else:
-            self.is_saving = True
-            self.map_name = args[1]
-            self.saving_index = 0
-
-
     def listener_callback_map(self, map_message):
-        self.get_logger().info("map received : {}".format(map_message.index))
         # get the map data from the message
         map_data = bytearray(map_message.map_data)
 
         # plot data using roboviz
         if not self.viz.display(self.x, self.y, self.theta, map_data): exit(0)
 
-        # save image for debugging
-        if self.is_saving:
-            if int(map_message.index) % 20 == 0: # do this times to times, else it's too many maps being saved ! 
-                # get the map (and save it as raw, for debugging)
-                m = map_utils.get_map(map_data)
-                robot_pos = map_utils.pos_to_gridpos(self.x, self.y)
-                np.save("/home/arthur/dev/ros/data/maps/" + self.map_name + str(self.saving_index) +  ".npy", m)
-                self.saving_index += 1
-
-                ### Image analysis happening here
-
-                # a. filter the map 
-                binary = map_utils.filter_map(m)
-                # b. get rectangle around the map
-                corners, contours = map_utils.get_bounding_rect(binary)
-                # c. find zones 
-                zones = map_utils.get_zones(corners, robot_pos)
-                # d. make and save the nice figure
-                save_name = "/home/arthur/dev/ros/data/maps/rects/"+self.map_name+str(self.saving_index)+".png"
-                map_utils.make_nice_plot(binary, save_name, robot_pos, self.theta, contours, corners, zones)
-
 
     def listener_callback_position(self, pos):
         self.x = pos.x / 1000
         self.y = pos.y / 1000
         self.theta = pos.theta
-        self.get_logger().info("position received from SLAM: {}, {}, {}  ".format(self.x,self.y,self.theta))
 
 
 def main(args=None):

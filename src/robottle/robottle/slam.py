@@ -20,9 +20,15 @@ import numpy as np
 from robottle_utils import lidar_utils
 
 # Constants for run time
-MIN_SAMPLES = 100 
 MAP_SIZE_PIXELS         = 500
 MAP_SIZE_METERS         = 10
+
+MIN_SAMPLES = 100 
+MAP_QUALITY = 50
+OFFSET_MM = 175
+DETECTION_MARGIN = 65
+OBSTACLE_WIDTH_MM = 600
+
 
 class Slam(Node):
     """
@@ -72,8 +78,8 @@ class Slam(Node):
         self.publisher_map = self.create_publisher(Map, 'world_map', 10)
 
         # Initialize parameters for slam 
-        laser = LaserModel(detection_margin = 70, offset_mm = 0)
-        self.slam = RMHC_SLAM(laser, MAP_SIZE_PIXELS, MAP_SIZE_METERS, map_quality = 50, hole_width_mm = 600)
+        laser = LaserModel(detection_margin = DETECTION_MARGIN, offset_mm = OFFSET_MM)
+        self.slam = RMHC_SLAM(laser, MAP_SIZE_PIXELS, MAP_SIZE_METERS, map_quality = MAP_QUALITY, hole_width_mm = OBSTACLE_WIDTH_MM)
         self.trajectory = []
         self.mapbytes = bytearray(MAP_SIZE_PIXELS * MAP_SIZE_PIXELS)
         self.previous_distances = None
@@ -110,8 +116,8 @@ class Slam(Node):
 
         # Update SLAM with current Lidar scan and scan angles if adequate
         if len(distances) > MIN_SAMPLES:
-            self.slam.update(distances, scan_angles_degrees=angles)#, pose_change = tuple(self.robot_pose_change))
-            self.analyse_odometry()
+            self.slam.update(distances, scan_angles_degrees=angles, pose_change = tuple(self.robot_pose_change))
+            # self.analyse_odometry()
             self.robot_pose_change = np.array([0.0,0.0,0.0])
             self.previous_distances = distances.copy()
             self.previous_angles    = angles.copy()
@@ -154,15 +160,15 @@ class Slam(Node):
         self.previous_pos = (x,y,theta)
 
 
-    def find_lidar_range(self):
+    def find_lidar_range(self, distances, angles):
         """Finds the critical angles of the LIDAR and prints them. 
         Careful, this function works (currently) only with the previous angles format.
         """
-        (i1, i2) = lidar_utils.get_valid_lidar_range(distances = msg.distances, 
-                angles = msg.angles,
+        (i1, i2) = lidar_utils.get_valid_lidar_range(distances = distances, 
+                angles = angles,
                 n_points = 10)
-        self.get_logger().info('indexes : {} : {} with angles {} - {}'
-                .format(i1,i2,msg.angles[i1], msg.angles[i2]))
+        print('indexes : {} : {} with angles {} - {}'
+                .format(i1,i2,angles[i1], angles[i2]))
 
 
 

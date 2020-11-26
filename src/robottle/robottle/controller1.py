@@ -8,8 +8,9 @@ from std_msgs.msg import String
 
 from robottle_utils import map_utils
 
-MAP_SIZE_PIXELS         = 500
-MAP_SIZE_METERS         = 10
+
+AREA_THRESHOLD = 60000
+
 
 class Controller1(Node):
     """
@@ -42,21 +43,64 @@ class Controller1(Node):
         self.x = 0
         self.y = 0
         self.theta = 0 
+        
+        # variable for the controller
+        self.initial_zones_found = False
+
+        # set saving state (if True, then it will save some maps to a folder when they can be analysed)
+        args = sys.argv
+        if len(args) == 1: # it means no argument was passed to the ros node
+            self.is_saving = False
+        else:
+            self.is_saving = True
+            self.map_name = args[1]
+            self.saving_index = 0
 
         # STATE MACHINE
         self.state = "initial_rotation"
         # send a request for continuous rotation after waiting 1 second for UART node to be ready
-        time.sleep(1)
+        time.sleep(3)
         self.uart_publisher.publish(String(data = "r"))
 
 
     def listener_callback_map(self, map_message):
         map_data = bytearray(map_message.map_data)
-        occupancy_grid = map_utils.get_map(map_data)
+
+        # Once in a while, start an analysis
+        if int(map_message.index) % 20 == 0: :
+            ### Map analysis happening here
+
+            # a. filter the map 
+            m = map_utils.get_map(map_data)
+            robot_pos = map_utils.pos_to_gridpos(self.x, self.y)
+            binary = map_utils.filter_map(m)
+            # b. get rectangle around the map
+            corners, area, contours = map_utils.get_bounding_rect(binary)
+            print(area)
+            # c. find zones 
+            if not self.initial_zones_found and area > AREA_THRESHOLD:
+               # corners found are valid and we can find the 'initial zones' 
+                zones = map_utils.get_initial_zones(corners, robot_pos)
+                self.previous_zones = zones
+                self.initial_zones_found = True
+            if self.initial_zones_found: 
+                print("decude next zones from previous zones")
+
+
+
+
+            # d. make and save the nice figure
+            if self.is_saving:
+                save_name = "/home/arthur/dev/ros/data/maps/rects/"+self.map_name+str(self.saving_index)+".png"
+                map_utils.make_nice_plot(binary, save_name, robot_pos, self.theta, contours, corners, zones)
+                np.save("/home/arthur/dev/ros/data/maps/" + self.map_name + str(self.saving_index) +  ".npy", m)
+                self.saving_index += 1
+
 
 
     def listener_callback_position(self, pos):
-        """This function just receives the position and will update it to self variables. All control logics are in the 'map' calback"""
+        """This function just receives the position and will update it to self variables. 
+        All control logics are in the 'map' calback"""
         # receive the position from the SLAM
         self.x = pos.x / 1000
         self.y = pos.y / 1000

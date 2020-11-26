@@ -29,6 +29,7 @@ Here is a description of the nodes we created for the robot.
 ### Internal Nodes (i.e. the brain)
 - **slam.py**: SLAM node (evaluate position and map). It outputs on topics `world_map` and `robot_pos`. It is an implementation of the 'TinySLAM' algorithm, which is built locally from this repository: [BreezySLAM](https://github.com/simondlevy/BreezySLAM). *Some portion of this code needs to be modified*
 - **controller_ol.py**: most basic controller, will avoid obstacles merely based on the SLAM output. It then communicates commands to the node *uart_messenger* (which then transfer them to the Arduino Mega)
+- **controller1.py**: it's going to be the first controller that makes the robot run autonomously. Work in progress. 
 - **vision_analyser.py**: service manager that can (i) take a picture on demand by subscribing to one of **detectnet** topics (to get 1 raw image input from the streamline) and (ii) analyse it straigth away. Offered services are the followings:
     - 'find_map_corners': take a picture and return angle change from beacons present on the image. Work in progress.
 
@@ -39,6 +40,26 @@ Here is a description of the nodes we created for the robot.
 *Those nodes are not intended to be ran on the Jetson Nano*
 - **slam_vizualiser.py**: prints the map and the position in another window.
 - **teleop.py**: controls the robot remotely using keyboard.
+
+
+## ROS Hyperparameters
+
+As the code is rather complex, there are several hyperparameters and it is sometimes hard to keep track of what is tunnable and what is not. Here is a list of all the hyperparameters of our code. 
+
+**SLAM**
+- detection_margin: it's an angle which define the datapoints of the LIDAR to be excluded (because it sees the robot). It was found that the best (i.e. the min) value is 65.
+- offset_mm: It's the shift in the axis of the robot between the center of rotation and the center of the lidar.
+- map_quality: It's the speed of integration of the new measurements from LIDAR to SLAM, between 0 and 255. 
+- hole_width_mm: It's the width of obstacles that SLAM assumes when one is seen by the LIDAR. 
+- 'initial_angle': (TODO) it's the initial angle of the robot in the arena. Zero is when robot is parallel to the wall which goes to the zone 2.
+- MIN_SAMPLE: minimum number of datapoints that a LIDAR batch of data must contain so that the SLAM takes them into account. 
+
+**Map Analysis**
+- threshold: binary threshold applied to the SLAM occupancy grid. 
+- kernel_size: size of the kernel of a median filter applied to the binary grid
+- N_points_min: contour detection is performed above filtered binary grid. It's the minimum number of points a contour must have in order to be considered as 'valid' and kept for future analysis
+- area_threshold: minimum area of a rotated rectangle to be considered as valid.
+
 
 
 ## Some useful commands 
