@@ -2,11 +2,13 @@ import rclpy
 from rclpy.node import Node
 import numpy as np 
 import time
+import sys
 
 from interfaces.msg import Map, Position, Status
 from std_msgs.msg import String
 
 from robottle_utils import map_utils
+from robottle_utils.rrt_star import RRTStar
 
 
 AREA_THRESHOLD = 60000
@@ -46,6 +48,7 @@ class Controller1(Node):
         
         # variable for the controller
         self.initial_zones_found = False
+        self.zones = []
 
         # set saving state (if True, then it will save some maps to a folder when they can be analysed)
         args = sys.argv
@@ -67,7 +70,7 @@ class Controller1(Node):
         map_data = bytearray(map_message.map_data)
 
         # Once in a while, start an analysis
-        if int(map_message.index) % 20 == 0: :
+        if int(map_message.index) % 20 == 0: 
             ### Map analysis happening here
 
             # a. filter the map 
@@ -78,21 +81,40 @@ class Controller1(Node):
             corners, area, contours = map_utils.get_bounding_rect(binary)
             print(area)
             # c. find zones 
+            path = []
             if not self.initial_zones_found and area > AREA_THRESHOLD:
                # corners found are valid and we can find the 'initial zones' 
-                zones = map_utils.get_initial_zones(corners, robot_pos)
-                self.previous_zones = zones
+                self.zones = map_utils.get_initial_zones(corners, robot_pos)
                 self.initial_zones_found = True
             if self.initial_zones_found: 
-                print("decude next zones from previous zones")
+                # zones are ordered the following way 
+                # (recycling area, zone2, zone3, zone4)
+                new_zones = map_utils.get_zones_from_previous(corners, self.zones)
+                self.zones = new_zones
+
+                # Path Planing
+                targets = map_utils.get_targets_from_zones(np.array(self.zones), target_weight = 0.7)
+                current_target = 2
+                rrt = RRTStar(
+                        start = robot_pos,
+                        goal = targets[current_target],
+                        binary_obstacle = binary,
+                        rand_area = [0, 500],
+                        expand_dis = 50,
+                        path_resolution = 1,
+                        goal_sample_rate = 5,
+                        max_iter = 500,
+                        )
+                path = rrt.planning(animation = False)
 
 
-
+            # Get motor commands from path
+            # todo
 
             # d. make and save the nice figure
             if self.is_saving:
                 save_name = "/home/arthur/dev/ros/data/maps/rects/"+self.map_name+str(self.saving_index)+".png"
-                map_utils.make_nice_plot(binary, save_name, robot_pos, self.theta, contours, corners, zones)
+                map_utils.make_nice_plot(binary, save_name, robot_pos, self.theta, contours, corners, self.zones, np.array(path).astype(int))
                 np.save("/home/arthur/dev/ros/data/maps/" + self.map_name + str(self.saving_index) +  ".npy", m)
                 self.saving_index += 1
 

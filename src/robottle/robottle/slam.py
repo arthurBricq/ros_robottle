@@ -89,6 +89,7 @@ class Slam(Node):
         # DEBUG parameters
         self.map_index = 0
         self.previous_pos = (0,0,0)
+        print("SLAM is starting")
 
     def listener_callback_detectnet(self, msg):
         return 
@@ -136,6 +137,7 @@ class Slam(Node):
         pos.theta = float(theta)
         self.publisher_position.publish(pos)
         
+        print("SLAM sending map : ", self.map_index)
         map_message = Map()
         map_message.map_data = self.mapbytes
         map_message.index = self.map_index
