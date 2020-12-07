@@ -108,8 +108,9 @@ class Controller1(Node):
         self.theta = pos.theta % 360
 
     def listener_arduino_status(self, status_msg):
+        """Called when Arduino send something to Jetson
+        """
         status = status_msg.status
-        print("Controller status received : ", status)
         # state machine logic
         if self.state == INITIAL_ROTATION_MODE:
             if status == 0:
@@ -125,11 +126,11 @@ class Controller1(Node):
                 # todo !!! 
                 pass 
             elif status == 1: # SUCCESS --> bottle was probably picked
-                # todo ??? verify with computer vision
                 self.start_random_search_mode()
 
-
     def listener_callback_detectnet(self, msg):
+        """Called when a bottle is detected by neuron network
+        """
         if self.state == RANDOM_SEARCH_MODE
             # look if a bottle is detected in front of the robot
             is_bottle_infront = False
@@ -249,7 +250,6 @@ class Controller1(Node):
                     )
             # np.save("/home/arthur/dev/ros/data/maps/"+name+".npy", m)
             self.saving_index += 1
-
 
     def start_random_search_mode(self):
         """Will start the random search and increase by 1 the stepper
