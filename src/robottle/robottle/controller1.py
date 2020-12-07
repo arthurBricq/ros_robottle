@@ -4,12 +4,19 @@ import numpy as np
 import time
 import sys
 
+from vision_msgs.msg import Detection2DArray
 from interfaces.msg import Map, Position, Status
 from std_msgs.msg import String
 
 from robottle_utils import map_utils, controller_utils
 from robottle_utils.rrt_star import RRTStar
 
+### STATE MACHINE 
+
+INITIAL_ROTATION_MODE = "initial_rotation_mode"
+TRAVEL_MODE = "travel_mode"
+RANDOM_SEARCH_MODE = "random_search_mode"
+BOTTLE_PICKING_MODE = "bottle_picking_mode"
 
 ### HYPERPARAMETERS
 
@@ -21,16 +28,18 @@ MIN_DIST_TO_GOAL = 1 # [m]
 CONTROLLER_TIME_CONSTANT = 20
 # path-tracker min angle diff for directing the robot
 MIN_ANGLE_DIFF = 15 # [deg]
+# time taken to do a 360 degrees rotation
+INITIAL_ROTATION_TIME = 10 # [s]
+# maximum number of times controller enters random search mode inside 1 zone
+N_RANDOM_SEARCH_MAX = 5
 
 # Array containing zones to visit
 TARGETS_TO_VISIT = [2,3]
 
-
 class Controller1(Node):
     """
-    This node visualize the map received from the SLAM node.
-    This node is quite hard to use, because it slows down a lot the process. 
-    It should not be used in live with the Jetson 
+    Controller of the ROBOT
+    This node is a state machine with several states and transitions from one to each others.
     """
     def __init__(self):
         super().__init__("controller1")
@@ -64,6 +73,7 @@ class Controller1(Node):
         self.path = None
         self.goal = None
         self.robot_pos = None
+        self.current_target_index = 2
 
         # set saving state (if True, then it will save some maps to a folder when they can be analysed)
         args = sys.argv
@@ -76,21 +86,69 @@ class Controller1(Node):
 
         # STATE MACHINE
         # send a request for continuous rotation after waiting 1 second for UART node to be ready
-        self.state = "initial_rotation"
+        self.state = INITIAL_ROTATION_MODE
         time.sleep(3)
         self.uart_publisher.publish(String(data = "r"))
-        time.sleep(10)
 
-        self.state = "travel_mode"
-        self.current_target_index = 2
         
-        print("Controller is ready")
 
+    ### CALLBACKS
+    # callbacks are the entry points to all other methods
 
     def listener_callback_map(self, map_message):
-        if self.state == "travel_mode": 
+        if self.state == TRAVEL_MODE: 
             self.travel_mode(map_message)
 
+    def listener_callback_position(self, pos):
+        """This function just receives the position and will update it to self variables. 
+        All control logics are in the 'map' calback"""
+        # receive the position from the SLAM
+        self.x = pos.x / 1000
+        self.y = pos.y / 1000
+        self.theta = pos.theta % 360
+
+    def listener_arduino_status(self, status_msg):
+        status = status_msg.status
+        print("Controller status received : ", status)
+        # state machine logic
+        if self.state == INITIAL_ROTATION_MODE:
+            if status == 0:
+                print("Controller says. 'hm, let me see what i can do...'")
+            elif status == 1:
+                print("Controller says: 'great job bob, now let's get you movin around ! '")
+                self.state = TRAVEL_MODE
+            elif status == 2:
+                print("Controller says: 'ok, i am waiting for your answer' ")
+
+        if self.state == BOTTLE_PICKING_MODE:
+            if status == 0: # ERROR --> we must do something
+                # todo !!! 
+                pass 
+            elif status == 1: # SUCCESS --> bottle was probably picked
+                # todo ??? verify with computer vision
+                self.start_random_search_mode()
+
+
+    def listener_callback_detectnet(self, msg):
+        if self.state == RANDOM_SEARCH_MODE
+            # look if a bottle is detected in front of the robot
+            is_bottle_infront = False
+            if is_bottle_infront:
+                # random_seach_mode --> bottle_picking_mode
+                self.start_bottle_picking_mode()
+                return 
+
+        if self.state == BOTTLE_PICKING_MODE:
+            # look if the bottle in range
+            is_bottle_in_range = False
+            if is_bottle_in_range:
+                # try to catch it - and wait for a response
+                self.uart_publisher.publish(String(data = "x"))
+                self.uart_publisher.publish(String(data = "o"))
+
+
+
+    ### STATE MACHINE METHODS
 
     def travel_mode(self, map_message):
         """Travel mode of the controller. 
@@ -150,8 +208,10 @@ class Controller1(Node):
         # 1. state transition condition
         dist = controller_utils.get_distance(self.robot_pos, self.goal)
         if dist < MIN_DIST_TO_GOAL:
-            # end of travel mode
-            self.state = "random_search"
+            # travel_mode --> random_search mode
+            self.start_random_search_mode()
+            self.subscription_camera = self.create_subscription(Detection2DArray, '/detectnet/detections',
+                self.listener_callback_detectnet, 1000)
             return
 
         # 2. Else, compute motors commands
@@ -169,11 +229,9 @@ class Controller1(Node):
                 # must turn to the left
                 msg.data = "a"
             self.uart_publisher.publish(msg)
-         else:
+        else:
             ## FORWARD SUB-STATE
-            msg = String()
-            msg.data = "w"
-            self.uart_publisher.publish(msg)
+            self.uart_publisher.publish(String(data = "w"))
 
         # finally. make and save the nice figure
         if self.is_saving and int(map_message.index) % CONTROLLER_TIME_CONSTANT == 0 and not self.path is None:
@@ -193,32 +251,23 @@ class Controller1(Node):
             self.saving_index += 1
 
 
-    def random_search_mode(self):
-        pass
+    def start_random_search_mode(self):
+        """Will start the random search and increase by 1 the stepper
+        """
+        if self.n_random_search == N_RANDOM_SEARCH_MAX:
+            # no more random walk can happen
+            # let's enter travel mode again
+            pass 
 
+        self.state = RANDOM_SEARCH_MODE
+        self.uart_publisher.publish(String(data = "d"))
+        self.n_random_search += 1
 
-    def listener_callback_position(self, pos):
-        """This function just receives the position and will update it to self variables. 
-        All control logics are in the 'map' calback"""
-        # receive the position from the SLAM
-        self.x = pos.x / 1000
-        self.y = pos.y / 1000
-        self.theta = pos.theta % 360
-
-        
-    def listener_arduino_status(self, status_msg):
-        status = status_msg.status
-        print("Controller status received : ", status)
-        # state machine logic
-        if self.state == "initial_rotation":
-            if status == 0:
-                print("Controller says. 'hm, let me see what i can do...'")
-            elif status == 1:
-                print("Controller says: 'great job bob, now let's get you movin around ! '")
-                self.state = "travel_mode"
-            elif status == 2:
-                print("Controller says: 'ok, i am waiting for your answer' ")
-
+    def start_bottle_picking_mode(self):
+        """Will start the bottle picking mode"""
+        self.state = BOTTLE_PICKING_MODE
+        # would be nice to go slower here
+        self.uart_publisher.publish(String(data = "w"))
 
 
 

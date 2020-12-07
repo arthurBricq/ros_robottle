@@ -5,11 +5,7 @@ from rclpy.node import Node
 
 # imports the interfaces
 from vision_msgs.msg import Detection2DArray
-from interfaces.msg import Nums
-from interfaces.msg import LidarData 
-from interfaces.msg import Position
-from interfaces.msg import Map
-from interfaces.msg import MotorsSpeed
+from interfaces.msg import Nums, LidarData, Position, Map, MotorsSpeed
 
 # imports things for slam
 from breezyslam.algorithms import RMHC_SLAM
@@ -49,14 +45,6 @@ class Slam(Node):
     def __init__(self):
         super().__init__('slam_node')
 
-        # Create first subscripton (detectnet results)
-        self.subscription1 = self.create_subscription(
-            Detection2DArray,
-            '/detectnet/detections',
-            self.listener_callback_detectnet,
-            1000)
-        self.subscription1  # prevent unused variable warning
-
         # Create second subscription (SLAM)
         self.subscription2 = self.create_subscription(
             LidarData,
@@ -91,8 +79,6 @@ class Slam(Node):
         self.previous_pos = (0,0,0)
         print("SLAM is starting")
 
-    def listener_callback_detectnet(self, msg):
-        return 
 
     def listener_callback_motorsspeed(self, msg):
         """
