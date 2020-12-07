@@ -7,11 +7,16 @@ import sys
 from interfaces.msg import Map, Position, Status
 from std_msgs.msg import String
 
-from robottle_utils import map_utils
+from robottle_utils import map_utils, controller_utils
 from robottle_utils.rrt_star import RRTStar
 
 
 AREA_THRESHOLD = 60000
+MIN_DIST_TO_GOAL = 1
+CONTROLLER_TIME_CONSTANT = 20
+
+# Array containing zones to visit
+TARGETS_TO_VISIT = [2,3]
 
 
 class Controller1(Node):
@@ -60,19 +65,30 @@ class Controller1(Node):
             self.saving_index = 0
 
         # STATE MACHINE
-        self.state = "initial_rotation"
         # send a request for continuous rotation after waiting 1 second for UART node to be ready
+        self.state = "initial_rotation"
         time.sleep(3)
         self.uart_publisher.publish(String(data = "r"))
+        time.sleep(10)
+
+        self.state = "travel_mode"
+        self.current_target_index = 0
 
 
     def listener_callback_map(self, map_message):
+        if self.state == "travel_mode": 
+            self.travel_mode(map_message)
+
+
+    def travel_mode(self, map_message):
+        """Travel mode of the controller. 
+        This function is called by the map listener's callback.
+        """
         map_data = bytearray(map_message.map_data)
 
-        # Once in a while, start an analysis
-        if int(map_message.index) % 20 == 0: 
-            ### Map analysis happening here
-
+        # Once in a while, start the controller logic
+        if int(map_message.index) % CONTROLLER_TIME_CONSTANT == 0: 
+            ### Map analysis 
             # a. filter the map 
             m = map_utils.get_map(map_data)
             robot_pos = map_utils.pos_to_gridpos(self.x, self.y)
@@ -86,18 +102,20 @@ class Controller1(Node):
                # corners found are valid and we can find the 'initial zones' 
                 self.zones = map_utils.get_initial_zones(corners, robot_pos)
                 self.initial_zones_found = True
+                return
             if self.initial_zones_found: 
                 # zones are ordered the following way 
                 # (recycling area, zone2, zone3, zone4)
                 new_zones = map_utils.get_zones_from_previous(corners, self.zones)
                 self.zones = new_zones
 
-                # Path Planing
+                ### Path Planing
+                # those targets are ordered points
                 targets = map_utils.get_targets_from_zones(np.array(self.zones), target_weight = 0.7)
-                current_target = 2
+                goal = targets[self.current_target_index]
                 rrt = RRTStar(
                         start = robot_pos,
-                        goal = targets[current_target],
+                        goal = goal,
                         binary_obstacle = binary,
                         rand_area = [0, 500],
                         expand_dis = 50,
@@ -107,9 +125,18 @@ class Controller1(Node):
                         )
                 path = rrt.planning(animation = False)
 
+                ### Path Tracker
+                # 1. end condition
+                dist = controller_utils.get_distance(robot_pos, goal)
+                if dist < MIN_DIST_TO_GOAL:
+                    # end of travel mode
+                    self.state = "random_search"
+                    return
+                # 2. Else, a new state machine takes place ! 
+                
 
-            # Get motor commands from path
-            # todo
+
+
 
             # d. make and save the nice figure
             if self.is_saving:
