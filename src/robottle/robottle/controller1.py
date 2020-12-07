@@ -11,9 +11,16 @@ from robottle_utils import map_utils, controller_utils
 from robottle_utils.rrt_star import RRTStar
 
 
+### HYPERPARAMETERS
+
+# min area that a rotated rectangle must contain to be considered as valid
 AREA_THRESHOLD = 60000
-MIN_DIST_TO_GOAL = 1
+# distance at which, if the robot is closer than the goal, travel_mode ends
+MIN_DIST_TO_GOAL = 1 # [m]
+# time constant of path computation update (the bigger, the less often the path is updated)
 CONTROLLER_TIME_CONSTANT = 20
+# path-tracker min angle diff for directing the robot
+MIN_ANGLE_DIFF = 15 # [deg]
 
 # Array containing zones to visit
 TARGETS_TO_VISIT = [2,3]
@@ -54,6 +61,9 @@ class Controller1(Node):
         # variable for the controller
         self.initial_zones_found = False
         self.zones = []
+        self.path = None
+        self.goal = None
+        self.robot_pos = None
 
         # set saving state (if True, then it will save some maps to a folder when they can be analysed)
         args = sys.argv
@@ -72,7 +82,9 @@ class Controller1(Node):
         time.sleep(10)
 
         self.state = "travel_mode"
-        self.current_target_index = 0
+        self.current_target_index = 2
+        
+        print("Controller is ready")
 
 
     def listener_callback_map(self, map_message):
@@ -86,36 +98,39 @@ class Controller1(Node):
         """
         map_data = bytearray(map_message.map_data)
 
-        # Once in a while, start the controller logic
+        ### I. Path planning
+        # Once in a while, start the path planning logic
         if int(map_message.index) % CONTROLLER_TIME_CONSTANT == 0: 
-            ### Map analysis 
+            ## Map analysis 
             # a. filter the map 
             m = map_utils.get_map(map_data)
-            robot_pos = map_utils.pos_to_gridpos(self.x, self.y)
+            self.robot_pos = map_utils.pos_to_gridpos(self.x, self.y)
             binary = map_utils.filter_map(m)
             # b. get rectangle around the map
             corners, area, contours = map_utils.get_bounding_rect(binary)
-            print(area)
+
             # c. find zones 
-            path = []
+            # zones are ordered the following way: (recycling area, zone2, zone3, zone4)
             if not self.initial_zones_found and area > AREA_THRESHOLD:
                # corners found are valid and we can find the 'initial zones' 
-                self.zones = map_utils.get_initial_zones(corners, robot_pos)
+                self.zones = map_utils.get_initial_zones(corners, self.robot_pos)
                 self.initial_zones_found = True
                 return
+
             if self.initial_zones_found: 
-                # zones are ordered the following way 
-                # (recycling area, zone2, zone3, zone4)
+                # update zones with new map
                 new_zones = map_utils.get_zones_from_previous(corners, self.zones)
                 self.zones = new_zones
 
-                ### Path Planing
-                # those targets are ordered points
+                ## Path Planing
+                # d. get targets positions for each zones
                 targets = map_utils.get_targets_from_zones(np.array(self.zones), target_weight = 0.7)
-                goal = targets[self.current_target_index]
+
+                # e. rrt_star path planning
+                self.goal = targets[self.current_target_index]
                 rrt = RRTStar(
-                        start = robot_pos,
-                        goal = goal,
+                        start = self.robot_pos,
+                        goal = self.goal,
                         binary_obstacle = binary,
                         rand_area = [0, 500],
                         expand_dis = 50,
@@ -123,28 +138,63 @@ class Controller1(Node):
                         goal_sample_rate = 5,
                         max_iter = 500,
                         )
-                path = rrt.planning(animation = False)
+                self.path = np.array(rrt.planning(animation = False))
 
-                ### Path Tracker
-                # 1. end condition
-                dist = controller_utils.get_distance(robot_pos, goal)
-                if dist < MIN_DIST_TO_GOAL:
-                    # end of travel mode
-                    self.state = "random_search"
-                    return
-                # 2. Else, a new state machine takes place ! 
-                
+        ### II. Path Tracking
+        # to remove later
+        diff = 0
+
+        # 0. end condition
+        if self.path is None or self.goal is None: return 
+
+        # 1. state transition condition
+        dist = controller_utils.get_distance(self.robot_pos, self.goal)
+        if dist < MIN_DIST_TO_GOAL:
+            # end of travel mode
+            self.state = "random_search"
+            return
+
+        # 2. Else, compute motors commands
+        # a. estimate the path's orientation
+        path_orientation = controller_utils.get_path_orientation(self.path)
+        diff = (path_orientation - self.theta + 180) % 360 - 180
+        # b. decide the sub-state 
+        if abs(diff) > MIN_ANGLE_DIFF:
+            ## ROTATION CORRECTION SUB-STATE
+            msg = String()
+            if diff > 0: 
+                # must turn to the right
+                msg.data = "d"
+            else: 
+                # must turn to the left
+                msg.data = "a"
+            self.uart_publisher.publish(msg)
+         else:
+            ## FORWARD SUB-STATE
+            msg = String()
+            msg.data = "w"
+            self.uart_publisher.publish(msg)
+
+        # finally. make and save the nice figure
+        if self.is_saving and int(map_message.index) % CONTROLLER_TIME_CONSTANT == 0 and not self.path is None:
+            name = self.map_name+str(self.saving_index)
+            save_name = "/home/arthur/dev/ros/data/maps/rects/"+name+".png"
+            map_utils.make_nice_plot(
+                    binary, 
+                    save_name, 
+                    self.robot_pos, 
+                    self.theta, 
+                    contours, 
+                    corners, 
+                    self.zones, self.path.astype(int),
+                    text = "diff = {:.2f}".format(diff)
+                    )
+            # np.save("/home/arthur/dev/ros/data/maps/"+name+".npy", m)
+            self.saving_index += 1
 
 
-
-
-            # d. make and save the nice figure
-            if self.is_saving:
-                save_name = "/home/arthur/dev/ros/data/maps/rects/"+self.map_name+str(self.saving_index)+".png"
-                map_utils.make_nice_plot(binary, save_name, robot_pos, self.theta, contours, corners, self.zones, np.array(path).astype(int))
-                np.save("/home/arthur/dev/ros/data/maps/" + self.map_name + str(self.saving_index) +  ".npy", m)
-                self.saving_index += 1
-
+    def random_search_mode(self):
+        pass
 
 
     def listener_callback_position(self, pos):
@@ -153,7 +203,7 @@ class Controller1(Node):
         # receive the position from the SLAM
         self.x = pos.x / 1000
         self.y = pos.y / 1000
-        self.theta = pos.theta
+        self.theta = pos.theta % 360
 
         
     def listener_arduino_status(self, status_msg):

@@ -4,6 +4,16 @@ First Robot Autonomous Controller is a State Machine performing Random Walk to C
 
 ![controller](imgs/controller1.png)
 
+## A word about the map representation
+
+Our map is represented using a 2d occupancy grid, one key problem is the origin of this map.
+
+One the numpy array, the first index represents the rows (i.e. the y-coordinates) and the second index represents the the columns, hence the x-position of the array.
+- if the map is plot using `plt.imshow` then the origin is at the lower-left corner
+- if the map is plot using `cv2.save()` then the origin is at the upper-left corner
+
+About the positions and the orientation within the map, it's defined with the origin being the horizontal line and positive rotations clokwise.
+
 ## State Machine Description
 
 ### Travel Mode
