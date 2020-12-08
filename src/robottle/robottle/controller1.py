@@ -74,6 +74,7 @@ class Controller1(Node):
         self.goal = None
         self.robot_pos = None
         self.current_target_index = 0
+        self.rotation_timer = None
 
         # set saving state (if True, then it will save some maps to a folder when they can be analysed)
         args = sys.argv
@@ -133,14 +134,14 @@ class Controller1(Node):
     def listener_callback_detectnet(self, msg):
         """Called when a bottle is detected by neuron network
         """
-        if self.state == RANDOM_SEARCH_MODE
+        if self.state == RANDOM_SEARCH_MODE:
             # find the angle of the closest detected bottle
-            angle = vision_utils.
-            is_bottle_infront = False
-            if is_bottle_infront:
-                # random_seach_mode --> bottle_picking_mode
-                self.start_bottle_picking_mode()
-                return 
+            angle = vision_utils.get_angle_of_closest_bottle([])
+            # estimate remaining time of rotation
+            time_to_rotate = controller_utils.get_rotation_time(angle)
+            # start a timer for this time
+            if not self.rotation_timer is None: self.destroy_timer(self.rotation_timer)
+            self.create_timer(time_to_rotate, self.rotation_timer_callback)
 
         if self.state == BOTTLE_PICKING_MODE:
             # look if the bottle in range
@@ -149,6 +150,11 @@ class Controller1(Node):
                 # try to catch it - and wait for a response
                 self.uart_publisher.publish(String(data = "x"))
                 self.uart_publisher.publish(String(data = "o"))
+
+    def rotation_timer_callback(self):
+        """Called when robot has turned enough to pick the bottle"""
+        self.start_bottle_picking_mode()
+        self.destroy_timer(self.rotation_timer)
 
 
 
@@ -244,7 +250,8 @@ class Controller1(Node):
         if self.n_random_search == N_RANDOM_SEARCH_MAX:
             # no more random walk can happen
             # let's enter travel mode again
-            pass 
+            self.state = TRAVEL_MODE
+            return 
 
         self.state = RANDOM_SEARCH_MODE
         self.uart_publisher.publish(String(data = "d"))
