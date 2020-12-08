@@ -8,7 +8,7 @@ from vision_msgs.msg import Detection2DArray
 from interfaces.msg import Map, Position, Status
 from std_msgs.msg import String
 
-from robottle_utils import map_utils, controller_utils
+from robottle_utils import map_utils, controller_utils, vision_utils
 from robottle_utils.rrt_star import RRTStar
 
 ### STATE MACHINE 
@@ -17,6 +17,7 @@ INITIAL_ROTATION_MODE = "initial_rotation_mode"
 TRAVEL_MODE = "travel_mode"
 RANDOM_SEARCH_MODE = "random_search_mode"
 BOTTLE_PICKING_MODE = "bottle_picking_mode"
+BOTTLE_RELEASE_MODE = "bottle_release_mode"
 
 ### HYPERPARAMETERS
 
@@ -32,9 +33,8 @@ MIN_ANGLE_DIFF = 15 # [deg]
 INITIAL_ROTATION_TIME = 10 # [s]
 # maximum number of times controller enters random search mode inside 1 zone
 N_RANDOM_SEARCH_MAX = 5
-
-# Array containing zones to visit
-TARGETS_TO_VISIT = [2,3]
+# Array containing indices of zones to visit: note that zones = [r, z2, z3, z4]
+TARGETS_TO_VISIT = [1,0,2,0]
 
 class Controller1(Node):
     """
@@ -73,7 +73,7 @@ class Controller1(Node):
         self.path = None
         self.goal = None
         self.robot_pos = None
-        self.current_target_index = 2
+        self.current_target_index = 0
 
         # set saving state (if True, then it will save some maps to a folder when they can be analysed)
         args = sys.argv
@@ -89,7 +89,6 @@ class Controller1(Node):
         self.state = INITIAL_ROTATION_MODE
         time.sleep(3)
         self.uart_publisher.publish(String(data = "r"))
-
         
 
     ### CALLBACKS
@@ -109,17 +108,16 @@ class Controller1(Node):
 
     def listener_arduino_status(self, status_msg):
         """Called when Arduino send something to Jetson
+        Messages type
+        0: ERROR
+        1: SUCESS
+        2: IN PROGRESS
         """
         status = status_msg.status
         # state machine logic
         if self.state == INITIAL_ROTATION_MODE:
-            if status == 0:
-                print("Controller says. 'hm, let me see what i can do...'")
-            elif status == 1:
-                print("Controller says: 'great job bob, now let's get you movin around ! '")
+            if status == 1:
                 self.state = TRAVEL_MODE
-            elif status == 2:
-                print("Controller says: 'ok, i am waiting for your answer' ")
 
         if self.state == BOTTLE_PICKING_MODE:
             if status == 0: # ERROR --> we must do something
@@ -128,11 +126,16 @@ class Controller1(Node):
             elif status == 1: # SUCCESS --> bottle was probably picked
                 self.start_random_search_mode()
 
+        if self.state == BOTTLE_RELEASE_MODE:
+            if status == 1: 
+                self.state = TRAVEL_MODE
+
     def listener_callback_detectnet(self, msg):
         """Called when a bottle is detected by neuron network
         """
         if self.state == RANDOM_SEARCH_MODE
-            # look if a bottle is detected in front of the robot
+            # find the angle of the closest detected bottle
+            angle = vision_utils.
             is_bottle_infront = False
             if is_bottle_infront:
                 # random_seach_mode --> bottle_picking_mode
@@ -186,17 +189,9 @@ class Controller1(Node):
                 targets = map_utils.get_targets_from_zones(np.array(self.zones), target_weight = 0.7)
 
                 # e. rrt_star path planning
-                self.goal = targets[self.current_target_index]
-                rrt = RRTStar(
-                        start = self.robot_pos,
-                        goal = self.goal,
-                        binary_obstacle = binary,
-                        rand_area = [0, 500],
-                        expand_dis = 50,
-                        path_resolution = 1,
-                        goal_sample_rate = 5,
-                        max_iter = 500,
-                        )
+                self.goal = targets[TARGETS_TO_VISIT[self.current_target_index]]
+                rrt = RRTStar(start = self.robot_pos, goal = self.goal,binary_obstacle = binary,rand_area = [0, 500],
+                        expand_dis = 50,path_resolution = 1,goal_sample_rate = 5,max_iter = 500)
                 self.path = np.array(rrt.planning(animation = False))
 
         ### II. Path Tracking
@@ -209,26 +204,26 @@ class Controller1(Node):
         # 1. state transition condition
         dist = controller_utils.get_distance(self.robot_pos, self.goal)
         if dist < MIN_DIST_TO_GOAL:
-            # travel_mode --> random_search mode
-            self.start_random_search_mode()
-            self.subscription_camera = self.create_subscription(Detection2DArray, '/detectnet/detections',
-                self.listener_callback_detectnet, 1000)
+            # robot arrived to destination
+            if self.goal in [1,2]: # robot in zone 2 or zone 3
+                # travel_mode --> random_search mode
+                self.start_random_search_mode()
+                self.subscription_camera = self.create_subscription(Detection2DArray, '/detectnet/detections',
+                    self.listener_callback_detectnet, 1000)
+            elif self.goal == 0:
+                # travel_mode --> release_bottle_mode
+                self.start_bottle_release_mode()
+            self.current_target_index += 1
             return
 
         # 2. Else, compute motors commands
-        # a. estimate the path's orientation
         path_orientation = controller_utils.get_path_orientation(self.path)
         diff = (path_orientation - self.theta + 180) % 360 - 180
-        # b. decide the sub-state 
         if abs(diff) > MIN_ANGLE_DIFF:
             ## ROTATION CORRECTION SUB-STATE
             msg = String()
-            if diff > 0: 
-                # must turn to the right
-                msg.data = "d"
-            else: 
-                # must turn to the left
-                msg.data = "a"
+            if diff > 0: msg.data = "d"
+            else: msg.data = "a"
             self.uart_publisher.publish(msg)
         else:
             ## FORWARD SUB-STATE
@@ -238,16 +233,8 @@ class Controller1(Node):
         if self.is_saving and int(map_message.index) % CONTROLLER_TIME_CONSTANT == 0 and not self.path is None:
             name = self.map_name+str(self.saving_index)
             save_name = "/home/arthur/dev/ros/data/maps/rects/"+name+".png"
-            map_utils.make_nice_plot(
-                    binary, 
-                    save_name, 
-                    self.robot_pos, 
-                    self.theta, 
-                    contours, 
-                    corners, 
-                    self.zones, self.path.astype(int),
-                    text = "diff = {:.2f}".format(diff)
-                    )
+            map_utils.make_nice_plot(binary, save_name, self.robot_pos, self.theta, contours, corners, 
+                    self.zones, self.path.astype(int), text = "diff = {:.2f}".format(diff))
             # np.save("/home/arthur/dev/ros/data/maps/"+name+".npy", m)
             self.saving_index += 1
 
@@ -268,6 +255,12 @@ class Controller1(Node):
         self.state = BOTTLE_PICKING_MODE
         # would be nice to go slower here
         self.uart_publisher.publish(String(data = "w"))
+
+    def start_bottle_release_mode(self):
+        """Will start the bottle picking mode"""
+        self.state = BOTTLE_RELEASE_MODE
+       
+        # todo !!! 
 
 
 

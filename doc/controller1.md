@@ -16,12 +16,34 @@ About the positions and the orientation within the map, it's defined with the or
 
 ## State Machine Description
 
+A state machine is implemented and contains several state, describe here
+
+- INITIAL ROTATION MODE 
+- TRAVEL MODE 
+- RANDOM SEARCH MODE 
+- BOTTLE PICKING MODE 
+- BOTTLE RELEASE MODE
+
+What defines the 'pace' of the controller are the different callbacks from other ROS Node. As they play an important role for the state machine, let me recall which those are
+
+- SLAM callback: it's in charge of calling the TRAVEL MODE.
+- Camera callback: it's in charge of the robot in two situations
+    - RANDOM SEARCH MODE: it says the angles where are bottles, to estimate the remaining rotation time required.
+    - BOTTLE PICKING MODE: it says when the bottle that is in front of the robot is in range to be picked by the arms.
+- Arduino callback: it's in charge of receiving messages from the arduino
+    - BOTTLE PICKING MODE: after the robot reached the bottle and tried to picked it
+    - BOTTLE RELEASE MODE: after the robot performed a rotation and a driving backward and have asked to open the back door
+
 ### Travel Mode
 
 In this state, the robot must travel to another zone - where we know it's going to make more points. Several situations can occurs:
-1. The robot will go pick bottles in another new (*not explored*) zone: **exploration mode**. For now, we assume in this mode that the robot is in the recycling area and that it is empty. However, we don't assume any orientation of the robot. 
-2. The robot will come back at the **recycling area** to drop its bottles: **return mode** 
+1. The robot will go pick bottles in another new (*not explored*) zone: **exploration mode**. For now, we assume in this mode that the robot is in the recycling area and that it is empty. 
+2. The robot will come back at the **recycling area** to drop its bottles: **return mode**. 
 
+Implementation details
+- the function `travel_mode` which is in charge of the **path planning** (computed once in a while) and of the **path tracking**. The function is called by the map callback if the state is activated.
+
+**Discussions**
 
 What information does the algorithm needs to **make the robot travel to the desired zone** ?
 - (i1) = **the desired zone**: it is easy to get those, we simply keep an array `desired_zones` and `visited_zones`, then make a substraction of those 2 sets to extract where we want to go.
@@ -37,7 +59,8 @@ So what data can we use to deduce (i3) if we assume to have at disposition (i1) 
     - the real map is a square
     - the real map contains a ramp in a given position
     - the real map has 4 color beacons
-- Vision *service* (in the ROS sense) to take a picture, and returns the orientation towards one beacon if one is detected (this service is going to be called at a certain frequency)
+
+We find those points using the `map_analysis` functions. Those are well documented and explains all the steps. 
 
 **Path planning and path following**
 
