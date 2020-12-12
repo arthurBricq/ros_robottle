@@ -1,3 +1,4 @@
+import time
 
 # imports for ROS
 import rclpy
@@ -50,7 +51,7 @@ class Slam(Node):
             LidarData,
             'lidar_data',
             self.listener_callback_lidar,
-            1000)
+            100)
         self.subscription2  # prevent unused variable warning
 
         # Create third subscription (Motor speeds to compute robot pose change)
@@ -77,7 +78,10 @@ class Slam(Node):
         # DEBUG parameters
         self.map_index = 0
         self.previous_pos = (0,0,0)
+        self.s = time.time()
         print("SLAM is starting")
+
+
 
 
     def listener_callback_motorsspeed(self, msg):
@@ -91,7 +95,7 @@ class Slam(Node):
         dx_left = msg.RADIUS * msg.left * (0.1047) * msg.time_delta
         dx_right = msg.RADIUS * msg.right * (0.1047) * msg.time_delta
         delta_r = 1/2 * (dx_left + dx_right) # [mm]
-        delta_d =  - (dx_right - dx_left)
+        delta_d = - (dx_right - dx_left)
         delta_theta = np.arctan(delta_d / msg.LENGTH) * 57.2958 # [deg]
         self.robot_pose_change += [delta_r, delta_theta, msg.time_delta]
 
@@ -103,7 +107,9 @@ class Slam(Node):
 
         # Update SLAM with current Lidar scan and scan angles if adequate
         if len(distances) > MIN_SAMPLES:
-            print("Slam Update with Lidar Data ", msg.index)
+            e = time.time()
+            print("Slam Update with Lidar Data ",e-self.s)
+            self.s = e
             self.slam.update(distances, scan_angles_degrees=angles, pose_change = tuple(self.robot_pose_change))
             # self.analyse_odometry()
             self.robot_pose_change = np.array([0.0,0.0,0.0])

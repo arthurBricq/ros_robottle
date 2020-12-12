@@ -41,7 +41,7 @@ class LidarPublisher(Node):
         msg = LidarData()
         msg.angles = angles   
         msg.distances = distances  
-        msg.index = i
+        msg.i = self.i 
 
         # publish the message
         self.publisher_.publish(msg)
