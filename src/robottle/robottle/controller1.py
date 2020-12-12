@@ -91,6 +91,7 @@ class Controller1(Node):
         time.sleep(3)
         self.uart_publisher.publish(String(data = "r"))
         print("Controller is ready")
+        self.state = TRAVEL_MODE
         
 
     ### CALLBACKS
