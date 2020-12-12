@@ -236,15 +236,16 @@ class Controller1(Node):
         # 2. Else, compute motors commands
         path_orientation = controller_utils.get_path_orientation(self.path)
         diff = (path_orientation - self.theta + 180) % 360 - 180
-        print(map_message.index, "Diff: ", diff)
         if abs(diff) > MIN_ANGLE_DIFF:
             ## ROTATION CORRECTION SUB-STATE
+            print("rotation correction: ", diff)
             msg = String()
             if diff > 0: msg.data = "d"
             else: msg.data = "a"
             self.uart_publisher.publish(msg)
         else:
             ## FORWARD SUB-STATE
+            print("going forward")
             self.uart_publisher.publish(String(data = "w"))
 
         # finally. make and save the nice figure
