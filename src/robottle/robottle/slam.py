@@ -103,7 +103,7 @@ class Slam(Node):
 
         # Update SLAM with current Lidar scan and scan angles if adequate
         if len(distances) > MIN_SAMPLES:
-            self.get_logger().info("SLAM Update")
+            print("Slam Update with Lidar Data ", msg.index)
             self.slam.update(distances, scan_angles_degrees=angles, pose_change = tuple(self.robot_pose_change))
             # self.analyse_odometry()
             self.robot_pose_change = np.array([0.0,0.0,0.0])
