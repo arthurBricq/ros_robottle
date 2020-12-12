@@ -24,7 +24,9 @@ def generate_launch_description():
         Node( 
             package="robottle",
             node_executable="slam",
-            name="slam"
+            name="slam",
+            output="screen",
+            emulate_tty=True
             ),
         Node(
             package="robottle",
