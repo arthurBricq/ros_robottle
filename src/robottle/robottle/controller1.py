@@ -90,6 +90,7 @@ class Controller1(Node):
         self.state = INITIAL_ROTATION_MODE
         time.sleep(3)
         self.uart_publisher.publish(String(data = "r"))
+        print("Controller is ready")
         
 
     ### CALLBACKS
