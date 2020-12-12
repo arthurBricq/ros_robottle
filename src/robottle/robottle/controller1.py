@@ -115,6 +115,7 @@ class Controller1(Node):
         self.x = pos.x / 1000
         self.y = pos.y / 1000
         self.theta = pos.theta % 360
+        print("({}) theta = {}".format((int(map_message.index), self.theta))
 
     def listener_arduino_status(self, status_msg):
         """Called when Arduino send something to Jetson
@@ -239,7 +240,7 @@ class Controller1(Node):
         diff = (path_orientation - self.theta + 180) % 360 - 180
         if abs(diff) > MIN_ANGLE_DIFF:
             ## ROTATION CORRECTION SUB-STATE
-            print("rotation correction: ", diff, " and theta = ", self.theta)
+            # print("rotation correction: ", diff, " and theta = ", self.theta)
             msg = String()
             if diff > 0: msg.data = "d"
             else: msg.data = "a"
@@ -254,7 +255,8 @@ class Controller1(Node):
             name = self.map_name+str(self.saving_index)
             save_name = "/home/arthur/dev/ros/data/maps/rects/"+name+".png"
             map_utils.make_nice_plot(binary, save_name, self.robot_pos, self.theta, contours, corners, 
-                    self.zones, self.path.astype(int), text = "diff = {:.2f}".format(diff))
+                    self.zones, self.path.astype(int), 
+                    text = "({}) diff = {:.2f}".format(int(map_message.index), diff))
             # np.save("/home/arthur/dev/ros/data/maps/"+name+".npy", m)
             self.saving_index += 1
 
