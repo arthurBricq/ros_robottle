@@ -239,7 +239,7 @@ class Controller1(Node):
         diff = (path_orientation - self.theta + 180) % 360 - 180
         if abs(diff) > MIN_ANGLE_DIFF:
             ## ROTATION CORRECTION SUB-STATE
-            print("rotation correction: ", diff)
+            print("rotation correction: ", diff, " and theta = ", self.theta)
             msg = String()
             if diff > 0: msg.data = "d"
             else: msg.data = "a"
