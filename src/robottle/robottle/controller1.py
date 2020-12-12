@@ -149,7 +149,7 @@ class Controller1(Node):
             if is_bottle_in_range:
                 # try to catch it - and wait for a response
                 self.uart_publisher.publish(String(data = "x"))
-                self.uart_publisher.publish(String(data = "o"))
+                self.uart_publisher.publish(String(data = "p"))
 
     def rotation_timer_callback(self):
         """Called when robot has turned enough to pick the bottle"""
@@ -211,6 +211,7 @@ class Controller1(Node):
         dist = controller_utils.get_distance(self.robot_pos, self.goal)
         if dist < MIN_DIST_TO_GOAL:
             # robot arrived to destination
+            self.current_target_index += 1
             if self.goal in [1,2]: # robot in zone 2 or zone 3
                 # travel_mode --> random_search mode
                 self.start_random_search_mode()
@@ -219,12 +220,12 @@ class Controller1(Node):
             elif self.goal == 0:
                 # travel_mode --> release_bottle_mode
                 self.start_bottle_release_mode()
-            self.current_target_index += 1
             return
 
         # 2. Else, compute motors commands
         path_orientation = controller_utils.get_path_orientation(self.path)
         diff = (path_orientation - self.theta + 180) % 360 - 180
+        print("Diff: ", diff)
         if abs(diff) > MIN_ANGLE_DIFF:
             ## ROTATION CORRECTION SUB-STATE
             msg = String()
