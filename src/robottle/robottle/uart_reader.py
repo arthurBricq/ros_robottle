@@ -60,7 +60,6 @@ class UARTReader(Node):
                         elif data == '\r': # the number is finished
                             speed = uart_utils.get_speed(datas)
                             datas = []
-                            self.get_logger().info("speed {} is {} !".format(direction, speed))
                             # construct the ROS message here
                             if direction == 'l': msg.left = speed
                             elif direction == 'r': msg.right = speed
