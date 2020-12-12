@@ -115,7 +115,7 @@ class Controller1(Node):
         self.x = pos.x / 1000
         self.y = pos.y / 1000
         self.theta = pos.theta % 360
-        print("({}) theta = {}".format((int(map_message.index), self.theta))
+        print("({}) theta = {}".format((int(map_message.index), self.theta)))
 
     def listener_arduino_status(self, status_msg):
         """Called when Arduino send something to Jetson
