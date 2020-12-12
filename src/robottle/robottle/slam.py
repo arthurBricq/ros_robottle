@@ -81,9 +81,6 @@ class Slam(Node):
         self.s = time.time()
         print("SLAM is starting")
 
-
-
-
     def listener_callback_motorsspeed(self, msg):
         """
         Must compute the robot pose change since the last time the data was collected from the motor

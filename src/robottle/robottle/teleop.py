@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import rclpy
 from rclpy.node import Node
+from rplidar import RPLidar as Lidar
 
 from std_msgs.msg import String
 from interfaces.srv import FindMapCorner
@@ -16,9 +17,14 @@ class TeleopRobotController(Node):
         print("Type(w,a,s,d,x) to move ")
         print("Type 'q' to quit the node")
         print("Type 'p' to take a picture now")
+        print("Type 'k' to activate image detection")
+        print("Type 'l' to de-activate image detection")
+        print("Type 'm' to start the Motors")
+        print("Type 'n' to stop the Motors")
 
         self.uart_publisher = self.create_publisher(String, 'uart_commands', 1000)
         self.cam_control_publisher = self.create_publisher(String, 'detectnet/camera_control', 1000)
+
         self.map_corner_client = self.create_client(FindMapCorner, "find_map_corner")
 
         try:
@@ -27,9 +33,19 @@ class TeleopRobotController(Node):
                 if key == 'p':
                     self.send_service()
                 elif key == 'l':
+                    # stop detection
                     self.cam_control_publisher.publish(String(data="destroy"))
                 elif key == 'k':
+                    # activate detection
                     self.cam_control_publisher.publish(String(data="create"))
+                elif key == 'm':
+                    # start the motor
+                    lidar = Lidar('/dev/ttyUSB0')
+                    lidar.start_motor()
+                elif key == 'n':
+                    # stop the motor
+                    lidar = Lidar('/dev/ttyUSB0')
+                    lidar.stop_motor()
                 elif key == 'q':
                     break
                 else:

@@ -8,7 +8,6 @@ from breezyslam.sensors import RPLidarA1 as LaserModel
 from breezyslam.algorithms import RMHC_SLAM
 from rplidar import RPLidar as Lidar
 
-
 MAP_SIZE_PIXELS         = 500
 MAP_SIZE_METERS         = 10
 LIDAR_DEVICE = '/dev/ttyUSB0'
@@ -28,10 +27,10 @@ class LidarPublisher(Node):
 
         # launch infinite loop here 
         while True:
-            self.timer_callback()
+            self.read_lidar()
 
 
-    def timer_callback(self):
+    def read_lidar(self):
         # get the data from the lidar
         items = [item for item in next(self.iterator)]
         angles    = [item[1] for item in items]
@@ -45,6 +44,7 @@ class LidarPublisher(Node):
             msg.i = self.i 
             self.publisher_.publish(msg)
         self.i += 1
+
 
 
 def main(args=None):
