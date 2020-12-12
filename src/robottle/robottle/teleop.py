@@ -18,6 +18,7 @@ class TeleopRobotController(Node):
         print("Type 'p' to take a picture now")
 
         self.uart_publisher = self.create_publisher(String, 'uart_commands', 1000)
+        self.cam_control_publisher = self.create_publisher(String, 'detectnet/camera_control', 1000)
         self.map_corner_client = self.create_client(FindMapCorner, "find_map_corner")
 
         try:
@@ -25,6 +26,10 @@ class TeleopRobotController(Node):
                 key = self.getKey()
                 if key == 'p':
                     self.send_service()
+                elif key == 'l':
+                    self.cam_control_publisher.publish(String(data="destroy"))
+                elif key == 'k':
+                    self.cam_control_publisher.publish(String(data="create"))
                 elif key == 'q':
                     break
                 else:

@@ -22,11 +22,6 @@ def generate_launch_description():
             output="screen",
             emulate_tty=True
             ),
-        Node( 
-            package="robottle",
-            node_executable="vision_analyser",
-            name="vision_analyser"
-            ),
         ### INTERNAL NODES
         Node( 
             package="robottle",

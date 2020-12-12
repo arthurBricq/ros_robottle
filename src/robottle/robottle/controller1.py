@@ -58,9 +58,17 @@ class Controller1(Node):
         self.subscription3 = self.create_subscription(Status,'arduino_status',
             self.listener_arduino_status,1000)
         self.subscription3  
+
+        # Create subscription for detectnet
+        self.subscription_camera = self.create_subscription(Detection2DArray, '/detectnet/detections',
+            self.listener_callback_detectnet, 1000)
         
         # Create a publication for uart commands
         self.uart_publisher = self.create_publisher(String, 'uart_commands', 1000)
+        
+        # create publisher for controlling the camera
+        self.cam_publisher = self.create_publisher(String, 'detectnet/camera_control', 1000)
+        self.cam_publisher.publish(String(data="destroy"))
 
         # keep track of where is the robot within the class
         self.x = 0
@@ -91,7 +99,6 @@ class Controller1(Node):
         time.sleep(3)
         self.uart_publisher.publish(String(data = "r"))
         print("Controller is ready")
-        self.state = TRAVEL_MODE
         
 
     ### CALLBACKS
@@ -155,8 +162,8 @@ class Controller1(Node):
 
     def rotation_timer_callback(self):
         """Called when robot has turned enough to pick the bottle"""
-        self.start_bottle_picking_mode()
         self.destroy_timer(self.rotation_timer)
+        self.start_bottle_picking_mode()
 
 
 
@@ -215,10 +222,10 @@ class Controller1(Node):
             # robot arrived to destination
             self.current_target_index += 1
             if self.goal in [1,2]: # robot in zone 2 or zone 3
+                # activate camera detection
+                self.cam_publisher.publish(String(data="create"))
                 # travel_mode --> random_search mode
                 self.start_random_search_mode()
-                self.subscription_camera = self.create_subscription(Detection2DArray, '/detectnet/detections',
-                    self.listener_callback_detectnet, 1000)
             elif self.goal == 0:
                 # travel_mode --> release_bottle_mode
                 self.start_bottle_release_mode()
@@ -253,6 +260,7 @@ class Controller1(Node):
         if self.n_random_search == N_RANDOM_SEARCH_MAX:
             # no more random walk can happen
             # let's enter travel mode again
+            self.cam_publisher.publish(String(data="destroy"))
             self.state = TRAVEL_MODE
             return 
 
