@@ -38,13 +38,12 @@ class LidarPublisher(Node):
         distances = [item[2] for item in items]
 
         # create a message
-        msg = LidarData()
-        msg.angles = angles   
-        msg.distances = distances  
-        msg.i = self.i 
-
-        # publish the message
-        self.publisher_.publish(msg)
+        if self.i % 2:
+            msg = LidarData()
+            msg.angles = angles   
+            msg.distances = distances  
+            msg.i = self.i 
+            self.publisher_.publish(msg)
         self.i += 1
 
 
