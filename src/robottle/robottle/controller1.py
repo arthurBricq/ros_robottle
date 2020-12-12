@@ -34,7 +34,7 @@ INITIAL_ROTATION_TIME = 10 # [s]
 # maximum number of times controller enters random search mode inside 1 zone
 N_RANDOM_SEARCH_MAX = 5
 # Array containing indices of zones to visit: note that zones = [r, z2, z3, z4]
-TARGETS_TO_VISIT = [1,0,2,0]
+TARGETS_TO_VISIT = [2,0,1,0]
 
 class Controller1(Node):
     """
@@ -221,6 +221,7 @@ class Controller1(Node):
         # 1. state transition condition
         dist = controller_utils.get_distance(self.robot_pos, self.goal)
         if dist < MIN_DIST_TO_GOAL:
+            print("leaving travel mode")
             # robot arrived to destination
             self.current_target_index += 1
             if self.goal in [1,2]: # robot in zone 2 or zone 3
