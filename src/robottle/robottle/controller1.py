@@ -227,7 +227,7 @@ class Controller1(Node):
         # 2. Else, compute motors commands
         path_orientation = controller_utils.get_path_orientation(self.path)
         diff = (path_orientation - self.theta + 180) % 360 - 180
-        print("Diff: ", diff)
+        print(map_message.index, "Diff: ", diff)
         if abs(diff) > MIN_ANGLE_DIFF:
             ## ROTATION CORRECTION SUB-STATE
             msg = String()
