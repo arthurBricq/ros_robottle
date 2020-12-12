@@ -105,9 +105,7 @@ class Controller1(Node):
     # callbacks are the entry points to all other methods
 
     def listener_callback_map(self, map_message):
-        print(self.theta)
-        print(int(map_message.index))
-        print("{} - theta = {}".format((int(map_message.index), self.theta)))
+        print("{} - theta = {}".format(int(map_message.index), self.theta)))
         if self.state == TRAVEL_MODE: 
             self.travel_mode(map_message)
 
