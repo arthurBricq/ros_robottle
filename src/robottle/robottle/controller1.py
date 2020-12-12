@@ -192,6 +192,7 @@ class Controller1(Node):
                # corners found are valid and we can find the 'initial zones' 
                 self.zones = map_utils.get_initial_zones(corners, self.robot_pos)
                 self.initial_zones_found = True
+                print("Initial zones found")
                 return
 
             if self.initial_zones_found: 
@@ -208,6 +209,7 @@ class Controller1(Node):
                 rrt = RRTStar(start = self.robot_pos, goal = self.goal,binary_obstacle = binary,rand_area = [0, 500],
                         expand_dis = 50,path_resolution = 1,goal_sample_rate = 5,max_iter = 500)
                 self.path = np.array(rrt.planning(animation = False))
+                print("Path found")
 
         ### II. Path Tracking
         # to remove later
