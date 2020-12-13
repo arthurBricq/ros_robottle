@@ -102,6 +102,10 @@ Here are some commands quite useful with the ROS setup
 
 `ros2 bag record -o name /lidar_data /motors_speed`
 
+- mount the file with all the pictures
+
+`sshfs arthur@M00e04c3fd2f6.dyn.epfl.ch:/home/arthur/dev/ros/data/maps/rects/ /home/arthur/dev/ros/ros_robottle/mount`
+
 ## Differences between Jetson and Personal Computer
 
 There are differences between the different setups, because the Jetson has to do things that I will not try to replicate at home (and just there results)
