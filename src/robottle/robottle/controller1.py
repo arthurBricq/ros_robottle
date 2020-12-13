@@ -128,6 +128,7 @@ class Controller1(Node):
         # state machine logic
         if self.state == INITIAL_ROTATION_MODE:
             if status == 1:
+                print("Initial rotation mode is finished")
                 self.state = TRAVEL_MODE
 
         if self.state == BOTTLE_PICKING_MODE:
@@ -179,6 +180,7 @@ class Controller1(Node):
         ### I. Path planning
         # Once in a while, start the path planning logic
         if int(map_message.index) % CONTROLLER_TIME_CONSTANT == 0: 
+            print("Starting map analysis")
             ## Map analysis 
             # a. filter the map 
             m = map_utils.get_map(map_data)
