@@ -19,6 +19,10 @@ RANDOM_SEARCH_MODE = "random_search_mode"
 BOTTLE_PICKING_MODE = "bottle_picking_mode"
 BOTTLE_RELEASE_MODE = "bottle_release_mode"
 
+TIME_STATE_OFF = "0"
+TIMER_STATE_ON_TRAVEL_MODE = "1"
+TIMER_STATE_ON_RANDOM_SEARCH = "2"
+
 ### HYPERPARAMETERS
 
 # min area that a rotated rectangle must contain to be considered as valid
@@ -79,6 +83,7 @@ class Controller1(Node):
         self.initial_zones_found = False
         self.zones = []
         self.path = []
+        self.targets = []
         self.goal = None
         self.robot_pos = None
         self.current_target_index = 0
@@ -99,6 +104,9 @@ class Controller1(Node):
         time.sleep(0)
         self.uart_publisher.publish(String(data = "r"))
         print("Controller is ready")
+
+        # for debugging
+        self.state = TRAVEL_MODE
         
 
     ### CALLBACKS
@@ -148,11 +156,8 @@ class Controller1(Node):
         if self.state == RANDOM_SEARCH_MODE:
             # find the angle of the closest detected bottle
             angle = vision_utils.get_angle_of_closest_bottle([])
-            # estimate remaining time of rotation
-            time_to_rotate = controller_utils.get_rotation_time(angle)
-            # start a timer for this time
-            if not self.rotation_timer is None: self.destroy_timer(self.rotation_timer)
-            self.create_timer(time_to_rotate, self.rotation_timer_callback)
+            # rotation timer
+            self.start_rotation_timer(diff, TIMER_STATE_ON_RANDOM_SEARCH)
 
         if self.state == BOTTLE_PICKING_MODE:
             # look if the bottle in range
@@ -164,8 +169,19 @@ class Controller1(Node):
 
     def rotation_timer_callback(self):
         """Called when robot has turned enough to pick the bottle"""
+        print("destroying timer")
         self.destroy_timer(self.rotation_timer)
-        self.start_bottle_picking_mode()
+        print("logic now", self.rotation_timer)
+        if self.rotation_timer_state == TIMER_STATE_ON_RANDOM_SEARCH:
+            # change timer state and go to bottle picking mode.
+            self.rotation_timer_state = TIME_STATE_OFF
+            self.start_bottle_picking_mode()
+        if self.rotation_timer_state == TIMER_STATE_ON_TRAVEL_MODE:
+            # change timer state and start moving forward.
+            self.rotation_timer_state = TIME_STATE_OFF
+            print("Rotated time reached. Let's move forward.")
+            self.uart_publisher.publish(String(data="w"))
+
 
 
 
@@ -175,14 +191,13 @@ class Controller1(Node):
         """Travel mode of the controller. 
         This function is called by the map listener's callback.
         """
-        map_data = bytearray(map_message.map_data)
-
         ### I. Path planning
         # Once in a while, start the path planning logic
         if int(map_message.index) % CONTROLLER_TIME_CONSTANT == 0: 
             print("Starting map analysis")
             ## Map analysis 
             # a. filter the map 
+            map_data = bytearray(map_message.map_data)
             m = map_utils.get_map(map_data)
             self.robot_pos = map_utils.pos_to_gridpos(self.x, self.y)
             binary = map_utils.filter_map(m)
@@ -205,12 +220,12 @@ class Controller1(Node):
 
                 ## Path Planing
                 # d. get targets positions for each zones
-                targets = map_utils.get_targets_from_zones(np.array(self.zones), target_weight = 0.7)
+                self.targets = map_utils.get_targets_from_zones(np.array(self.zones), target_weight = 0.6)
 
                 # e. rrt_star path planning
-                self.goal = targets[TARGETS_TO_VISIT[self.current_target_index]]
+                self.goal = self.targets[TARGETS_TO_VISIT[self.current_target_index]]
                 rrt = RRTStar(start = self.robot_pos, goal = self.goal,binary_obstacle = binary,rand_area = [0, 500],
-                        expand_dis = 50,path_resolution = 1,goal_sample_rate = 5,max_iter = 500)
+                        expand_dis = 50, path_resolution = 1,goal_sample_rate = 5,max_iter = 500)
                 self.path = np.array(rrt.planning(animation = False))
                 print("Path found")
 
@@ -242,11 +257,14 @@ class Controller1(Node):
         diff = (path_orientation - self.theta + 180) % 360 - 180
         if abs(diff) > MIN_ANGLE_DIFF:
             ## ROTATION CORRECTION SUB-STATE
-            # print("rotation correction: ", diff, " and theta = ", self.theta)
+            # a. send the rotation message
             msg = String()
             if diff > 0: msg.data = "d"
             else: msg.data = "a"
             self.uart_publisher.publish(msg)
+            # b. rotation timer
+            self.start_rotation_timer(diff, TIMER_STATE_ON_TRAVEL_MODE)
+
         else:
             ## FORWARD SUB-STATE
             print("going forward")
@@ -256,9 +274,11 @@ class Controller1(Node):
         if self.is_saving and int(map_message.index) % CONTROLLER_TIME_CONSTANT == 0:
             name = self.map_name+str(self.saving_index)
             save_name = "/home/arthur/dev/ros/data/maps/rects/"+name+".png"
+            text = "({}) diff = {:.2f} \n robot pos = {}".format(int(map_message.index), 
+                    diff, (self.robot_pos, self.theta))
             map_utils.make_nice_plot(binary, save_name, self.robot_pos, self.theta, contours, corners, 
-                    self.zones, self.path.astype(int), 
-                    text = "({}) diff = {:.2f}".format(int(map_message.index), diff))
+                    self.zones, self.targets, self.path.astype(int), 
+                    text = text)
             np.save("/home/arthur/dev/ros/data/maps/"+name+".npy", m)
             self.saving_index += 1
 
@@ -287,6 +307,22 @@ class Controller1(Node):
         self.state = BOTTLE_RELEASE_MODE
        
         # todo !!! 
+
+    ### HELPER FUNCTIONS
+    def start_rotation_timer(self, angle, state):
+        """Will start a timer which has a period equals to the required rotation time
+        to achieve the provided angle."""
+        # 1. if required, delete previous timer
+        if self.rotation_timer_state is not TIME_STATE_OFF: 
+            # it means another timer was launched
+            self.destroy_timer(self.rotation_timer)
+
+        # 2. estimate remaining time of rotation and start new timer
+        self.rotation_timer_state = state 
+        time_to_rotate = controller_utils.get_rotation_time(np.abs(diff))
+        self.create_timer(time_to_rotate, self.rotation_timer_callback)
+
+
 
 
 

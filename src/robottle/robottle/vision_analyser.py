@@ -8,51 +8,24 @@ from time import gmtime, strftime
 from robottle_utils import vision_utils
 
 class VisionAnalyser(Node):
-    """Ros Node to
-    - take a picture at the moment a service is received
-    - perform image analysis
-    - returns the output of the algorithm (beacon delta_angles and color)
-
-    Eventually it can also save images to a folder.
+    """Ros Node to TEST TIMERS 
     """
 
     def __init__(self):
         super().__init__('minimal_service')
-        self.srv = self.create_service(FindMapCorner, 'find_map_corner', self.find_map_corner)
-        self.has_to_get_image = False
+        self.i = 0
+        self.timer1 = self.create_timer(1, self.timer1_callback) 
+        self.timer2 = self.create_timer(1, self.timer2_callback) 
+
+    def timer1_callback(self):
+        if self.i == 5: 
+            self.destroy_timer(self.timer1)
+        print("timer 1 calledi: ", self.i)
+        self.i += 1
         
 
-    def find_map_corner(self, request, response):
-        print("Service received !: ", request)
-        # 1. create subscription to camera topic
-        self.subscription = self.create_subscription(
-                Image,
-                'video_source/raw',
-                self.raw_image_callback,
-                1000
-                )
-        response.response = "I have  asked to save your picture"
-        print("Response: ", response)
-
-        return response
-
-    def raw_image_callback(self, msg):
-        """Called when an image is received from 'video_source/raw'"""
-        print("Image received from vision input")
-        # destroy the subscription 
-        self.destroy_subscription(self.subscription)
-
-        # so let's analyse it here and then delete the subscription
-        rows = msg.height
-        step = msg.step
-        cols = msg.width
-        dim = int(step / cols)
-        pixels = msg.data # of size (steps, nrows)
-        name = strftime("%m-%d_%H-%M-%S", gmtime())
-
-        # save the image (later we will need to analyse it)
-        vision_utils.save_picture(pixels, rows, cols, dim, name)
-
+    def timer2_callback(self):
+        print("timer 2 checking timer 1: ", self.timer1.is_ready())
 
 
 
