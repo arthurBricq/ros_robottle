@@ -285,9 +285,9 @@ class Controller1(Node):
             print("robot is going forward, distance to next point: ", dist_to_next_point)
             if dist_to_next_point < MIN_DIST_TO_POINT:
                 # remove first point of the path
-                print("Will update path: ", path)
-                del path[-1]
-                print("Updated path: ", path)
+                print("Will update path: ", self.path)
+                del self.path[-1]
+                print("Updated path: ", self.path)
 
 
 
