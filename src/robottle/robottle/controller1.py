@@ -78,7 +78,7 @@ class Controller1(Node):
         # variable for the controller
         self.initial_zones_found = False
         self.zones = []
-        self.path = None
+        self.path = []
         self.goal = None
         self.robot_pos = None
         self.current_target_index = 0
@@ -219,7 +219,7 @@ class Controller1(Node):
         diff = 0
 
         # 0. end condition
-        if self.path is None or self.goal is None: return 
+        if len(self.path) == 0 or self.goal is None: return 
 
         # 1. state transition condition
         dist = controller_utils.get_distance(self.robot_pos, self.goal)
@@ -253,7 +253,7 @@ class Controller1(Node):
             self.uart_publisher.publish(String(data = "w"))
 
         # finally. make and save the nice figure
-        if self.is_saving and int(map_message.index) % CONTROLLER_TIME_CONSTANT == 0 and not self.path is None:
+        if self.is_saving and int(map_message.index) % CONTROLLER_TIME_CONSTANT == 0:
             name = self.map_name+str(self.saving_index)
             save_name = "/home/arthur/dev/ros/data/maps/rects/"+name+".png"
             map_utils.make_nice_plot(binary, save_name, self.robot_pos, self.theta, contours, corners, 
