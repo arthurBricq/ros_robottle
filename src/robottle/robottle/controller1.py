@@ -280,7 +280,7 @@ class Controller1(Node):
             # send a forward message just in case it wasn't lunched before
             self.uart_publisher.publish(String(data = "w"))
             # compute distance to next point of the path
-            p = path[-2]
+            p = self.path[-2]
             dist_to_next_point = controller_utils.get_distance(self.robot_pos, p)
             print("robot is going forward, distance to next point: ", dist_to_next_point)
             if dist_to_next_point < MIN_DIST_TO_POINT:
