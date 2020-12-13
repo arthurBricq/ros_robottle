@@ -174,7 +174,6 @@ class Controller1(Node):
         """Called when robot has turned enough to pick the bottle"""
         print("destroying timer")
         self.destroy_timer(self.rotation_timer)
-        print("logic now", self.rotation_timer)
 
         if self.rotation_timer_state == TIMER_STATE_ON_RANDOM_SEARCH:
             # change timer state and go to bottle picking mode.
@@ -194,6 +193,9 @@ class Controller1(Node):
         """Travel mode of the controller. 
         This function is called by the map listener's callback.
         """
+        # compute robot position (used a lot)
+        self.robot_pos = map_utils.pos_to_gridpos(self.x, self.y)
+
         ### I. Path planning
         # Once in a while, start the path planning logic
         if int(map_message.index) % CONTROLLER_TIME_CONSTANT == 0: 
@@ -208,13 +210,16 @@ class Controller1(Node):
             # a. filter the map 
             map_data = bytearray(map_message.map_data)
             m = map_utils.get_map(map_data)
-            self.robot_pos = map_utils.pos_to_gridpos(self.x, self.y)
             binary = map_utils.filter_map(m)
             # b. get rectangle around the map
             corners, area, contours = map_utils.get_bounding_rect(binary)
             # c. find zones 
             # zones are ordered the following way: (recycling area, zone2, zone3, zone4)
             if not self.initial_zones_found and area > AREA_THRESHOLD:
+
+                if area > 225000:
+                    raise RunTimeError("Zones were not found properly")
+
                # corners found are valid and we can find the 'initial zones' 
                 self.zones = map_utils.get_initial_zones(corners, self.robot_pos)
                 self.initial_zones_found = True
