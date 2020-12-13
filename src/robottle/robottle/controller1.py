@@ -29,6 +29,8 @@ TIMER_STATE_ON_RANDOM_SEARCH = "2"
 AREA_THRESHOLD = 60000
 # distance at which, if the robot is closer than the goal, travel_mode ends
 MIN_DIST_TO_GOAL = 1 # [m]
+# min distance between robot and point in the path to consider the robot as passed it
+MIN_DIST_TO_POINT = 0.2 # [m]
 # time constant of path computation update (the bigger, the less often the path is updated)
 CONTROLLER_TIME_CONSTANT = 20
 # path-tracker min angle diff for directing the robot
@@ -274,9 +276,21 @@ class Controller1(Node):
 
         else:
             ## FORWARD SUB-STATE
-            # in theory, robot should already be going forward.
-            print("going forward")
+            # in theory, robot should be going forward.
+            # send a forward message just in case it wasn't lunched before
             self.uart_publisher.publish(String(data = "w"))
+            # compute distance to next point of the path
+            p = path[-2]
+            dist_to_next_point = controller_utils.get_distance(self.robot_pos, p)
+            print("robot is going forward, distance to next point: ", dist_to_next_point)
+            if dist_to_next_point < MIN_DIST_TO_POINT:
+                # remove first point of the path
+                print("Will update path: ", path)
+                del path[-1]
+                print("Updated path: ", path)
+
+
+
 
         # finally. make and save the nice figure
         if self.is_saving and int(map_message.index) % CONTROLLER_TIME_CONSTANT == 0:
