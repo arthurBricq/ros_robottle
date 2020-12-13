@@ -263,20 +263,20 @@ class Controller1(Node):
         diff = (path_orientation - self.theta + 180) % 360 - 180
         if abs(diff) > MIN_ANGLE_DIFF:
             ## ROTATION CORRECTION SUB-STATE
+            print("Rotation correction with diff = ", diff)
             # a. send the rotation message
             msg = String()
             if diff > 0: msg.data = "d"
             else: msg.data = "a"
             self.uart_publisher.publish(msg)
             # b. rotation timer
-            print("Rotation correction with diff = ", diff)
             self.start_rotation_timer(diff, TIMER_STATE_ON_TRAVEL_MODE)
 
         else:
             ## FORWARD SUB-STATE
             # in theory, robot should already be going forward.
             print("going forward")
-            # self.uart_publisher.publish(String(data = "w"))
+            self.uart_publisher.publish(String(data = "w"))
 
         # finally. make and save the nice figure
         if self.is_saving and int(map_message.index) % CONTROLLER_TIME_CONSTANT == 0:
