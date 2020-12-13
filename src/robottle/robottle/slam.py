@@ -105,7 +105,6 @@ class Slam(Node):
         # Update SLAM with current Lidar scan and scan angles if adequate
         if len(distances) > MIN_SAMPLES:
             e = time.time()
-            print("Slam Update with Lidar Data ",e-self.s, msg.i )
             self.s = e
             self.slam.update(distances, scan_angles_degrees=angles, pose_change = tuple(self.robot_pose_change))
             # self.analyse_odometry()
@@ -114,6 +113,7 @@ class Slam(Node):
             self.previous_angles    = angles.copy()
         elif self.previous_distances is not None:
             # If not adequate, use previous
+            print("Slam NOT updating")
             self.slam.update(self.previous_distances, scan_angles_degrees=self.previous_angles)
 
         # Get current robot position and current map bytes as grayscale
@@ -126,8 +126,6 @@ class Slam(Node):
         pos.y = float(y)
         pos.theta = float(theta)
         self.publisher_position.publish(pos)
-        
-        print("SLAM sending map : ", self.map_index)
         map_message = Map()
         map_message.map_data = self.mapbytes
         map_message.index = self.map_index

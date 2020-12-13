@@ -96,7 +96,7 @@ class Controller1(Node):
         # STATE MACHINE
         # send a request for continuous rotation after waiting 1 second for UART node to be ready
         self.state = INITIAL_ROTATION_MODE
-        time.sleep(3)
+        time.sleep(0)
         self.uart_publisher.publish(String(data = "r"))
         print("Controller is ready")
         
@@ -257,7 +257,7 @@ class Controller1(Node):
             map_utils.make_nice_plot(binary, save_name, self.robot_pos, self.theta, contours, corners, 
                     self.zones, self.path.astype(int), 
                     text = "({}) diff = {:.2f}".format(int(map_message.index), diff))
-            # np.save("/home/arthur/dev/ros/data/maps/"+name+".npy", m)
+            np.save("/home/arthur/dev/ros/data/maps/"+name+".npy", m)
             self.saving_index += 1
 
     def start_random_search_mode(self):
