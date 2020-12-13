@@ -328,7 +328,7 @@ class Controller1(Node):
 
         # 2. estimate remaining time of rotation and start new timer
         self.rotation_timer_state = state 
-        time_to_rotate = controller_utils.get_rotation_time(np.abs(diff))
+        time_to_rotate = controller_utils.get_rotation_time(np.abs(angle))
         self.create_timer(time_to_rotate, self.rotation_timer_callback)
 
 
