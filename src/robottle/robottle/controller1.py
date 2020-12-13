@@ -269,6 +269,7 @@ class Controller1(Node):
             else: msg.data = "a"
             self.uart_publisher.publish(msg)
             # b. rotation timer
+            print("Rotation correction with diff = ", diff)
             self.start_rotation_timer(diff, TIMER_STATE_ON_TRAVEL_MODE)
 
         else:
