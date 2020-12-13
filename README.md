@@ -70,11 +70,11 @@ Here are some commands quite useful with the ROS setup
 
 `ssh arthur@M00e04c3fd2f6.dyn.epfl.ch`
 
+`cd dev/ros/workspace1 ; . install/setup.bash ; `
+
 - ssh copy file
 
 `scp -r arthur@M00e04c3fd2f6.dyn.epfl.ch:/home/arthur/dev/ros/workspace1/bag_files/freq_test /home/arthur/dev/ros/ros_robottle/bag_files/freq_test` 
-
-`cd dev/ros/workspace1 ; . install/setup.bash ; `
 
 - bag files recording sensor inputs (lidar data + motors speed so far)
 
@@ -86,7 +86,7 @@ Here are some commands quite useful with the ROS setup
 
 - launch the other ROS nodes (LIDAR, Motors Speed Reader, SLAM, Motors Commands)
 
-`ros2 launch robottle launch_controller.launch.py`
+`ros2 launch robottle launch_nocontroller.launch.py`
 
 - launch the detectnet node (*with its own launch files*)
 
