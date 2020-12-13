@@ -203,6 +203,7 @@ class Controller1(Node):
 
             ## Handling timer problem
             if self.rotation_timer_state == TIMER_STATE_ON_TRAVEL_MODE:
+                self.uart_publisher.publish(String(data = "x"))
                 self.rotation_timer_state == TIME_STATE_OFF
                 self.destroy_timer(self.rotation_timer)
 
@@ -218,13 +219,13 @@ class Controller1(Node):
             if not self.initial_zones_found and area > AREA_THRESHOLD:
 
                 if area > 225000:
-                    raise RunTimeError("Zones were not found properly")
+                    raise RuntimeError("Zones were not found properly")
 
                # corners found are valid and we can find the 'initial zones' 
                 self.zones = map_utils.get_initial_zones(corners, self.robot_pos)
                 self.initial_zones_found = True
                 print("Initial zones found")
-                return
+
             if self.initial_zones_found: 
                 # update zones with new map
                 new_zones = map_utils.get_zones_from_previous(corners, self.zones)
