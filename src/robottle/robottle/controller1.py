@@ -101,12 +101,13 @@ class Controller1(Node):
         # STATE MACHINE
         # send a request for continuous rotation after waiting 1 second for UART node to be ready
         self.state = INITIAL_ROTATION_MODE
+        self.rotation_timer_state = TIME_STATE_OFF
         time.sleep(0)
         self.uart_publisher.publish(String(data = "r"))
         print("Controller is ready")
 
         # for debugging
-        self.state = TRAVEL_MODE
+        # self.state = TRAVEL_MODE
         
 
     ### CALLBACKS
@@ -172,17 +173,17 @@ class Controller1(Node):
         print("destroying timer")
         self.destroy_timer(self.rotation_timer)
         print("logic now", self.rotation_timer)
+
         if self.rotation_timer_state == TIMER_STATE_ON_RANDOM_SEARCH:
             # change timer state and go to bottle picking mode.
             self.rotation_timer_state = TIME_STATE_OFF
             self.start_bottle_picking_mode()
+
         if self.rotation_timer_state == TIMER_STATE_ON_TRAVEL_MODE:
             # change timer state and start moving forward.
             self.rotation_timer_state = TIME_STATE_OFF
             print("Rotated time reached. Let's move forward.")
             self.uart_publisher.publish(String(data="w"))
-
-
 
 
     ### STATE MACHINE METHODS
@@ -195,6 +196,12 @@ class Controller1(Node):
         # Once in a while, start the path planning logic
         if int(map_message.index) % CONTROLLER_TIME_CONSTANT == 0: 
             print("Starting map analysis")
+
+            ## Handling timer problem
+            if self.rotation_timer_state == TIMER_STATE_ON_TRAVEL_MODE:
+                self.rotation_timer_state == TIME_STATE_OFF
+                self.destroy_timer(self.rotation_timer)
+
             ## Map analysis 
             # a. filter the map 
             map_data = bytearray(map_message.map_data)
@@ -203,7 +210,6 @@ class Controller1(Node):
             binary = map_utils.filter_map(m)
             # b. get rectangle around the map
             corners, area, contours = map_utils.get_bounding_rect(binary)
-
             # c. find zones 
             # zones are ordered the following way: (recycling area, zone2, zone3, zone4)
             if not self.initial_zones_found and area > AREA_THRESHOLD:
@@ -212,7 +218,6 @@ class Controller1(Node):
                 self.initial_zones_found = True
                 print("Initial zones found")
                 return
-
             if self.initial_zones_found: 
                 # update zones with new map
                 new_zones = map_utils.get_zones_from_previous(corners, self.zones)
@@ -235,6 +240,7 @@ class Controller1(Node):
 
         # 0. end condition
         if len(self.path) == 0 or self.goal is None: return 
+        if self.rotation_timer_state == TIMER_STATE_ON_TRAVEL_MODE: return
 
         # 1. state transition condition
         dist = controller_utils.get_distance(self.robot_pos, self.goal)
@@ -267,8 +273,9 @@ class Controller1(Node):
 
         else:
             ## FORWARD SUB-STATE
+            # in theory, robot should already be going forward.
             print("going forward")
-            self.uart_publisher.publish(String(data = "w"))
+            # self.uart_publisher.publish(String(data = "w"))
 
         # finally. make and save the nice figure
         if self.is_saving and int(map_message.index) % CONTROLLER_TIME_CONSTANT == 0:
@@ -309,6 +316,7 @@ class Controller1(Node):
         # todo !!! 
 
     ### HELPER FUNCTIONS
+
     def start_rotation_timer(self, angle, state):
         """Will start a timer which has a period equals to the required rotation time
         to achieve the provided angle."""
