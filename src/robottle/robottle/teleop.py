@@ -24,7 +24,6 @@ class TeleopRobotController(Node):
 
         self.uart_publisher = self.create_publisher(String, 'uart_commands', 1000)
         self.cam_control_publisher = self.create_publisher(String, 'detectnet/camera_control', 1000)
-
         self.map_corner_client = self.create_client(FindMapCorner, "find_map_corner")
 
         try:
