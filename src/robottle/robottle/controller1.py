@@ -113,7 +113,7 @@ class Controller1(Node):
         print("Controller is ready")
 
         # for debugging
-        self.state = TRAVEL_MODE
+        # self.state = TRAVEL_MODE
         
 
     ### CALLBACKS
