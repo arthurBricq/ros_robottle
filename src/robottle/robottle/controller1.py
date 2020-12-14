@@ -98,12 +98,23 @@ class Controller1(Node):
         self.is_saving = "--save" in args 
         self.is_plotting = "--plot" in args
         self.saving_index = 0
+        self.map_name = ""
+        self.SAVE_TIME_CONSTANT = 10  
         if self.is_plotting:
-            self.map_name = ""
             self.live_vizualiser = ImageVizualiser()
+            try:
+                self.SAVE_TIME_CONSTANT = int(args[args.index("--plot")+2])
+            except:
+                pass
         if self.is_saving: 
-            self.map_name = args[args.index("--save") + 1]
+            idx = args.index("--save")
+            self.map_name = args[idx + 1]
             print("Name : ", self.map_name)
+            try:
+                self.SAVE_TIME_CONSTANT = int(args[idx+2])
+            except:
+                pass
+            
 
         # STATE MACHINE
         # send a request for continuous rotation after waiting 1 second for UART node to be ready
@@ -111,7 +122,7 @@ class Controller1(Node):
         self.rotation_timer_state = TIME_STATE_OFF
         time.sleep(0)
         self.uart_publisher.publish(String(data = "r"))
-        print("Controller is ready: Is Ploting ? {}  - Is Saving ? {}".format(self.is_plotting, self.is_saving))
+        print("Controller is ready: Is Ploting ? {}  - Is Saving ? {} - rate = {}".format(self.is_plotting, self.is_saving, self.SAVE_TIME_CONSTANT))
 
         # for debugging
         if "--travel" in args: 
