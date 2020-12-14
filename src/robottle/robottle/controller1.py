@@ -176,7 +176,6 @@ class Controller1(Node):
 
     def rotation_timer_callback(self):
         """Called when robot has turned enough to pick the bottle"""
-        print("destroying timer")
         self.destroy_timer(self.rotation_timer)
 
         if self.rotation_timer_state == TIMER_STATE_ON_RANDOM_SEARCH:
