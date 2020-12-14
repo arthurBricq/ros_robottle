@@ -59,7 +59,8 @@ class VisionAnalyser(Node):
 
     def detection_callback(self, msg):
         if self.detection_to_receive:
-            print("Detection message: ", msg.detections)
+            print("Detection message: ", str(msg.detections))
+            print([d.results for d in msg.detections])
             self.detection_to_receive -= 1
 
 
