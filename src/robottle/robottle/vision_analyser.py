@@ -20,39 +20,45 @@ class VisionAnalyser(Node):
         super().__init__('minimal_service')
         self.srv = self.create_service(FindMapCorner, 'find_map_corner', self.find_map_corner)
 
+        # parameters
         self.pictures_to_take = 0
-        self.has_received_detection = False
+        self.detection_to_receive = 0
 
-        # 1. create subscription to camera topic
-        self.subscription = self.create_subscription(Image, 'detectnet/overlay',
+        # subscriptions
+        self.subscription = self.create_subscription(Image, 'video_source/raw',
                 self.raw_image_callback, 1000)
         self.subscription = self.create_subscription(Detection2DArray, 'detectnet/detections',
                 self.detection_callback, 1000)
 
+    ### SERVICE
     def find_map_corner(self, request, response):
         print("Service received !: ", request)
         self.pictures_to_take += 1
-        response.response = "I have  asked to save your picture"
+        self.detection_to_receive += 1
+        self.name = request.name 
+        response.response = "I have  asked to save your picture at : {}".format(self.name)
         return response
 
+    ### SUBSCRIPTIONS
     def raw_image_callback(self, msg):
-        """Called when an image is received from 'video_source/raw'"""
-        if self.pictures_to_take:
-            if self.has_received_detection:
-                self.pictures_to_take -= 1
-                # so let's analyse it here and then delete the subscription
-                rows = msg.height
-                step = msg.step
-                cols = msg.width
-                dim = int(step / cols)
-                pixels = msg.data # of size (steps, nrows)
-                name = strftime("%m-%d_%H-%M-%S", gmtime())
-                # save the image (later we will need to analyse it)
-                vision_utils.save_picture(pixels, rows, cols, dim, name)
+        """Called when an image is received from 'video_source/raw'
+        It will simply save the first image that comes once a detection was made.
+        """
+        if self.pictures_to_take and not self.detection_to_receive:
+            self.pictures_to_take -= 1
+            # so let's analyse it here and then delete the subscription
+            rows = msg.height
+            step = msg.step
+            cols = msg.width
+            dim = int(step / cols)
+            pixels = msg.data # of size (steps, nrows)
+            # save the image (later we will need to analyse it)
+            vision_utils.save_picture(pixels, rows, cols, dim, self.name)
 
     def detection_callback(self, msg):
-        if self.pictures_to_take:
-            print("Detection message: ", msg)
+        if self.detection_to_receive:
+            print("Detection message: ", msg.detections)
+            self.detection_to_receive -= 1
 
 
 

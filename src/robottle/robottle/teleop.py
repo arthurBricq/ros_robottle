@@ -13,6 +13,13 @@ class TeleopRobotController(Node):
 
     def __init__(self):	
         super().__init__("teleop_controller")
+
+        args= sys.argv 
+        self.name = "teleop_default_name"
+        self.save_index = 0
+        if "--name" in args:
+            self.name = args[args.index("--name") + 1]
+
         print("Teleop Running: ")
         print("Type(w,a,s,d,x) to move ")
         print("Type 'q' to quit the node")
@@ -21,6 +28,7 @@ class TeleopRobotController(Node):
         print("Type 'l' to de-activate image detection")
         print("Type 'm' to start the Motors")
         print("Type 'n' to stop the Motors")
+        print("--name = ", self.name)
 
         self.uart_publisher = self.create_publisher(String, 'uart_commands', 1000)
         self.cam_control_publisher = self.create_publisher(String, 'detectnet/camera_control', 1000)
@@ -72,12 +80,14 @@ class TeleopRobotController(Node):
         # create the request and send it 
         request = FindMapCorner.Request()
         request.should_save = True
+        request.name = self.name + "_" + str(self.save_index)
         future = self.map_corner_client.call_async(request)
         while True:
             rclpy.spin_once(self)
             if future.done():
                 try:
                     response = future.result()
+                    self.save_index += 1
                     print("reponse:", response)
                 except Exception as e:
                     print("Error: ", e)

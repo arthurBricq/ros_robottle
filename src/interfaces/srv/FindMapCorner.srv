@@ -1,3 +1,4 @@
 bool should_save
+string name
 ---
 string response
