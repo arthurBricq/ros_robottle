@@ -59,7 +59,7 @@ class TeleopRobotController(Node):
                     msg = String()
                     msg.data = key
                     self.uart_publisher.publish(msg)
-            print("Finished with the loop")
+            raise RuntimeError("Teleoperation was aborted")
         except:
             print(e)
         finally:

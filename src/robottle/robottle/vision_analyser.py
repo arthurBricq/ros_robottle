@@ -8,6 +8,8 @@ from interfaces.srv import FindMapCorner
 from time import gmtime, strftime
 from robottle_utils import vision_utils
 
+FOLDER = "/home/arthur/dev/ros/pictures/f1/"
+
 class VisionAnalyser(Node):
     """Ros Node to
     - take a picture at the moment a service is received
@@ -53,7 +55,7 @@ class VisionAnalyser(Node):
             dim = int(step / cols)
             pixels = msg.data # of size (steps, nrows)
             # save the image (later we will need to analyse it)
-            vision_utils.save_picture(pixels, rows, cols, dim, self.name)
+            vision_utils.save_picture(pixels, rows, cols, dim, self.name, folder)
 
     def detection_callback(self, msg):
         if self.detection_to_receive:
