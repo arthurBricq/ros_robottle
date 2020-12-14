@@ -36,7 +36,6 @@ class VisionAnalyser(Node):
 
     def raw_image_callback(self, msg):
         """Called when an image is received from 'video_source/raw'"""
-        print("Image received from vision input")
         if self.pictures_to_take:
             if self.has_received_detection:
                 self.pictures_to_take -= 1
