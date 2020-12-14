@@ -55,7 +55,7 @@ class VisionAnalyser(Node):
             dim = int(step / cols)
             pixels = msg.data # of size (steps, nrows)
             # save the image (later we will need to analyse it)
-            vision_utils.save_picture(pixels, rows, cols, dim, self.name, folder)
+            vision_utils.save_picture(pixels, rows, cols, dim, self.name, FOLDER)
 
     def detection_callback(self, msg):
         if self.detection_to_receive:
