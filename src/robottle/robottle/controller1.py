@@ -266,7 +266,7 @@ class Controller1(Node):
                 print("Path found")
 
         # finally. make and save the nice figure
-        if (self.is_saving or self.is_plotting) and int(map_message.index) % 5 == 0:
+        if (self.is_saving or self.is_plotting) and int(map_message.index) % self.SAVE_TIME_CONSTANT == 0:
             name = self.map_name+str(self.saving_index)
             save_name = "/home/arthur/dev/ros/data/maps/rects/"+name+".png" if self.is_saving else ""
             text = "robot pos = {}".format(int(map_message.index), 
