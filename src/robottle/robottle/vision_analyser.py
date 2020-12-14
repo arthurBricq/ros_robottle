@@ -60,7 +60,9 @@ class VisionAnalyser(Node):
     def detection_callback(self, msg):
         if self.detection_to_receive:
             print("Detection message: ", str(msg.detections))
-            print([(d.bbox.center.x, d.bbox.center.y, d.bbox.size_x, d.bbox.size_y) for d in msg.detections])
+            res = [(d.bbox.center.x, d.bbox.center.y, d.bbox.size_x, d.bbox.size_y) for d in msg.detections]
+            print(res)
+            print(str(res))
             self.detection_to_receive -= 1
 
 
