@@ -9,6 +9,7 @@ from interfaces.msg import Map, Position, Status
 from std_msgs.msg import String
 
 from robottle_utils import map_utils, controller_utils, vision_utils
+from robottle_utils.vizualiser import ImageVizualiser
 from robottle_utils.rrt_star import RRTStar
 
 ### STATE MACHINE 
@@ -83,8 +84,8 @@ class Controller1(Node):
         
         # variable for the controller
         self.initial_zones_found = False
-        self.zones = []
-        self.path = []
+        self.zones = np.array([])
+        self.path = np.array([])
         self.targets = []
         self.goal = None
         self.robot_pos = None
@@ -95,10 +96,13 @@ class Controller1(Node):
         args = sys.argv
         if len(args) == 1: # it means no argument was passed to the ros node
             self.is_saving = False
+            self.is_plotting = False
         else:
             self.is_saving = True
+            self.is_plotting = False
             self.map_name = args[1]
             self.saving_index = 0
+            self.live_vizualiser = ImageVizualiser()
 
         # STATE MACHINE
         # send a request for continuous rotation after waiting 1 second for UART node to be ready
@@ -109,7 +113,7 @@ class Controller1(Node):
         print("Controller is ready")
 
         # for debugging
-        # self.state = TRAVEL_MODE
+        self.state = TRAVEL_MODE
         
 
     ### CALLBACKS
@@ -212,12 +216,19 @@ class Controller1(Node):
             map_data = bytearray(map_message.map_data)
             m = map_utils.get_map(map_data)
             binary = map_utils.filter_map(m)
+
             # b. get rectangle around the map
             corners, area, contours = map_utils.get_bounding_rect(binary)
+
+            # save binary if we are going to make some plots
+            if self.is_saving:
+                self.binary = binary
+                self.contours = contours 
+                self.corners = corners
+
             # c. find zones 
             # zones are ordered the following way: (recycling area, zone2, zone3, zone4)
             if not self.initial_zones_found and area > AREA_THRESHOLD:
-
                 if area > 225000:
                     raise RuntimeError("Zones were not found properly")
 
@@ -242,10 +253,21 @@ class Controller1(Node):
                 self.path = np.array(rrt.planning(animation = False))
                 print("Path found")
 
-        ### II. Path Tracking
-        # to remove later
-        diff = 0
+        # finally. make and save the nice figure
+        if self.is_saving and int(map_message.index) % 5 == 0:
+            name = self.map_name+str(self.saving_index)
+            save_name = "/home/arthur/dev/ros/data/maps/rects/"+name+".png"
+            text = "robot pos = {}".format(int(map_message.index), 
+                    (self.robot_pos, self.theta))
+            img = map_utils.make_nice_plot(self.binary, save_name, self.robot_pos, self.theta, self.contours, self.corners, 
+                    self.zones, self.targets, self.path.astype(int), 
+                    text = text)
+            if self.is_plotting:
+                self.live_vizualiser.display(np.array(img))
+            # np.save("/home/arthur/dev/ros/data/maps/"+name+".npy", img)
+            self.saving_index += 1
 
+        ### II. Path Tracking
         # 0. end condition
         if len(self.path) == 0 or self.goal is None: return 
         if self.rotation_timer_state == TIMER_STATE_ON_TRAVEL_MODE: return
@@ -295,20 +317,6 @@ class Controller1(Node):
                 del self.path[-1]
                 print("Updated path: ", self.path)
 
-
-
-
-        # finally. make and save the nice figure
-        if self.is_saving and int(map_message.index) % CONTROLLER_TIME_CONSTANT == 0:
-            name = self.map_name+str(self.saving_index)
-            save_name = "/home/arthur/dev/ros/data/maps/rects/"+name+".png"
-            text = "({}) diff = {:.2f} \n robot pos = {}".format(int(map_message.index), 
-                    diff, (self.robot_pos, self.theta))
-            map_utils.make_nice_plot(binary, save_name, self.robot_pos, self.theta, contours, corners, 
-                    self.zones, self.targets, self.path.astype(int), 
-                    text = text)
-            np.save("/home/arthur/dev/ros/data/maps/"+name+".npy", m)
-            self.saving_index += 1
 
     def start_random_search_mode(self):
         """Will start the random search and increase by 1 the stepper

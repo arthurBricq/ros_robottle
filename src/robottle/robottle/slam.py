@@ -130,6 +130,7 @@ class Slam(Node):
         map_message.map_data = self.mapbytes
         map_message.index = self.map_index
         self.publisher_map.publish(map_message)
+        print("Map sent: ", self.map_index)
         self.map_index += 1
 
 
