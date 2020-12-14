@@ -75,6 +75,7 @@ Here are some commands quite useful with the ROS setup
 - ssh copy file
 
 `scp -r arthur@M00e04c3fd2f6.dyn.epfl.ch:/home/arthur/dev/ros/workspace1/bag_files/freq_test /home/arthur/dev/ros/ros_robottle/bag_files/freq_test` 
+
 - scp copy file for many files
 
 `scp -r arthur@M00e04c3fd2f6.dyn.epfl.ch:/home/arthur/dev/ros/data/maps/rects/name* /home/arthur/dev/ros/data/from_jetson/`
