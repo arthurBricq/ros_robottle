@@ -20,6 +20,7 @@ class VisionAnalyser(Node):
         self.srv = self.create_service(FindMapCorner, 'find_map_corner', self.find_map_corner)
 
         self.pictures_to_take = 0
+        self.has_received_detection = False
 
         # 1. create subscription to camera topic
         self.subscription = self.create_subscription(Image, 'detectnet/overlay',
