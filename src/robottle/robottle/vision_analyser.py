@@ -62,7 +62,7 @@ class VisionAnalyser(Node):
             self.detection_to_receive -= 1
             res = [(d.bbox.center.x, d.bbox.center.y, d.bbox.size_x, d.bbox.size_y) for d in msg.detections]
             with open(FOLDER + "_detection.txt", "a") as text_file:
-                string = "- " + self.name + str(res)
+                string = "\n - " + self.name + str(res)
                 text_file.write(string)
 
 
