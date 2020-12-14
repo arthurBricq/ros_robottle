@@ -1,6 +1,7 @@
 import rclpy
 from rclpy.node import Node
 
+from vision_msgs.msg import Detection2DArray
 from sensor_msgs.msg import Image
 from interfaces.srv import FindMapCorner
 
@@ -25,7 +26,7 @@ class VisionAnalyser(Node):
         # 1. create subscription to camera topic
         self.subscription = self.create_subscription(Image, 'detectnet/overlay',
                 self.raw_image_callback, 1000)
-        self.subscription = self.create_subscription(Image, 'detectnet/detections',
+        self.subscription = self.create_subscription(Detection2DArray, 'detectnet/detections',
                 self.detection_callback, 1000)
 
     def find_map_corner(self, request, response):
