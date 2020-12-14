@@ -92,17 +92,18 @@ class Controller1(Node):
         self.current_target_index = 0
         self.rotation_timer = None
 
+        # DEBUG 
         # set saving state (if True, then it will save some maps to a folder when they can be analysed)
         args = sys.argv
-        if len(args) == 1: # it means no argument was passed to the ros node
-            self.is_saving = False
-            self.is_plotting = False
-        else:
-            self.is_saving = True
-            self.is_plotting = False
-            self.map_name = args[1]
-            self.saving_index = 0
+        self.is_saving = "--save" in args 
+        self.is_plotting = "--plot" in args
+        self.saving_index = 0
+        if self.is_plotting:
+            self.map_name = ""
             self.live_vizualiser = ImageVizualiser()
+        if self.is_saving: 
+            self.map_name = args[args.index("--save") + 1]
+            print("Name : ", self.map_name)
 
         # STATE MACHINE
         # send a request for continuous rotation after waiting 1 second for UART node to be ready
@@ -110,10 +111,11 @@ class Controller1(Node):
         self.rotation_timer_state = TIME_STATE_OFF
         time.sleep(0)
         self.uart_publisher.publish(String(data = "r"))
-        print("Controller is ready")
+        print("Controller is ready: Is Ploting ? {}  - Is Saving ? {}".format(self.is_plotting, self.is_saving))
 
         # for debugging
-        # self.state = TRAVEL_MODE
+        if "--travel" in args: 
+            self.state = TRAVEL_MODE
         
 
     ### CALLBACKS
@@ -214,13 +216,13 @@ class Controller1(Node):
             # a. filter the map 
             map_data = bytearray(map_message.map_data)
             m = map_utils.get_map(map_data)
-            binary = map_utils.filter_map(m)
+            binary = map_utils.filter_map(m, dilation_kernel_size = 14)
 
             # b. get rectangle around the map
             corners, area, contours = map_utils.get_bounding_rect(binary)
 
             # save binary if we are going to make some plots
-            if self.is_saving:
+            if self.is_saving or self.is_plotting:
                 self.binary = binary
                 self.contours = contours 
                 self.corners = corners
@@ -253,12 +255,13 @@ class Controller1(Node):
                 print("Path found")
 
         # finally. make and save the nice figure
-        if self.is_saving and int(map_message.index) % 5 == 0:
+        if (self.is_saving or self.is_plotting) and int(map_message.index) % 5 == 0:
             name = self.map_name+str(self.saving_index)
-            save_name = "/home/arthur/dev/ros/data/maps/rects/"+name+".png"
+            save_name = "/home/arthur/dev/ros/data/maps/rects/"+name+".png" if self.is_saving else ""
             text = "robot pos = {}".format(int(map_message.index), 
                     (self.robot_pos, self.theta))
-            img = map_utils.make_nice_plot(self.binary, save_name, self.robot_pos, self.theta, self.contours, self.corners, 
+            img = map_utils.make_nice_plot(self.binary, save_name, self.robot_pos, 
+                    self.theta, self.contours, self.corners, 
                     self.zones, self.targets, self.path.astype(int), 
                     text = text)
             if self.is_plotting:
