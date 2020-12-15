@@ -18,7 +18,7 @@ from robottle_utils import lidar_utils
 
 # Constants for run time
 MAP_SIZE_PIXELS         = 500
-MAP_SIZE_METERS         = 10
+MAP_SIZE_METERS         = 12
 
 MIN_SAMPLES = 100 
 MAP_QUALITY = 50
@@ -68,7 +68,7 @@ class Slam(Node):
 
         # Initialize parameters for slam 
         laser = LaserModel(detection_margin = DETECTION_MARGIN, offset_mm = OFFSET_MM)
-        self.slam = RMHC_SLAM(laser, MAP_SIZE_PIXELS, MAP_SIZE_METERS, map_quality = MAP_QUALITY, hole_width_mm = OBSTACLE_WIDTH_MM, x0_mm = 1500, y0_mm = 1500, theta0 = 0)
+        self.slam = RMHC_SLAM(laser, MAP_SIZE_PIXELS, MAP_SIZE_METERS, map_quality = MAP_QUALITY, hole_width_mm = OBSTACLE_WIDTH_MM, x0_mm = 3000, y0_mm = 9000, theta0 = 0)
         self.trajectory = []
         self.mapbytes = bytearray(MAP_SIZE_PIXELS * MAP_SIZE_PIXELS)
         self.previous_distances = None
@@ -160,9 +160,6 @@ class Slam(Node):
                 n_points = 10)
         print('indexes : {} : {} with angles {} - {}'
                 .format(i1,i2,angles[i1], angles[i2]))
-
-
-
 
 def main(args=None):
     rclpy.init(args=args)

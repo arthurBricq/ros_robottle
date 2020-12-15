@@ -12,7 +12,7 @@ from robottle_utils import map_utils
 from roboviz import MapVisualizer
 
 MAP_SIZE_PIXELS         = 500
-MAP_SIZE_METERS         = 10
+MAP_SIZE_METERS         = 12
 
 
 class SlamVizualizer(Node):

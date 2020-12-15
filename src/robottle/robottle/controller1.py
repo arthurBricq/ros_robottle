@@ -36,8 +36,6 @@ MIN_DIST_TO_POINT = 0.2 # [m]
 CONTROLLER_TIME_CONSTANT = 20
 # path-tracker min angle diff for directing the robot
 MIN_ANGLE_DIFF = 15 # [deg]
-# time taken to do a 360 degrees rotation
-INITIAL_ROTATION_TIME = 10 # [s]
 # maximum number of times controller enters random search mode inside 1 zone
 N_RANDOM_SEARCH_MAX = 5
 # Array containing indices of zones to visit: note that zones = [r, z2, z3, z4]
@@ -103,7 +101,7 @@ class Controller1(Node):
         if self.is_plotting:
             self.live_vizualiser = ImageVizualiser()
             try:
-                self.SAVE_TIME_CONSTANT = int(args[args.index("--plot")+2])
+                self.SAVE_TIME_CONSTANT = int(args[args.index("--plot")+1])
             except:
                 pass
         if self.is_saving: 
@@ -141,8 +139,8 @@ class Controller1(Node):
         """This function just receives the position and will update it to self variables. 
         All control logics are in the 'map' calback"""
         # receive the position from the SLAM
-        self.x = pos.x / 1000
-        self.y = pos.y / 1000
+        self.x = pos.x / 1200
+        self.y = pos.y / 1200
         self.theta = pos.theta % 360
 
     def listener_arduino_status(self, status_msg):
