@@ -27,7 +27,7 @@ class VisionAnalyser(Node):
         self.detection_to_receive = 0
 
         # subscriptions
-        self.subscription = self.create_subscription(Image, 'video_source/raw',
+        self.subscription = self.create_subscription(Image, 'detectnet/overlay',# 'video_source/raw',
                 self.raw_image_callback, 1000)
         self.subscription = self.create_subscription(Detection2DArray, 'detectnet/detections',
                 self.detection_callback, 1000)

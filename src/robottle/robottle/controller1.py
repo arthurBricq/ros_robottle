@@ -228,7 +228,11 @@ class Controller1(Node):
             binary = map_utils.filter_map(m, dilation_kernel_size = 14)
 
             # b. get rectangle around the map
-            corners, area, contours = map_utils.get_bounding_rect(binary)
+            try:
+                corners, area, contours = map_utils.get_bounding_rect(binary)
+            except:
+                print("Contours not found... yet ?")
+                return
 
             # save binary if we are going to make some plots
             if self.is_saving or self.is_plotting:
@@ -269,14 +273,17 @@ class Controller1(Node):
             save_name = "/home/arthur/dev/ros/data/maps/rects/"+name+".png" if self.is_saving else ""
             text = "robot pos = {}".format(int(map_message.index), 
                     (self.robot_pos, self.theta))
-            img = map_utils.make_nice_plot(self.binary, save_name, self.robot_pos, 
-                    self.theta, self.contours, self.corners, 
-                    self.zones, self.targets, self.path.astype(int), 
-                    text = text)
-            if self.is_plotting:
-                self.live_vizualiser.display(np.array(img))
-            # np.save("/home/arthur/dev/ros/data/maps/"+name+".npy", img)
-            self.saving_index += 1
+            try:
+                img = map_utils.make_nice_plot(self.binary, save_name, self.robot_pos, 
+                        self.theta, self.contours, self.corners, 
+                        self.zones, self.targets, self.path.astype(int), 
+                        text = text)
+                if self.is_plotting:
+                    self.live_vizualiser.display(np.array(img))
+                # np.save("/home/arthur/dev/ros/data/maps/"+name+".npy", img)
+                self.saving_index += 1
+            except:
+                print("Could not save")
 
         ### II. Path Tracking
         # 0. end condition
