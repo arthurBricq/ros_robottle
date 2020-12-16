@@ -2,6 +2,26 @@
 
 This repo contains the ROS source code to run the project, that was writen by myself. It is the ROS2 workspace of our project !
 
+
+## How to use it 
+
+ROS directory: ~/dev/ros/workspace1
+
+Source code of ROS directory: ~/dev/ros/workspace1/src/robottle/robottle
+
+Setup to take pictures
+1. turn on jetson and connect using SSH (as explained below): open 3 terminals
+2. On each terminal, press 'i'  (alias for 'cd dev/ros/workspace ; . install/setup.bash'
+3. If jetson says 'ros2 command not found', the reason is that you didn't source the code with (`source ../ros.sh`before you built the new ROS code with the commnad `colcon build` or `colcon build --packages-select robottle` )
+4. then, on ech terminal, do the commands
+    - launch detectnet (see below)
+    - run teleop (see below)
+    - launch vision utils `ros2 launch robottle bottle_picking.launch.py` (will open 3 nodes, including `vision_analyser`
+5. When everything is ready, click on 'p' from teleop to ask to take a picture, verifiy on vision_analyser that the picture was taken and keep going. Make sure that you also pressed 'k' before pressing 'p' to TURN ON THE CAMERA (and press 'l' when you are finished to turn it off)
+6. folder where pictures and detections are writen: ~/dev/ros/pictures/f1
+
+
+
 ## Other repositories used 
 
 The ROS code works in pair with the [Robottle Python Package](https://github.com/arthurBricq/robottle_python_packages) where there are some helper functions and algorithms. 

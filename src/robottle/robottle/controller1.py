@@ -176,7 +176,8 @@ class Controller1(Node):
             # find the angle of the closest detected bottle
             angle = vision_utils.get_angle_of_closest_bottle([])
             # rotation timer
-            self.start_rotation_timer(diff, TIMER_STATE_ON_RANDOM_SEARCH)
+            if angle is not None:
+                self.start_rotation_timer(angle, TIMER_STATE_ON_RANDOM_SEARCH)
 
         if self.state == BOTTLE_PICKING_MODE:
             # look if the bottle in range
