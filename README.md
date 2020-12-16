@@ -15,7 +15,7 @@ Setup to take pictures
 3. If jetson says 'ros2 command not found', the reason is that you didn't source the code with (`source ../ros.sh`before you built the new ROS code with the commnad `colcon build` or `colcon build --packages-select robottle` )
 4. then, on ech terminal, do the commands
     - launch detectnet (see below)
-    - run teleop (see below)
+    - run teleop with argument name: `ros2 run robottle teleop --name name_you_want`
     - launch vision utils `ros2 launch robottle bottle_picking.launch.py` (will open 3 nodes, including `vision_analyser`
 5. When everything is ready, click on 'p' from teleop to ask to take a picture, verifiy on vision_analyser that the picture was taken and keep going. Make sure that you also pressed 'k' before pressing 'p' to TURN ON THE CAMERA (and press 'l' when you are finished to turn it off)
 6. folder where pictures and detections are writen: ~/dev/ros/pictures/f1

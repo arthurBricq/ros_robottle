@@ -126,6 +126,9 @@ class Controller1(Node):
         if "--travel" in args: 
             self.state = TRAVEL_MODE
         
+        if "--search" in args: 
+            print("Random search mode activated")
+            self.state = RANDOM_SEARCH_MODE
 
     ### CALLBACKS
     # callbacks are the entry points to all other methods
@@ -174,18 +177,18 @@ class Controller1(Node):
         """
         if self.state == RANDOM_SEARCH_MODE and self.rotation_timer_state == TIME_STATE_OFF:
             # find the angle of the closest detected bottle
-            angle = vision_utils.get_angle_of_closest_bottle([])
+            detections = [(d.bbox.center.x, d.bbox.center.y, d.bbox.size_x, d.bbox.size_y) for d in msg.detections]
+            angle = vision_utils.get_angle_of_closest_bottle(detections)
             # rotation timer
             if angle is not None:
                 self.start_rotation_timer(angle, TIMER_STATE_ON_RANDOM_SEARCH)
-
-        if self.state == BOTTLE_PICKING_MODE:
-            # look if the bottle in range
-            is_bottle_in_range = False
-            if is_bottle_in_range:
-                # try to catch it - and wait for a response
-                self.uart_publisher.publish(String(data = "x"))
-                self.uart_publisher.publish(String(data = "p"))
+            # OR
+            # simple rotation
+            #if angle > THRESHOLD_ANGLE:
+            #    self.uart_publisher.publish(String(data = "d")
+            #else:
+            #    # YOUHU IT's ready: move forward
+            ##    self.start_bottle_picking_mode()
 
     def rotation_timer_callback(self):
         """Called when robot has turned enough to pick the bottle"""
@@ -315,10 +318,6 @@ class Controller1(Node):
             ## ROTATION CORRECTION SUB-STATE
             print("Rotation correction with diff = ", diff)
             # a. send the rotation message
-            msg = String()
-            if diff > 0: msg.data = "d"
-            else: msg.data = "a"
-            self.uart_publisher.publish(msg)
             # b. rotation timer
             self.start_rotation_timer(diff, TIMER_STATE_ON_TRAVEL_MODE)
 
@@ -374,10 +373,17 @@ class Controller1(Node):
             # it means another timer was launched
             self.destroy_timer(self.rotation_timer)
 
-        # 2. estimate remaining time of rotation and start new timer
+        # 2. send the rotation motor control
+        msg = String()
+        if angle > 0: msg.data = "d"
+        else: msg.data = "a"
+        self.uart_publisher.publish(msg)
+
+        # 3. estimate remaining time of rotation and start new timer
         self.rotation_timer_state = state 
         time_to_rotate = controller_utils.get_rotation_time(np.abs(angle))
         self.rotation_timer = self.create_timer(time_to_rotate, self.rotation_timer_callback)
+
 
 
 
