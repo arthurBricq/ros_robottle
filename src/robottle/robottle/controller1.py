@@ -158,7 +158,8 @@ class Controller1(Node):
                 self.state = TRAVEL_MODE
 
         if self.state == BOTTLE_PICKING_MODE:
-            if status == 0: # ERROR --> we must do something
+            if status == 0: 
+                # ERROR --> we must do something
                 # todo !!! 
                 pass 
             elif status == 1: # SUCCESS --> bottle was probably picked
@@ -171,7 +172,7 @@ class Controller1(Node):
     def listener_callback_detectnet(self, msg):
         """Called when a bottle is detected by neuron network
         """
-        if self.state == RANDOM_SEARCH_MODE:
+        if self.state == RANDOM_SEARCH_MODE and self.rotation_timer_state == TIME_STATE_OFF:
             # find the angle of the closest detected bottle
             angle = vision_utils.get_angle_of_closest_bottle([])
             # rotation timer
@@ -354,7 +355,7 @@ class Controller1(Node):
         """Will start the bottle picking mode"""
         self.state = BOTTLE_PICKING_MODE
         # would be nice to go slower here
-        self.uart_publisher.publish(String(data = "w"))
+        self.uart_publisher.publish(String(data = "y"))
 
     def start_bottle_release_mode(self):
         """Will start the bottle picking mode"""
@@ -375,7 +376,7 @@ class Controller1(Node):
         # 2. estimate remaining time of rotation and start new timer
         self.rotation_timer_state = state 
         time_to_rotate = controller_utils.get_rotation_time(np.abs(angle))
-        self.rotation_timer = self.rotation_timer = self.create_timer(time_to_rotate, self.rotation_timer_callback)
+        self.rotation_timer = self.create_timer(time_to_rotate, self.rotation_timer_callback)
 
 
 
