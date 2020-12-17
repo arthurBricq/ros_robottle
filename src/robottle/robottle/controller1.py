@@ -177,12 +177,15 @@ class Controller1(Node):
     def listener_callback_detectnet(self, msg):
         """Called when a bottle is detected by neuron network
         """
+        print("detected a bottle, now should start timer")
+
         if self.state == RANDOM_SEARCH_MODE and self.rotation_timer_state == TIME_STATE_OFF:
             # find the angle of the closest detected bottle
             detections = [(d.bbox.center.x, d.bbox.center.y, d.bbox.size_x, d.bbox.size_y) for d in msg.detections]
             angle = vision_utils.get_angle_of_closest_bottle(detections)
             # rotation timer
             if angle is not None:
+                print("timer started")
                 self.start_rotation_timer(angle, TIMER_STATE_ON_RANDOM_SEARCH)
             # OR
             # simple rotation
@@ -195,6 +198,7 @@ class Controller1(Node):
     def rotation_timer_callback(self):
         """Called when robot has turned enough to pick the bottle"""
         self.destroy_timer(self.rotation_timer)
+        print("timer finished")
 
         if self.rotation_timer_state == TIMER_STATE_ON_RANDOM_SEARCH:
             # change timer state and go to bottle picking mode.
@@ -342,6 +346,8 @@ class Controller1(Node):
     def start_random_search_mode(self):
         """Will start the random search and increase by 1 the stepper
         """
+        print("entered random search mode", self.n_random_search+1,"times")
+
         if self.n_random_search == N_RANDOM_SEARCH_MAX:
             # no more random walk can happen
             # let's enter travel mode again
@@ -376,6 +382,7 @@ class Controller1(Node):
             self.destroy_timer(self.rotation_timer)
 
         # 2. send the rotation motor control
+        print("starting rotation now")
         msg = String()
         if angle > 0: msg.data = "d"
         else: msg.data = "a"
