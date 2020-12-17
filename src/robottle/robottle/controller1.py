@@ -73,7 +73,8 @@ class Controller1(Node):
 
         # create publisher for controlling the camera
         self.cam_publisher = self.create_publisher(String, 'detectnet/camera_control', 1000)
-        self.cam_publisher.publish(String(data="destroy"))
+        # self.cam_publisher.publish(String(data="destroy"))
+        # TO CHECK: c'est normal que tu destroy juste apres crée la subscription?
 
         # keep track of where is the robot within the class
         self.x = 0
@@ -177,7 +178,6 @@ class Controller1(Node):
     def listener_callback_detectnet(self, msg):
         """Called when a bottle is detected by neuron network
         """
-        print("detected a bottle, now should start timer")
 
         if self.state == RANDOM_SEARCH_MODE and self.rotation_timer_state == TIME_STATE_OFF:
             # find the angle of the closest detected bottle
@@ -185,7 +185,7 @@ class Controller1(Node):
             angle = vision_utils.get_angle_of_closest_bottle(detections)
             # rotation timer
             if angle is not None:
-                print("timer started")
+                print("starting timer after detection of bottle, with angle:",angle)
                 self.start_rotation_timer(angle, TIMER_STATE_ON_RANDOM_SEARCH)
             # OR
             # simple rotation
