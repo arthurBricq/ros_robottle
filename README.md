@@ -21,6 +21,16 @@ Setup to take pictures
 6. folder where pictures and detections are writen: ~/dev/ros/pictures/f1
 
 
+## Report of 17.12
+
+- detection has different timings each time, sometimes give detections in bulk
+- angle calculation seems to work fine (TO TEST in better conditions)
+- camera doesn't detect all bottles
+- robottle detects well when it is stopped, and then goes to bottle -> possible solution is to change random search: rotation X degrees, stop, detect, repeat
+
+- ultrasonic has range of approx 60 cm at current height -> cannot be used to detect bottles far away
+- should be kept as low as possible for detecting further and as high as possible for passing rocks
+
 
 ## Other repositories used 
 
