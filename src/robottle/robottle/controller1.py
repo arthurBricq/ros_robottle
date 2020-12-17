@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-import numpy as np 
+import numpy as np
 import time
 import sys
 
@@ -12,7 +12,7 @@ from robottle_utils import map_utils, controller_utils, vision_utils
 from robottle_utils.vizualiser import ImageVizualiser
 from robottle_utils.rrt_star import RRTStar
 
-### STATE MACHINE 
+### STATE MACHINE
 
 INITIAL_ROTATION_MODE = "initial_rotation_mode"
 TRAVEL_MODE = "travel_mode"
@@ -49,28 +49,28 @@ class Controller1(Node):
     def __init__(self):
         super().__init__("controller1")
 
-        # Create subscription for the map 
+        # Create subscription for the map
         self.subscription1 = self.create_subscription(Position,'robot_pos',
             self.listener_callback_position,1000)
-        self.subscription1  
+        self.subscription1
 
         # Create subscription for the robot position
         self.subscription2 = self.create_subscription(Map,'world_map',
             self.listener_callback_map,1000)
-        self.subscription2  
+        self.subscription2
 
         # Create subscription for the UART reader (get signals from MC)
         self.subscription3 = self.create_subscription(Status,'arduino_status',
             self.listener_arduino_status,1000)
-        self.subscription3  
+        self.subscription3
 
         # Create subscription for detectnet
         self.subscription_camera = self.create_subscription(Detection2DArray, '/detectnet/detections',
             self.listener_callback_detectnet, 1000)
-        
+
         # Create a publication for uart commands
         self.uart_publisher = self.create_publisher(String, 'uart_commands', 1000)
-        
+
         # create publisher for controlling the camera
         self.cam_publisher = self.create_publisher(String, 'detectnet/camera_control', 1000)
         self.cam_publisher.publish(String(data="destroy"))
@@ -78,8 +78,8 @@ class Controller1(Node):
         # keep track of where is the robot within the class
         self.x = 0
         self.y = 0
-        self.theta = 0 
-        
+        self.theta = 0
+
         # variable for the controller
         self.initial_zones_found = False
         self.zones = np.array([])
@@ -90,21 +90,21 @@ class Controller1(Node):
         self.current_target_index = 0
         self.rotation_timer = None
 
-        # DEBUG 
+        # DEBUG
         # set saving state (if True, then it will save some maps to a folder when they can be analysed)
         args = sys.argv
-        self.is_saving = "--save" in args 
+        self.is_saving = "--save" in args
         self.is_plotting = "--plot" in args
         self.saving_index = 0
         self.map_name = ""
-        self.SAVE_TIME_CONSTANT = 10  
+        self.SAVE_TIME_CONSTANT = 10
         if self.is_plotting:
             self.live_vizualiser = ImageVizualiser()
             try:
                 self.SAVE_TIME_CONSTANT = int(args[args.index("--plot")+1])
             except:
                 pass
-        if self.is_saving: 
+        if self.is_saving:
             idx = args.index("--save")
             self.map_name = args[idx + 1]
             print("Name : ", self.map_name)
@@ -112,7 +112,7 @@ class Controller1(Node):
                 self.SAVE_TIME_CONSTANT = int(args[idx+2])
             except:
                 pass
-            
+
 
         # STATE MACHINE
         # send a request for continuous rotation after waiting 1 second for UART node to be ready
@@ -123,23 +123,23 @@ class Controller1(Node):
         print("Controller is ready: Is Ploting ? {}  - Is Saving ? {} - rate = {}".format(self.is_plotting, self.is_saving, self.SAVE_TIME_CONSTANT))
 
         # for debugging
-        if "--travel" in args: 
+        if "--travel" in args:
             self.state = TRAVEL_MODE
-        
-        if "--search" in args: 
+
+        if "--search" in args:
             print("Random search mode activated")
-            self.state = RANDOM_SEARCH_MODE
+            self.start_random_search_mode()
 
     ### CALLBACKS
     # callbacks are the entry points to all other methods
 
     def listener_callback_map(self, map_message):
         #print("{} - theta = {}".format(int(map_message.index), self.theta))
-        if self.state == TRAVEL_MODE: 
+        if self.state == TRAVEL_MODE:
             self.travel_mode(map_message)
 
     def listener_callback_position(self, pos):
-        """This function just receives the position and will update it to self variables. 
+        """This function just receives the position and will update it to self variables.
         All control logics are in the 'map' calback"""
         # receive the position from the SLAM
         self.x = pos.x / 1200
@@ -161,15 +161,15 @@ class Controller1(Node):
                 self.state = TRAVEL_MODE
 
         if self.state == BOTTLE_PICKING_MODE:
-            if status == 0: 
+            if status == 0:
                 # ERROR --> we must do something
-                # todo !!! 
-                pass 
+                # todo !!!
+                pass
             elif status == 1: # SUCCESS --> bottle was probably picked
                 self.start_random_search_mode()
 
         if self.state == BOTTLE_RELEASE_MODE:
-            if status == 1: 
+            if status == 1:
                 self.state = TRAVEL_MODE
 
     def listener_callback_detectnet(self, msg):
@@ -209,7 +209,7 @@ class Controller1(Node):
     ### STATE MACHINE METHODS
 
     def travel_mode(self, map_message):
-        """Travel mode of the controller. 
+        """Travel mode of the controller.
         This function is called by the map listener's callback.
         """
         # compute robot position (used a lot)
@@ -217,7 +217,7 @@ class Controller1(Node):
 
         ### I. Path planning
         # Once in a while, start the path planning logic
-        if int(map_message.index) % CONTROLLER_TIME_CONSTANT == 0: 
+        if int(map_message.index) % CONTROLLER_TIME_CONSTANT == 0:
             print("Starting map analysis")
 
             ## Handling timer problem
@@ -226,8 +226,8 @@ class Controller1(Node):
                 self.rotation_timer_state == TIME_STATE_OFF
                 self.destroy_timer(self.rotation_timer)
 
-            ## Map analysis 
-            # a. filter the map 
+            ## Map analysis
+            # a. filter the map
             map_data = bytearray(map_message.map_data)
             m = map_utils.get_map(map_data)
             binary = map_utils.filter_map(m, dilation_kernel_size = 14)
@@ -242,21 +242,21 @@ class Controller1(Node):
             # save binary if we are going to make some plots
             if self.is_saving or self.is_plotting:
                 self.binary = binary
-                self.contours = contours 
+                self.contours = contours
                 self.corners = corners
 
-            # c. find zones 
+            # c. find zones
             # zones are ordered the following way: (recycling area, zone2, zone3, zone4)
             if not self.initial_zones_found and area > AREA_THRESHOLD:
                 if area > 2250000:
                     raise RuntimeError("Zones were not found properly")
 
-               # corners found are valid and we can find the 'initial zones' 
+               # corners found are valid and we can find the 'initial zones'
                 self.zones = map_utils.get_initial_zones(corners, self.robot_pos)
                 self.initial_zones_found = True
                 print("Initial zones found with area: ", area)
 
-            if self.initial_zones_found: 
+            if self.initial_zones_found:
                 # update zones with new map
                 new_zones = map_utils.get_zones_from_previous(corners, self.zones)
                 self.zones = new_zones
@@ -276,12 +276,12 @@ class Controller1(Node):
         if (self.is_saving or self.is_plotting) and int(map_message.index) % self.SAVE_TIME_CONSTANT == 0:
             name = self.map_name+str(self.saving_index)
             save_name = "/home/arthur/dev/ros/data/maps/rects/"+name+".png" if self.is_saving else ""
-            text = "robot pos = {}".format(int(map_message.index), 
+            text = "robot pos = {}".format(int(map_message.index),
                     (self.robot_pos, self.theta))
             try:
-                img = map_utils.make_nice_plot(self.binary, save_name, self.robot_pos, 
-                        self.theta, self.contours, self.corners, 
-                        self.zones, self.targets, self.path.astype(int), 
+                img = map_utils.make_nice_plot(self.binary, save_name, self.robot_pos,
+                        self.theta, self.contours, self.corners,
+                        self.zones, self.targets, self.path.astype(int),
                         text = text)
                 if self.is_plotting:
                     self.live_vizualiser.display(np.array(img))
@@ -292,7 +292,7 @@ class Controller1(Node):
 
         ### II. Path Tracking
         # 0. end condition
-        if len(self.path) == 0 or self.goal is None: return 
+        if len(self.path) == 0 or self.goal is None: return
         if self.rotation_timer_state == TIMER_STATE_ON_TRAVEL_MODE: return
 
         # 1. state transition condition
@@ -345,7 +345,7 @@ class Controller1(Node):
             # let's enter travel mode again
             self.cam_publisher.publish(String(data="destroy"))
             self.state = TRAVEL_MODE
-            return 
+            return
 
         self.state = RANDOM_SEARCH_MODE
         self.uart_publisher.publish(String(data = "d"))
@@ -360,8 +360,8 @@ class Controller1(Node):
     def start_bottle_release_mode(self):
         """Will start the bottle picking mode"""
         self.state = BOTTLE_RELEASE_MODE
-       
-        # todo !!! 
+
+        # todo !!!
 
     ### HELPER FUNCTIONS
 
@@ -369,7 +369,7 @@ class Controller1(Node):
         """Will start a timer which has a period equals to the required rotation time
         to achieve the provided angle."""
         # 1. if required, delete previous timer
-        if self.rotation_timer_state is not TIME_STATE_OFF: 
+        if self.rotation_timer_state is not TIME_STATE_OFF:
             # it means another timer was launched
             self.destroy_timer(self.rotation_timer)
 
@@ -380,7 +380,7 @@ class Controller1(Node):
         self.uart_publisher.publish(msg)
 
         # 3. estimate remaining time of rotation and start new timer
-        self.rotation_timer_state = state 
+        self.rotation_timer_state = state
         time_to_rotate = controller_utils.get_rotation_time(np.abs(angle))
         self.rotation_timer = self.create_timer(time_to_rotate, self.rotation_timer_callback)
 
@@ -398,4 +398,3 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-
