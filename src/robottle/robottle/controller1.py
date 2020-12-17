@@ -128,6 +128,8 @@ class Controller1(Node):
 
         if "--search" in args:
             print("Random search mode activated")
+            self.n_random_search = 0
+            self.state = RANDOM_SEARCH_MODE
             self.start_random_search_mode()
 
     ### CALLBACKS
