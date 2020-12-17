@@ -1,6 +1,6 @@
 # ROS for Robottle
 
-This repo contains the ROS source code to run the project, that was writen by myself. It is the ROS2 workspace of our project !
+This repo contains the ROS source code to run the project, that was writen by myself. It is the ROS2 workspace of our project!
 
 
 ## How to use it 
