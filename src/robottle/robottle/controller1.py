@@ -128,6 +128,7 @@ class Controller1(Node):
             self.state = TRAVEL_MODE
 
         if "--search" in args:
+            # CHANGED
             print("Random search mode activated")
             self.n_random_search = 0
             self.state = RANDOM_SEARCH_MODE
@@ -198,7 +199,6 @@ class Controller1(Node):
     def rotation_timer_callback(self):
         """Called when robot has turned enough to pick the bottle"""
         self.destroy_timer(self.rotation_timer)
-        print("timer finished")
 
         if self.rotation_timer_state == TIMER_STATE_ON_RANDOM_SEARCH:
             # change timer state and go to bottle picking mode.
