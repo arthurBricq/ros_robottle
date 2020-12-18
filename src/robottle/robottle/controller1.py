@@ -40,7 +40,7 @@ MIN_ANGLE_DIFF = 15 # [deg]
 # maximum number of times controller enters random search mode inside 1 zone
 N_RANDOM_SEARCH_MAX = 20
 # Array containing indices of zones to visit: note that zones = [r, z2, z3, z4]
-TARGETS_TO_VISIT = [2,0,2,0]
+TARGETS_TO_VISIT = [1,0,2,0]
 # delta degree for little random search rotations
 DELTA_RANDOM_SEARCH = 30
 
