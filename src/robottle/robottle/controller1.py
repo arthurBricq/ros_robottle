@@ -126,8 +126,6 @@ class Controller1(Node):
             self.state = TRAVEL_MODE
 
         if "--search" in args:
-            # CHANGED
-            print("Random search mode activated")
             self.state = RANDOM_SEARCH_MODE
             self.start_random_search_mode()
 
@@ -366,7 +364,7 @@ class Controller1(Node):
     def start_random_search_mode(self):
         """Will start the random search and increase by 1 the stepper
         """
-        print("entered random search mode", self.n_random_search+1,"times")
+        print("Random search activated - n = ", self.n_random_search)
         self.state = RANDOM_SEARCH_MODE
         self.n_random_search += 1
 
