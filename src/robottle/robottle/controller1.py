@@ -130,7 +130,7 @@ class Controller1(Node):
 
         if "--search" in args:
             # CHANGED
-            print("Random search mode activated
+            print("Random search mode activated")
             self.state = RANDOM_SEARCH_MODE
             self.cam_publisher.publish(String(data="create"))
             self.start_random_search_mode()
