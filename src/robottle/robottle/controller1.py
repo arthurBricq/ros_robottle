@@ -324,9 +324,9 @@ class Controller1(Node):
         # 1. state transition condition
         dist = controller_utils.get_distance(self.robot_pos, self.goal)
         if dist < MIN_DIST_TO_GOAL:
-            print("Leaving travel mode")
             # robot arrived to destination
             self.current_target_index += 1
+            print("Robot reached zone ", TARGETS_TO_VISIT[self.current_target_index])
             if TARGETS_TO_VISIT[self.current_target_index] in [1,2]: # robot in zone 2 or zone 3
                 # activate camera detection
                 self.cam_publisher.publish(String(data="create"))
