@@ -12,7 +12,7 @@ from robottle_utils import map_utils, controller_utils, vision_utils
 from robottle_utils.vizualiser import ImageVizualiser
 from robottle_utils.rrt_star import RRTStar
 
-### STATE MACHINE
+### STATE MACHINES
 
 INITIAL_ROTATION_MODE = "initial_rotation_mode"
 TRAVEL_MODE = "travel_mode"
@@ -22,7 +22,11 @@ BOTTLE_RELEASE_MODE = "bottle_release_mode"
 
 TIME_STATE_OFF = "0"
 TIMER_STATE_ON_TRAVEL_MODE = "1"
-TIMER_STATE_ON_RANDOM_SEARCH = "2"
+TIMER_STATE_ON_RANDOM_SEARCH_BOTTLE_ALIGNMENT = "2"
+TIMER_STATE_ON_RANDOM_SEARCH_DELTA_ROTATION = "3"
+
+DETECTNET_TIMER_STATE_ON = "0"
+DETECTNET_TIMER_STATE_OFF = "1"
 
 ### HYPERPARAMETERS
 
@@ -40,6 +44,8 @@ MIN_ANGLE_DIFF = 15 # [deg]
 N_RANDOM_SEARCH_MAX = 5
 # Array containing indices of zones to visit: note that zones = [r, z2, z3, z4]
 TARGETS_TO_VISIT = [2,0,1,0]
+# delta degree for little random search rotations
+DELTA_RANDOM_SEARCH = 30
 
 class Controller1(Node):
     """
@@ -125,7 +131,6 @@ class Controller1(Node):
             # CHANGED
             print("Random search mode activated")
             self.state = RANDOM_SEARCH_MODE
-            self.cam_publisher.publish(String(data="create"))
             self.start_random_search_mode()
 
 
@@ -182,34 +187,34 @@ class Controller1(Node):
 
     def listener_callback_detectnet(self, msg):
         """Called when a bottle is detected by neuron network
+        This function can only be called when the neuron network is active
+        i.e. only in RANDOM_SEARCH_MODE when the robot is still and waiting for detection
+        i.e. 
         """
-        print("Object detected")
-
-        if self.state == RANDOM_SEARCH_MODE and self.rotation_timer_state == TIME_STATE_OFF:
-            # find the angle of the closest detected bottle
-            detections = [(d.bbox.center.x, d.bbox.center.y, d.bbox.size_x, d.bbox.size_y) for d in msg.detections]
-            angle = vision_utils.get_angle_of_closest_bottle(detections)
-            # rotation timer
-            if angle is not None:
-                print("starting timer after detection of bottle, with angle:",angle)
-                self.start_rotation_timer(angle, TIMER_STATE_ON_RANDOM_SEARCH)
-            # OR
-            # simple rotation
-            #if angle > THRESHOLD_ANGLE:
-            #    self.uart_publisher.publish(String(data = "d")
-            #else:
-            #    # YOUHU IT's ready: move forward
-            ##    self.start_bottle_picking_mode()
+        # 1. destroy the timer 
+        self.destroy_timer(self.wait_for_detectnet_timer)
+        # 2. find the angle of the closest detected bottle
+        detections = [(d.bbox.center.x, d.bbox.center.y, d.bbox.size_x, d.bbox.size_y) for d in msg.detections]
+        angle = vision_utils.get_angle_of_closest_bottle(detections)
+        # 3. rotation timer
+        if angle is not None:
+            print("starting timer after detection of bottle, with angle:",angle)
+            self.start_rotation_timer(angle, TIMER_STATE_ON_RANDOM_SEARCH_BOTTLE_ALIGNMENT)
 
     def rotation_timer_callback(self):
         """Called when robot has turned enough to pick the bottle"""
         self.destroy_timer(self.rotation_timer)
 
-        if self.rotation_timer_state == TIMER_STATE_ON_RANDOM_SEARCH:
+        if self.rotation_timer_state == TIMER_STATE_ON_RANDOM_SEARCH_BOTTLE_ALIGNMENT:
             print("Robot is in front of bottle")
             # change timer state and go to bottle picking mode.
             self.rotation_timer_state = TIME_STATE_OFF
             self.start_bottle_picking_mode()
+
+        if self.rotation_timer_state == TIMER_STATE_ON_RANDOM_SEARCH_DELTA_ROTATION:
+            print("Robot finished his delta rotation")
+            # start detection again
+            self.start_random_search_mode()
 
         if self.rotation_timer_state == TIMER_STATE_ON_TRAVEL_MODE:
             # change timer state and start moving forward.
@@ -217,6 +222,14 @@ class Controller1(Node):
             print("Rotated time reached. Let's move forward.")
             self.uart_publisher.publish(String(data="w"))
 
+    def no_bottle_detected_callback(self):
+        """Timer called after 2 seconds and destroyed immeditaly when a bottle is detected.
+        If the calback is called, it means no bottle were detected during its period.
+        """
+        print("No bottle detected during time interval")
+        self.destroy_timer(self.wait_for_detectnet_timer)
+        # lets start a rotation
+        self.start_rotation_timer(DELTA_RANDOM_SEARCH, TIMER_STATE_ON_RANDOM_SEARCH_DELTA_ROTATION)
 
     ### STATE MACHINE METHODS
 
@@ -353,7 +366,10 @@ class Controller1(Node):
         """Will start the random search and increase by 1 the stepper
         """
         print("entered random search mode", self.n_random_search+1,"times")
+        self.state = RANDOM_SEARCH_MODE
+        self.n_random_search += 1
 
+        # ending criterion (1)
         if self.n_random_search == N_RANDOM_SEARCH_MAX:
             # no more random walk can happen
             # let's enter travel mode again
@@ -361,9 +377,12 @@ class Controller1(Node):
             self.state = TRAVEL_MODE
             return
 
-        self.state = RANDOM_SEARCH_MODE
-        self.uart_publisher.publish(String(data = "d"))
-        self.n_random_search += 1
+        # create subscription for detection
+        self.cam_publisher.publish(String(data="create"))
+
+        # create a callback in 2 seconds in the case that no bottle were detected
+        self.wait_for_detectnet_timer = self.create_timer(3, self.no_bottle_detected_callback)
+
 
     def start_bottle_picking_mode(self):
         """Will start the bottle picking mode"""
@@ -374,7 +393,6 @@ class Controller1(Node):
     def start_bottle_release_mode(self):
         """Will start the bottle picking mode"""
         self.state = BOTTLE_RELEASE_MODE
-
         # todo !!!
 
     ### HELPER FUNCTIONS
@@ -398,10 +416,6 @@ class Controller1(Node):
         self.rotation_timer_state = state
         time_to_rotate = controller_utils.get_rotation_time(np.abs(angle))
         self.rotation_timer = self.create_timer(time_to_rotate, self.rotation_timer_callback)
-
-
-
-
 
 
 def main(args=None):
