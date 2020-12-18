@@ -292,8 +292,10 @@ class Controller1(Node):
 
                 # e. rrt_star path planning
                 self.goal = self.targets[TARGETS_TO_VISIT[self.current_target_index]]
-                rrt = RRTStar(start = self.robot_pos, goal = self.goal,binary_obstacle = binary,rand_area = [0, 500],
-                        expand_dis = 50, path_resolution = 1,goal_sample_rate = 5,max_iter = 500)
+                random_area = map_utils.get_random_area(self.zones)
+                rrt = RRTStar(start = self.robot_pos, goal = self.goal, binary_obstacle = binary, 
+                        rand_area = random_area, expand_dis = 50, path_resolution = 1,
+                        goal_sample_rate = 5, max_iter = 500)
                 self.path = np.array(rrt.planning(animation = False))
                 print("Path found")
 
