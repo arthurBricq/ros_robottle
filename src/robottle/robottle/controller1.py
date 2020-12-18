@@ -73,8 +73,8 @@ class Controller1(Node):
 
         # create publisher for controlling the camera
         self.cam_publisher = self.create_publisher(String, 'detectnet/camera_control', 1000)
-        # self.cam_publisher.publish(String(data="destroy"))
-        # TO CHECK: c'est normal que tu destroy juste apres crée la subscription?
+        self.cam_publisher.publish(String(data="destroy"))
+        # CHANGED: c'est normal que tu destroy juste apres crée la subscription?
 
         # keep track of where is the robot within the class
         self.x = 0
@@ -90,6 +90,7 @@ class Controller1(Node):
         self.robot_pos = None
         self.current_target_index = 0
         self.rotation_timer = None
+        self.n_random_search = 0
 
         # DEBUG
         # set saving state (if True, then it will save some maps to a folder when they can be analysed)
@@ -129,9 +130,9 @@ class Controller1(Node):
 
         if "--search" in args:
             # CHANGED
-            print("Random search mode activated")
-            self.n_random_search = 0
+            print("Random search mode activated
             self.state = RANDOM_SEARCH_MODE
+            self.cam_publisher.publish(String(data="create"))
             self.start_random_search_mode()
 
     ### CALLBACKS
