@@ -325,14 +325,15 @@ class Controller1(Node):
         dist = controller_utils.get_distance(self.robot_pos, self.goal)
         if dist < MIN_DIST_TO_GOAL:
             # robot arrived to destination
+            reached = TARGETS_TO_VISIT[self.current_target_index]
             self.current_target_index += 1
-            print("Robot reached zone ", TARGETS_TO_VISIT[self.current_target_index])
-            if TARGETS_TO_VISIT[self.current_target_index] in [1,2]: # robot in zone 2 or zone 3
+            print("Robot reached zone ", reached)
+            if reached in [1,2]: # robot in zone 2 or zone 3
                 # activate camera detection
                 self.cam_publisher.publish(String(data="create"))
                 # travel_mode --> random_search mode
                 self.start_random_search_mode()
-            elif self.goal == 0:
+            elif reached == 0:
                 # travel_mode --> release_bottle_mode
                 self.start_bottle_release_mode()
             return
