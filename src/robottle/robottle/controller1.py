@@ -180,6 +180,7 @@ class Controller1(Node):
     def listener_callback_detectnet(self, msg):
         """Called when a bottle is detected by neuron network
         """
+        print("Object detected")
 
         if self.state == RANDOM_SEARCH_MODE and self.rotation_timer_state == TIME_STATE_OFF:
             # find the angle of the closest detected bottle
