@@ -187,16 +187,17 @@ class Controller1(Node):
         This function can only be called when the neuron network is active
         i.e. only in RANDOM_SEARCH_MODE when the robot is still and waiting for detection
         """
-        # 1. destroy the timer 
-        self.destroy_timer(self.wait_for_detectnet_timer)
-        # 2. find the angle of the closest detected bottle
-        detections = [(d.bbox.center.x, d.bbox.center.y, d.bbox.size_x, d.bbox.size_y) for d in msg.detections]
-        angle = vision_utils.get_angle_of_closest_bottle(detections)
-        # 3. rotation timer
-        if angle is not None:
-            print("starting timer after detection of bottle, with angle:",angle)
-            self.cam_publisher.publish(String(data="destroy"))
-            self.start_rotation_timer(angle, TIMER_STATE_ON_RANDOM_SEARCH_BOTTLE_ALIGNMENT)
+        if self.rotation_timer_state == TIMER_STATE_OFF:
+            # 1. destroy the timer 
+            self.destroy_timer(self.wait_for_detectnet_timer)
+            # 2. find the angle of the closest detected bottle
+            detections = [(d.bbox.center.x, d.bbox.center.y, d.bbox.size_x, d.bbox.size_y) for d in msg.detections]
+            angle = vision_utils.get_angle_of_closest_bottle(detections)
+            # 3. rotation timer
+            if angle is not None:
+                print("starting timer after detection of bottle, with angle:",angle)
+                self.cam_publisher.publish(String(data="destroy"))
+                self.start_rotation_timer(angle, TIMER_STATE_ON_RANDOM_SEARCH_BOTTLE_ALIGNMENT)
 
     def rotation_timer_callback(self):
         """Called when robot has turned enough to pick the bottle"""
