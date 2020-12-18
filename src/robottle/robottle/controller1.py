@@ -119,6 +119,7 @@ class Controller1(Node):
                 self.SAVE_TIME_CONSTANT = int(args[idx+2])
             except:
                 pass
+        print("Controller is ready: Is Ploting ? {}  - Is Saving ? {} - rate = {}".format(self.is_plotting, self.is_saving, self.SAVE_TIME_CONSTANT))
 
         # for debugging
         if "--travel" in args:
@@ -137,7 +138,6 @@ class Controller1(Node):
         time.sleep(0)
         if self.state == INITIAL_ROTATION_MODE:
             self.uart_publisher.publish(String(data = "r"))
-        print("Controller is ready: Is Ploting ? {}  - Is Saving ? {} - rate = {}".format(self.is_plotting, self.is_saving, self.SAVE_TIME_CONSTANT))
 
 
     ### CALLBACKS
@@ -410,7 +410,6 @@ class Controller1(Node):
         msg = String()
         if angle > 0: msg.data = "d"
         else: msg.data = "a"
-        print(msg)
         self.uart_publisher.publish(String(data="h"))
         self.uart_publisher.publish(msg)
 
