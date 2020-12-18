@@ -91,6 +91,8 @@ class Controller1(Node):
         self.current_target_index = 0
         self.rotation_timer = None
         self.n_random_search = 0
+        self.state = INITIAL_ROTATION_MODE
+        self.rotation_timer_state = TIME_STATE_OFF
 
         # DEBUG
         # set saving state (if True, then it will save some maps to a folder when they can be analysed)
@@ -115,15 +117,6 @@ class Controller1(Node):
             except:
                 pass
 
-
-        # STATE MACHINE
-        # send a request for continuous rotation after waiting 1 second for UART node to be ready
-        self.state = INITIAL_ROTATION_MODE
-        self.rotation_timer_state = TIME_STATE_OFF
-        time.sleep(0)
-        self.uart_publisher.publish(String(data = "r"))
-        print("Controller is ready: Is Ploting ? {}  - Is Saving ? {} - rate = {}".format(self.is_plotting, self.is_saving, self.SAVE_TIME_CONSTANT))
-
         # for debugging
         if "--travel" in args:
             self.state = TRAVEL_MODE
@@ -134,6 +127,16 @@ class Controller1(Node):
             self.state = RANDOM_SEARCH_MODE
             self.cam_publisher.publish(String(data="create"))
             self.start_random_search_mode()
+
+
+        # STATE MACHINE
+        # send a request for continuous rotation after waiting 1 second for UART node to be ready
+        # todo: change '0' to '3' when launching controller1 within launch file
+        time.sleep(0)
+        if self.state == INITIAL_ROTATION_MODE:
+            self.uart_publisher.publish(String(data = "r"))
+        print("Controller is ready: Is Ploting ? {}  - Is Saving ? {} - rate = {}".format(self.is_plotting, self.is_saving, self.SAVE_TIME_CONSTANT))
+
 
     ### CALLBACKS
     # callbacks are the entry points to all other methods
