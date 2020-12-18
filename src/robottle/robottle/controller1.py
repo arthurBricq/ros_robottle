@@ -318,12 +318,11 @@ class Controller1(Node):
         ### II. Path Tracking
         # 0. end condition
         if len(self.path) == 0 or self.goal is None: return
-        if self.rotation_timer_state == TIMER_STATE_ON_TRAVEL_MODE: return
 
         # 1. state transition condition
         dist = controller_utils.get_distance(self.robot_pos, self.goal)
         if dist < MIN_DIST_TO_GOAL:
-            print("leaving travel mode")
+            print("Leaving travel mode")
             # robot arrived to destination
             self.current_target_index += 1
             if self.goal in [1,2]: # robot in zone 2 or zone 3
@@ -337,6 +336,8 @@ class Controller1(Node):
             return
 
         # 2. Else, compute motors commands
+        if self.rotation_timer_state == TIMER_STATE_ON_TRAVEL_MODE: return
+
         path_orientation = controller_utils.get_path_orientation(self.path)
         diff = (path_orientation - self.theta + 180) % 360 - 180
         if abs(diff) > MIN_ANGLE_DIFF:
