@@ -326,7 +326,7 @@ class Controller1(Node):
             print("Leaving travel mode")
             # robot arrived to destination
             self.current_target_index += 1
-            if self.goal in [1,2]: # robot in zone 2 or zone 3
+            if TARGETS_TO_VISIT[self.current_target_index] in [1,2]: # robot in zone 2 or zone 3
                 # activate camera detection
                 self.cam_publisher.publish(String(data="create"))
                 # travel_mode --> random_search mode
