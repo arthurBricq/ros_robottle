@@ -20,13 +20,10 @@ RANDOM_SEARCH_MODE = "random_search_mode"
 BOTTLE_PICKING_MODE = "bottle_picking_mode"
 BOTTLE_RELEASE_MODE = "bottle_release_mode"
 
-TIME_STATE_OFF = "0"
+TIMER_STATE_OFF = "0"
 TIMER_STATE_ON_TRAVEL_MODE = "1"
 TIMER_STATE_ON_RANDOM_SEARCH_BOTTLE_ALIGNMENT = "2"
 TIMER_STATE_ON_RANDOM_SEARCH_DELTA_ROTATION = "3"
-
-DETECTNET_TIMER_STATE_ON = "0"
-DETECTNET_TIMER_STATE_OFF = "1"
 
 ### HYPERPARAMETERS
 
@@ -98,7 +95,7 @@ class Controller1(Node):
         self.rotation_timer = None
         self.n_random_search = 0
         self.state = INITIAL_ROTATION_MODE
-        self.rotation_timer_state = TIME_STATE_OFF
+        self.rotation_timer_state = TIMER_STATE_OFF
 
         # DEBUG
         # set saving state (if True, then it will save some maps to a folder when they can be analysed)
@@ -189,7 +186,6 @@ class Controller1(Node):
         """Called when a bottle is detected by neuron network
         This function can only be called when the neuron network is active
         i.e. only in RANDOM_SEARCH_MODE when the robot is still and waiting for detection
-        i.e. 
         """
         # 1. destroy the timer 
         self.destroy_timer(self.wait_for_detectnet_timer)
@@ -199,6 +195,7 @@ class Controller1(Node):
         # 3. rotation timer
         if angle is not None:
             print("starting timer after detection of bottle, with angle:",angle)
+            self.cam_publisher.publish(String(data="destroy"))
             self.start_rotation_timer(angle, TIMER_STATE_ON_RANDOM_SEARCH_BOTTLE_ALIGNMENT)
 
     def rotation_timer_callback(self):
@@ -208,17 +205,18 @@ class Controller1(Node):
         if self.rotation_timer_state == TIMER_STATE_ON_RANDOM_SEARCH_BOTTLE_ALIGNMENT:
             print("Robot is in front of bottle")
             # change timer state and go to bottle picking mode.
-            self.rotation_timer_state = TIME_STATE_OFF
+            self.rotation_timer_state = TIMER_STATE_OFF
             self.start_bottle_picking_mode()
 
         if self.rotation_timer_state == TIMER_STATE_ON_RANDOM_SEARCH_DELTA_ROTATION:
             print("Robot finished his delta rotation")
+            self.rotation_timer_state = TIMER_STATE_OFF
             # start detection again
             self.start_random_search_mode()
 
         if self.rotation_timer_state == TIMER_STATE_ON_TRAVEL_MODE:
             # change timer state and start moving forward.
-            self.rotation_timer_state = TIME_STATE_OFF
+            self.rotation_timer_state = TIMER_STATE_OFF
             print("Rotated time reached. Let's move forward.")
             self.uart_publisher.publish(String(data="w"))
 
@@ -249,7 +247,7 @@ class Controller1(Node):
             ## Handling timer problem
             if self.rotation_timer_state == TIMER_STATE_ON_TRAVEL_MODE:
                 self.uart_publisher.publish(String(data = "x"))
-                self.rotation_timer_state == TIME_STATE_OFF
+                self.rotation_timer_state == TIMER_STATE_OFF
                 self.destroy_timer(self.rotation_timer)
 
             ## Map analysis
@@ -402,7 +400,7 @@ class Controller1(Node):
         """Will start a timer which has a period equals to the required rotation time
         to achieve the provided angle."""
         # 1. if required, delete previous timer
-        if self.rotation_timer_state is not TIME_STATE_OFF:
+        if self.rotation_timer_state is not TIMER_STATE_OFF:
             # it means another timer was launched
             self.destroy_timer(self.rotation_timer)
 
