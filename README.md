@@ -140,6 +140,10 @@ Here are some commands quite useful with the ROS setup
 
 `sshfs arthur@M00e04c3fd2f6.dyn.epfl.ch:/home/arthur/dev/ros/data/maps/rects/ /home/arthur/dev/ros/ros_robottle/mount`
 
+or 
+
+`xdg-open dev/ros/data/maps/rects/`
+
 ## Differences between Jetson and Personal Computer
 
 There are differences between the different setups, because the Jetson has to do things that I will not try to replicate at home (and just there results)
