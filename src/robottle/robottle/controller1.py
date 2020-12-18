@@ -30,7 +30,7 @@ TIMER_STATE_ON_RANDOM_SEARCH_DELTA_ROTATION = "3"
 # min area that a rotated rectangle must contain to be considered as valid
 AREA_THRESHOLD = 60000
 # distance at which, if the robot is closer than the goal, travel_mode ends
-MIN_DIST_TO_GOAL = 1 # [m]
+MIN_DIST_TO_GOAL = 50 # [pixels]
 # min distance between robot and point in the path to consider the robot as passed it
 MIN_DIST_TO_POINT = 0.2 # [m]
 # time constant of path computation update (the bigger, the less often the path is updated)
