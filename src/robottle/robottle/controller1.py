@@ -142,7 +142,6 @@ class Controller1(Node):
     # callbacks are the entry points to all other methods
 
     def listener_callback_map(self, map_message):
-        #print("{} - theta = {}".format(int(map_message.index), self.theta))
         if self.state == TRAVEL_MODE:
             self.travel_mode(map_message)
 
@@ -247,6 +246,7 @@ class Controller1(Node):
 
             ## Handling timer problem
             if self.rotation_timer_state == TIMER_STATE_ON_TRAVEL_MODE:
+                print("Stopping current timer and let's compute a new path to follow")
                 self.uart_publisher.publish(String(data = "x"))
                 self.rotation_timer_state == TIMER_STATE_OFF
                 self.destroy_timer(self.rotation_timer)
@@ -316,6 +316,7 @@ class Controller1(Node):
                 print("Could not save")
 
         ### II. Path Tracking
+        print("Path Tracking")
         # 0. end condition
         if len(self.path) == 0 or self.goal is None: return
 
