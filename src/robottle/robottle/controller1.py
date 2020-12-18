@@ -174,6 +174,7 @@ class Controller1(Node):
                 # todo !!!
                 pass
             elif status == 1: # SUCCESS --> bottle was probably picked
+                print("Bottle picked")
                 self.start_random_search_mode()
 
         if self.state == BOTTLE_RELEASE_MODE:
