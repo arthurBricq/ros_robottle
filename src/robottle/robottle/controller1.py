@@ -187,7 +187,7 @@ class Controller1(Node):
         This function can only be called when the neuron network is active
         i.e. only in RANDOM_SEARCH_MODE when the robot is still and waiting for detection
         """
-        if self.rotation_timer_state == TIMER_STATE_OFF:
+        if self.rotation_timer_state == TIMER_STATE_OFF and self.state == RANDOM_SEARCH_MODE:
             # 1. destroy the timer 
             self.destroy_timer(self.wait_for_detectnet_timer)
             # 2. find the angle of the closest detected bottle
