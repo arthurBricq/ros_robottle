@@ -410,6 +410,8 @@ class Controller1(Node):
         msg = String()
         if angle > 0: msg.data = "d"
         else: msg.data = "a"
+        print(msg)
+        self.uart_publisher.publish(String(data="h"))
         self.uart_publisher.publish(msg)
 
         # 3. estimate remaining time of rotation and start new timer
