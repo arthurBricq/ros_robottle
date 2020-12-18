@@ -203,6 +203,7 @@ class Controller1(Node):
         self.destroy_timer(self.rotation_timer)
 
         if self.rotation_timer_state == TIMER_STATE_ON_RANDOM_SEARCH:
+            print("Robot is in front of bottle")
             # change timer state and go to bottle picking mode.
             self.rotation_timer_state = TIME_STATE_OFF
             self.start_bottle_picking_mode()
