@@ -316,7 +316,7 @@ class Controller1(Node):
                 print("Could not save")
 
         ### II. Path Tracking
-        print("Path Tracking")
+        print("Path Tracking: ", self.robot_pos, self.goal)
         # 0. end condition
         if len(self.path) == 0 or self.goal is None: return
 
