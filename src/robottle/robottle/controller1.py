@@ -229,6 +229,7 @@ class Controller1(Node):
         print("No bottle detected during time interval")
         self.destroy_timer(self.wait_for_detectnet_timer)
         # lets start a rotation
+        self.cam_publisher.publish(String(data="destroy"))
         self.start_rotation_timer(DELTA_RANDOM_SEARCH, TIMER_STATE_ON_RANDOM_SEARCH_DELTA_ROTATION)
 
     ### STATE MACHINE METHODS
@@ -417,13 +418,11 @@ class Controller1(Node):
         time_to_rotate = controller_utils.get_rotation_time(np.abs(angle))
         self.rotation_timer = self.create_timer(time_to_rotate, self.rotation_timer_callback)
 
-
 def main(args=None):
     rclpy.init(args=args)
     node = Controller1()
     rclpy.spin(node)
     rclpy.shutdown()
-
 
 if __name__ == '__main__':
     main()
