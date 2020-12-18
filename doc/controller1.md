@@ -77,9 +77,49 @@ For the path following, it works the following way:
     - if "rotation correction": robot will rotate until reaching the desired orientation. This mode is launched autmatically if the direction of the robot is not aligned with the direction of the path. 
     - if "forward": robot will simply move forward until next rotation mode is launched.
 
-### Random walk Mode
+### Random Search Mode
 
-Rotates slowly until a bottle is in front of the robot.
+
+2 kinds of obstacles
+1. Tall obstacles
+    - a real obstacle
+    - a wall
+    - a standing bottle
+2. Small obstacles
+    - a bottle
+    - rocks
+
+Algorithm to remain inside the rocks.
+1. Try to detect a bottle
+2. If not detection: rotates 30 degrees and start again at (1)
+3. If detection: 
+    - rotate to face toward the bottle
+    - send 'y' to arduino so that robot starts going forward (at lower speed than travel mode)
+    - continuously check for 'tall' obstacles with LIDAR
+    - if tall obstacle detected, 
+        - check if is a bottle using the width of the obstacle. If not, stop and start again at (2). If yes, do nothing. 
+    - wait for Arduino's reponses (that tells that there is a small obstacles, either a bottle or a rock)
+        - if robot in rocks zone: check that it's not in front of the rocks. If so, start again at (2)
+    - send 'p' to Arduino to pick the bottle
+4. Start again at (1)
+
+
+Additional information
+- When moving forward with 'y', robot will not exceed a certain distance called L. 
+
+Ideas
+- Jetson could select the maximum allowed distance when sending 'y'. 
+- possibility 2: check with computer vision if rocks are present between robot and bottle
+- possibility 3: estimate distance using bounding box, and check that bottle is in area using SLAM data
+
+TODO
+- Jetson
+    - check with Lidar that there's no obstacle by subscring to Lidar Data in controller1
+    - logic for 'y' and 'p' inside arduino callback (check only for zone 3)
+- Arduino
+    - refactor the 'loop' function
+    - change 'y' and 'p' logic
+
 
 ### Bottle Picking Mode
 

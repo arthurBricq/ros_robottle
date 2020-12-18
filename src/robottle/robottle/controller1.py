@@ -172,9 +172,18 @@ class Controller1(Node):
                 # ERROR --> we must do something
                 # todo !!!
                 pass
-            elif status == 1: # SUCCESS --> bottle was probably picked
+            elif status == 1: # robot picked the bottle 
                 print("Bottle picked")
                 self.start_random_search_mode()
+            elif status == 3: # robot reached a small obstacle
+                if TARGETS_TO_VISIT[self.current_target_index] == 2: 
+                    # robot is inside the rocks zone
+                    # TODO: verify that robot is not in front of the rocks 
+                    self.uart_publisher.publish(String(data="x"))
+                else:
+                    self.uart_publisher.publish(String(data="p"))
+
+
 
         if self.state == BOTTLE_RELEASE_MODE:
             if status == 1:
@@ -297,7 +306,7 @@ class Controller1(Node):
                         rand_area = random_area, expand_dis = 50, path_resolution = 1,
                         goal_sample_rate = 5, max_iter = 500)
                 self.path = np.array(rrt.planning(animation = False))
-                print("Path found")
+                print("Path found", random_area)
 
         # finally. make and save the nice figure
         if (self.is_saving or self.is_plotting) and int(map_message.index) % self.SAVE_TIME_CONSTANT == 0:
