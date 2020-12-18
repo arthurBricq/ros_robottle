@@ -316,9 +316,10 @@ class Controller1(Node):
                 print("Could not save")
 
         ### II. Path Tracking
-        print("Path Tracking: ", self.robot_pos, self.goal)
         # 0. end condition
-        if len(self.path) == 0 or self.goal is None: return
+        if len(self.path) == 0 or self.goal is None: 
+            print("Aborting")
+            return
 
         # 1. state transition condition
         dist = controller_utils.get_distance(self.robot_pos, self.goal)
