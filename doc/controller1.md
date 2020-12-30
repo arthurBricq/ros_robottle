@@ -115,28 +115,12 @@ Ideas
 TODO
 - Jetson
     - check with Lidar that there's no obstacle by subscring to Lidar Data in controller1
+    - lower speed setting
     - logic for 'y' and 'p' inside arduino callback (check only for zone 3)
 - Arduino
     - refactor the 'loop' function
     - change 'y' and 'p' logic
-
-
-### Bottle Picking Mode
-
-A bottle is in front of the robot: moves straigth until the bottle **is in range of the arm** (this idication is given by analysing the bounding boxes of the NN and by combining this information with Lidar data)
-
-Then, send a message to Arduino Mega via UART saying "you are now in charge of picking the bottle".
-
-The Arduino mega will
-- try to catch the bottle 
-    - if no bottle is detected --> responds "I can't find a bottle"
-    - if bottle is detected but can't be picked --> tries 1 more time. If unsucessfull again, responds "I can't pick this bottle" and the Jetson will need to move (**recovery mode**)
-    - if bottle is collected --> responds "I picked the bottle !"
-
-
-### Recovery Mode
-
-This mode will be writen when we have more empirical data on the problems and how to fix them. 
+    - maximum distance timer for 'y' mode
 
 # Debuging 
 

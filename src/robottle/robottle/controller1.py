@@ -5,10 +5,10 @@ import time
 import sys
 
 from vision_msgs.msg import Detection2DArray
-from interfaces.msg import Map, Position, Status
+from interfaces.msg import Map, Position, Status, LidarData
 from std_msgs.msg import String
 
-from robottle_utils import map_utils, controller_utils, vision_utils
+from robottle_utils import map_utils, controller_utils, vision_utils, lidar_utils
 from robottle_utils.vizualiser import ImageVizualiser
 from robottle_utils.rrt_star import RRTStar
 
@@ -19,6 +19,7 @@ TRAVEL_MODE = "travel_mode"
 RANDOM_SEARCH_MODE = "random_search_mode"
 BOTTLE_PICKING_MODE = "bottle_picking_mode"
 BOTTLE_RELEASE_MODE = "bottle_release_mode"
+BOTTLE_REACHING_MODE = "bottle_reaching_mode"
 
 TIMER_STATE_OFF = "0"
 TIMER_STATE_ON_TRAVEL_MODE = "1"
@@ -71,13 +72,16 @@ class Controller1(Node):
         self.subscription_camera = self.create_subscription(Detection2DArray, '/detectnet/detections',
             self.listener_callback_detectnet, 1000)
 
+        # Create subscription for lidar
+        self.subscription_lidar = self.create_subscription(LidarData, 'lidar_data',
+            self.lidar_callback, 1000)
+
         # Create a publication for uart commands
         self.uart_publisher = self.create_publisher(String, 'uart_commands', 1000)
 
         # create publisher for controlling the camera
         self.cam_publisher = self.create_publisher(String, 'detectnet/camera_control', 1000)
         self.cam_publisher.publish(String(data="destroy"))
-        # CHANGED: c'est normal que tu destroy juste apres crée la subscription?
 
         # keep track of where is the robot within the class
         self.x = 0
@@ -93,6 +97,7 @@ class Controller1(Node):
         self.robot_pos = None
         self.current_target_index = 0
         self.rotation_timer = None
+        self.lidar_save_index = None
         self.n_random_search = 0
         self.state = INITIAL_ROTATION_MODE
         self.rotation_timer_state = TIMER_STATE_OFF
@@ -129,6 +134,10 @@ class Controller1(Node):
             self.state = RANDOM_SEARCH_MODE
             self.start_random_search_mode()
 
+        if "--reach" in args:
+            self.state = BOTTLE_REACHING_MODE
+            self.lidar_save_index = 0
+
 
         # STATE MACHINE
         # send a request for continuous rotation after waiting 1 second for UART node to be ready
@@ -153,6 +162,15 @@ class Controller1(Node):
         self.y = pos.y / 1200
         self.theta = pos.theta % 360
 
+    def lidar_callback(self, msg):
+        if self.state == BOTTLE_REACHING_MODE:
+            # TODO : check if there is no obstacles
+            obstacle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, self.lidar_save_index) 
+            self.lidar_save_index += 1 
+            if obstacle_detected: 
+                self.start_rotation_timer(DELTA_RANDOM_SEARCH, TIMER_STATE_ON_RANDOM_SEARCH_DELTA_ROTATION)
+
+
     def listener_arduino_status(self, status_msg):
         """Called when Arduino send something to Jetson
         Messages type
@@ -161,21 +179,18 @@ class Controller1(Node):
         2: IN PROGRESS
         """
         status = status_msg.status
-        # state machine logic
         if self.state == INITIAL_ROTATION_MODE:
             if status == 1:
                 print("Initial rotation mode is finished")
                 self.state = TRAVEL_MODE
 
-        if self.state == BOTTLE_PICKING_MODE:
-            if status == 0:
-                # ERROR --> we must do something
-                # todo !!!
+        if self.state == BOTTLE_REACHING_MODE:
+            if status == 0: 
+                # = max distance reached
+                # TODO
                 pass
-            elif status == 1: # robot picked the bottle 
-                print("Bottle picked")
-                self.start_random_search_mode()
-            elif status == 3: # robot reached a small obstacle
+            elif status == 1:
+                # = there is a small obstacle ahead of the robot
                 if TARGETS_TO_VISIT[self.current_target_index] == 2: 
                     # robot is inside the rocks zone
                     # TODO: verify that robot is not in front of the rocks 
@@ -184,6 +199,14 @@ class Controller1(Node):
                     self.uart_publisher.publish(String(data="p"))
 
 
+        if self.state == BOTTLE_PICKING_MODE:
+            if status == 0:
+                # = no bottle were detected by the robot arm 
+                # TODO
+                pass
+            elif status == 1: # robot picked the bottle 
+                print("Bottle picked")
+                self.start_random_search_mode()
 
         if self.state == BOTTLE_RELEASE_MODE:
             if status == 1:
@@ -214,7 +237,7 @@ class Controller1(Node):
             print("Robot is in front of bottle")
             # change timer state and go to bottle picking mode.
             self.rotation_timer_state = TIMER_STATE_OFF
-            self.start_bottle_picking_mode()
+            self.start_bottle_reaching_mode()
 
         if self.rotation_timer_state == TIMER_STATE_ON_RANDOM_SEARCH_DELTA_ROTATION:
             print("Robot finished his delta rotation")
@@ -340,8 +363,6 @@ class Controller1(Node):
             self.current_target_index += 1
             print("Robot reached zone ", reached)
             if reached in [1,2]: # robot in zone 2 or zone 3
-                # activate camera detection
-                self.cam_publisher.publish(String(data="create"))
                 # travel_mode --> random_search mode
                 self.start_random_search_mode()
             elif reached == 0:
@@ -400,10 +421,11 @@ class Controller1(Node):
         self.wait_for_detectnet_timer = self.create_timer(3, self.no_bottle_detected_callback)
 
 
-    def start_bottle_picking_mode(self):
+    def start_bottle_reaching_mode(self):
         """Will start the bottle picking mode"""
-        self.state = BOTTLE_PICKING_MODE
+        self.state = BOTTLE_REACHING_MODE
         # would be nice to go slower here
+        # lets start a rotation
         self.uart_publisher.publish(String(data = "y"))
 
     def start_bottle_release_mode(self):
