@@ -79,7 +79,6 @@ For the path following, it works the following way:
 
 ### Random Search Mode
 
-
 2 kinds of obstacles
 1. Tall obstacles
     - a real obstacle
@@ -114,13 +113,8 @@ Ideas
 
 TODO
 - Jetson
-    - check with Lidar that there's no obstacle by subscring to Lidar Data in controller1
-    - lower speed setting
-    - logic for 'y' and 'p' inside arduino callback (check only for zone 3)
 - Arduino
     - refactor the 'loop' function
-    - change 'y' and 'p' logic
-    - maximum distance timer for 'y' mode
 
 # Debuging 
 

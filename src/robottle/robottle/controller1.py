@@ -128,7 +128,7 @@ class Controller1(Node):
 
         # for debugging
         if "--travel" in args:
-            self.state = TRAVEL_MODE
+            self.start_travel_mode()
 
         if "--search" in args:
             self.state = RANDOM_SEARCH_MODE
@@ -163,6 +163,9 @@ class Controller1(Node):
         self.theta = pos.theta % 360
 
     def lidar_callback(self, msg):
+        if self.state == TRAVEL_MODE:
+            if self.robot_pos is not None:
+                controller_utils.is_obstacle_a_rock(self.robot_pos.tolist() + [self.theta], self.zones)
         if self.state == BOTTLE_REACHING_MODE:
             # TODO : check if there is no obstacles
             obstacle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, self.lidar_save_index) 
@@ -182,7 +185,7 @@ class Controller1(Node):
         if self.state == INITIAL_ROTATION_MODE:
             if status == 1:
                 print("Initial rotation mode is finished")
-                self.state = TRAVEL_MODE
+                self.start_travel_mode()
 
         if self.state == BOTTLE_REACHING_MODE:
             if status == 0: 
@@ -193,9 +196,17 @@ class Controller1(Node):
                 # = there is a small obstacle ahead of the robot
                 if TARGETS_TO_VISIT[self.current_target_index] == 2: 
                     # robot is inside the rocks zone
-                    # TODO: verify that robot is not in front of the rocks 
+                    # verify that robot is not in front of the rocks 
                     self.uart_publisher.publish(String(data="x"))
+                    is_rock, angle = controller_utils.is_obstacle_a_rock(self.robot_pos, self.zones)
+                    if is_rock:
+                        self.state = RANDOM_SEARCH_MODE
+                        self.start_rotation_timer(angle, TIMER_STATE_ON_RANDOM_SEARCH_DELTA_ROTATION)
+                    else:
+                        self.state = BOTTLE_PICKING_MODE
+                        self.uart_publisher.publish(String(data="p"))
                 else:
+                    self.state = BOTTLE_PICKING_MODE
                     self.uart_publisher.publish(String(data="p"))
 
 
@@ -210,7 +221,7 @@ class Controller1(Node):
 
         if self.state == BOTTLE_RELEASE_MODE:
             if status == 1:
-                self.state = TRAVEL_MODE
+                self.start_travel_mode()
 
     def listener_callback_detectnet(self, msg):
         """Called when a bottle is detected by neuron network
@@ -411,8 +422,11 @@ class Controller1(Node):
             # no more random walk can happen
             # let's enter travel mode again
             self.cam_publisher.publish(String(data="destroy"))
-            self.state = TRAVEL_MODE
+            self.start_travel_mode()
             return
+
+        # set lower speed
+        self.uart_publisher.publish(String(data = "m2"))
 
         # create subscription for detection
         self.cam_publisher.publish(String(data="create"))
@@ -427,6 +441,10 @@ class Controller1(Node):
         # would be nice to go slower here
         # lets start a rotation
         self.uart_publisher.publish(String(data = "y"))
+
+    def start_travel_mode(self):
+        self.uart_publisher.publish(String(data = "m1"))
+        self.state = TRAVEL_MODE
 
     def start_bottle_release_mode(self):
         """Will start the bottle picking mode"""
