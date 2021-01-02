@@ -165,9 +165,6 @@ class Controller1(Node):
         self.theta = pos.theta % 360
 
     def lidar_callback(self, msg):
-        if self.state == TRAVEL_MODE:
-            if self.robot_pos is not None:
-                controller_utils.is_obstacle_a_rock(self.robot_pos.tolist() + [self.theta], self.zones)
         if self.state == BOTTLE_REACHING_MODE:
             # TODO : check if there is no obstacles
             obstacle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, self.lidar_save_index) 
