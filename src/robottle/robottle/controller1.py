@@ -168,7 +168,8 @@ class Controller1(Node):
         if self.state == BOTTLE_REACHING_MODE:
             # TODO : check if there is no obstacles
             obstacle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, self.lidar_save_index) 
-            self.lidar_save_index += 1 
+            if self.lidar_save_index is not None:
+                self.lidar_save_index += 1 
             if obstacle_detected: 
                 self.start_rotation_timer(DELTA_RANDOM_SEARCH, TIMER_STATE_ON_RANDOM_SEARCH_DELTA_ROTATION)
 
@@ -291,7 +292,7 @@ class Controller1(Node):
             if self.rotation_timer_state == TIMER_STATE_ON_TRAVEL_MODE:
                 print("Stopping current timer and let's compute a new path to follow")
                 self.uart_publisher.publish(String(data = "x"))
-                self.rotation_timer_state == TIMER_STATE_OFF
+                self.rotation_timer_state = TIMER_STATE_OFF
                 self.destroy_timer(self.rotation_timer)
 
             ## Map analysis
@@ -340,7 +341,7 @@ class Controller1(Node):
                         rand_area = random_area, expand_dis = 50, path_resolution = 1,
                         goal_sample_rate = 5, max_iter = 500)
                 self.path = np.array(rrt.planning(animation = False))
-                print("Path found", random_area)
+                print("Path found")
 
         # finally. make and save the nice figure
         if (self.is_saving or self.is_plotting) and int(map_message.index) % self.SAVE_TIME_CONSTANT == 0:
