@@ -403,7 +403,7 @@ class Controller1(Node):
             # compute distance to next point of the path
             p = self.path[-2]
             dist_to_next_point = controller_utils.get_distance(self.robot_pos, p)
-            print("   going foward for a distance {:.2f}".format(dist_to_next_point))
+            print("    going foward for a distance {:.2f}".format(dist_to_next_point))
             if dist_to_next_point < MIN_DIST_TO_POINT:
                 # remove first point of the path
                 print("Will update path: ", self.path)
