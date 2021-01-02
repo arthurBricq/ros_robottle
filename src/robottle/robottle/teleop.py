@@ -28,10 +28,12 @@ class TeleopRobotController(Node):
         print("Type 'l' to de-activate image detection")
         print("Type 'm' to start the Motors")
         print("Type 'n' to stop the Motors")
+        print("Type 'f' to flip the camera")
         print("--name = ", self.name)
 
         self.uart_publisher = self.create_publisher(String, 'uart_commands', 1000)
         self.cam_control_publisher = self.create_publisher(String, 'detectnet/camera_control', 1000)
+        self.camera_flip_topic = self.create_publisher(String, 'video_source/flip_topic', 1000)
         self.map_corner_client = self.create_client(FindMapCorner, "find_map_corner")
 
         try:
@@ -53,6 +55,9 @@ class TeleopRobotController(Node):
                     # stop the motor
                     lidar = Lidar('/dev/ttyUSB0')
                     lidar.stop_motor()
+                elif key == 'f':
+                    # flip the camera
+                    self.camera_flip_topic.publish(String(data="flip"))
                 elif key == 'q':
                     break
                 else:
