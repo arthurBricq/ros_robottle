@@ -21,17 +21,6 @@ Setup to take pictures
 6. folder where pictures and detections are writen: ~/dev/ros/pictures/f1
 
 
-## Report of 17.12
-
-- detection has different timings each time, sometimes give detections in bulk
-- angle calculation seems to work fine (TO TEST in better conditions)
-- camera doesn't detect all bottles
-- robottle detects well when it is stopped, and then goes to bottle -> possible solution is to change random search: rotation X degrees, stop, detect, repeat
-
-- ultrasonic has range of approx 60 cm at current height -> cannot be used to detect bottles far away
-- should be kept as low as possible for detecting further and as high as possible for passing rocks
-
-
 ## Other repositories used 
 
 The ROS code works in pair with the [Robottle Python Package](https://github.com/arthurBricq/robottle_python_packages) where there are some helper functions and algorithms. 
@@ -95,6 +84,12 @@ As the code is rather complex, there are several hyperparameters and it is somet
 ## Some useful commands 
 
 Here are some commands quite useful with the ROS setup
+
+- commands to compile code
+
+`cd $PYTHON_PATH ; git pull ; sudo python3 setup.py install`
+
+`cd $ROS_PATH ; git pull ; colcon build --packages-select robottle`
 
 - ssh command to open a shell, go to proper directory, and open ros
 
