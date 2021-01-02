@@ -382,7 +382,9 @@ class Controller1(Node):
             return
 
         # 2. Else, compute motors commands
-        if self.rotation_timer_state == TIMER_STATE_ON_TRAVEL_MODE: return
+        if self.rotation_timer_state == TIMER_STATE_ON_TRAVEL_MODE: 
+            print("Robot is turning...")
+            return
 
         path_orientation = controller_utils.get_path_orientation(self.path)
         diff = (path_orientation - self.theta + 180) % 360 - 180
