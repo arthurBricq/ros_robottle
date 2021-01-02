@@ -41,7 +41,8 @@ MIN_ANGLE_DIFF = 15 # [deg]
 # maximum number of times controller enters random search mode inside 1 zone
 N_RANDOM_SEARCH_MAX = 40
 # Array containing indices of zones to visit: note that zones = [r, z2, z3, z4]
-TARGETS_TO_VISIT = [1,0,2,0]
+# z2 = grass, z3 = rocks
+TARGETS_TO_VISIT = [1,0,2,0] # = grass, recycling, rocks, recycling
 # delta degree for little random search rotations
 DELTA_RANDOM_SEARCH = 30
 
@@ -152,6 +153,7 @@ class Controller1(Node):
 
     def listener_callback_map(self, map_message):
         if self.state == TRAVEL_MODE:
+
             self.travel_mode(map_message)
 
     def listener_callback_position(self, pos):
@@ -190,6 +192,7 @@ class Controller1(Node):
         if self.state == BOTTLE_REACHING_MODE:
             if status == 0: 
                 # = max distance reached
+                print("Robot advanced maximum distance in 'y' mode")
                 # TODO
                 pass
             elif status == 1:
