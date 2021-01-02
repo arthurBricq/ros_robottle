@@ -463,7 +463,7 @@ class Controller1(Node):
             self.destroy_timer(self.rotation_timer)
 
         # 2. send the rotation motor control
-        print("        (starting rotation now)")
+        print("        (starting rotation now)", state, angle)
         msg = String()
         if angle > 0: msg.data = "d"
         else: msg.data = "a"
