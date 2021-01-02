@@ -184,7 +184,7 @@ class Controller1(Node):
         status = status_msg.status
         if self.state == INITIAL_ROTATION_MODE:
             if status == 1:
-                print("Initial rotation mode is finished")
+                print("* Initial Rotation Mode --> Travel Mode")
                 self.start_travel_mode()
 
         if self.state == BOTTLE_REACHING_MODE:
@@ -286,7 +286,7 @@ class Controller1(Node):
         ### I. Path planning
         # Once in a while, start the path planning logic
         if int(map_message.index) % CONTROLLER_TIME_CONSTANT == 0:
-            print("Starting map analysis")
+            print("    - map analysis")
 
             ## Handling timer problem
             if self.rotation_timer_state == TIMER_STATE_ON_TRAVEL_MODE:
@@ -323,7 +323,7 @@ class Controller1(Node):
                # corners found are valid and we can find the 'initial zones'
                 self.zones = map_utils.get_initial_zones(corners, self.robot_pos)
                 self.initial_zones_found = True
-                print("Initial zones found with area: ", area)
+                print("    - initial zones found with area: ", area)
 
             if self.initial_zones_found:
                 # update zones with new map
@@ -341,7 +341,7 @@ class Controller1(Node):
                         rand_area = random_area, expand_dis = 50, path_resolution = 1,
                         goal_sample_rate = 5, max_iter = 500)
                 self.path = np.array(rrt.planning(animation = False))
-                print("Path found")
+                print("    - path found")
 
         # finally. make and save the nice figure
         if (self.is_saving or self.is_plotting) and int(map_message.index) % self.SAVE_TIME_CONSTANT == 0:
@@ -364,7 +364,7 @@ class Controller1(Node):
         ### II. Path Tracking
         # 0. end condition
         if len(self.path) == 0 or self.goal is None: 
-            print("Aborting")
+            print("...")
             return
 
         # 1. state transition condition
@@ -384,15 +384,13 @@ class Controller1(Node):
 
         # 2. Else, compute motors commands
         if self.rotation_timer_state == TIMER_STATE_ON_TRAVEL_MODE: 
-            print("Robot is turning...")
             return
 
         path_orientation = controller_utils.get_path_orientation(self.path)
         diff = (path_orientation - self.theta + 180) % 360 - 180
-        print(diff, path_orientation, self.rotation_timer_state)
         if abs(diff) > MIN_ANGLE_DIFF:
             ## ROTATION CORRECTION SUB-STATE
-            print("Rotation correction with diff = ", diff)
+            print("    rotation correction with diff = ", diff)
             # a. send the rotation message
             # b. rotation timer
             self.start_rotation_timer(diff, TIMER_STATE_ON_TRAVEL_MODE)
@@ -405,8 +403,7 @@ class Controller1(Node):
             # compute distance to next point of the path
             p = self.path[-2]
             dist_to_next_point = controller_utils.get_distance(self.robot_pos, p)
-            print(int(map_message.index), "Going forward. Distance to next point: ", 
-                    dist_to_next_point, "Distance to target: ", dist)
+            print("   going foward for a distance {:.2f}".format(dist_to_next_point))
             if dist_to_next_point < MIN_DIST_TO_POINT:
                 # remove first point of the path
                 print("Will update path: ", self.path)
