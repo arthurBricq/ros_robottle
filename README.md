@@ -115,7 +115,7 @@ Here are some commands quite useful with the ROS setup
 
 - launch the other ROS nodes (LIDAR, Motors Speed Reader, SLAM, Motors Commands)
 
-`ros2 launch robottle launch_nocontroller.launch.py`
+`ros2 launch robottle launch_controller.launch.py`
 
 - launch the detectnet node (*with its own launch files*)
 
