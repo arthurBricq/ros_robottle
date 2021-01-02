@@ -55,14 +55,14 @@ class VisionAnalyser(Node):
             dim = int(step / cols)
             pixels = msg.data # of size (steps, nrows)
             # save the image (later we will need to analyse it)
-            # vision_utils.save_picture(pixels, rows, cols, dim, self.name, FOLDER)
+            vision_utils.save_picture(pixels, rows, cols, dim, self.name, FOLDER)
 
     def detection_callback(self, msg):
         detections = [(d.bbox.center.x, d.bbox.center.y, d.bbox.size_x, d.bbox.size_y) for d in msg.detections]
         angle = vision_utils.get_angle_of_closest_bottle(detections)
         print("Angle = ", angle)
-#        if self.detection_to_receive:
-            #self.detection_to_receive -= 1
+        if self.detection_to_receive:
+            self.detection_to_receive -= 1
             #res = [(d.bbox.center.x, d.bbox.center.y, d.bbox.size_x, d.bbox.size_y) for d in msg.detections]
             #with open(FOLDER + "_detection.txt", "a") as text_file:
             #    string = "\n - " + self.name + str(res)
