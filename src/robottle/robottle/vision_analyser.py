@@ -20,7 +20,7 @@ class VisionAnalyser(Node):
 
     def __init__(self):
         super().__init__('minimal_service')
-        self.srv = self.create_service(FindMapCorner, 'find_map_corner', self.find_map_corner)
+        self.srv = self.create_service(FindMapCorner, 'find_map_corner', self.vision_service)
 
         # parameters
         self.pictures_to_take = 0
@@ -33,7 +33,7 @@ class VisionAnalyser(Node):
                 self.detection_callback, 1000)
 
     ### SERVICE
-    def find_map_corner(self, request, response):
+    def vision_service(self, request, response):
         print("Service received !: ", request)
         self.pictures_to_take += 1
         self.detection_to_receive += 1
@@ -55,15 +55,17 @@ class VisionAnalyser(Node):
             dim = int(step / cols)
             pixels = msg.data # of size (steps, nrows)
             # save the image (later we will need to analyse it)
-            vision_utils.save_picture(pixels, rows, cols, dim, self.name, FOLDER)
+            # vision_utils.save_picture(pixels, rows, cols, dim, self.name, FOLDER)
 
     def detection_callback(self, msg):
-        if self.detection_to_receive:
-            self.detection_to_receive -= 1
-            res = [(d.bbox.center.x, d.bbox.center.y, d.bbox.size_x, d.bbox.size_y) for d in msg.detections]
-            with open(FOLDER + "_detection.txt", "a") as text_file:
-                string = "\n - " + self.name + str(res)
-                text_file.write(string)
+        angle = vision_utils.get_angle_of_closest_bottle()
+        print("Angle = ", angle)
+#        if self.detection_to_receive:
+            #self.detection_to_receive -= 1
+            #res = [(d.bbox.center.x, d.bbox.center.y, d.bbox.size_x, d.bbox.size_y) for d in msg.detections]
+            #with open(FOLDER + "_detection.txt", "a") as text_file:
+            #    string = "\n - " + self.name + str(res)
+            #    text_file.write(string)
 
 
 
