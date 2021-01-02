@@ -246,13 +246,13 @@ class Controller1(Node):
         self.destroy_timer(self.rotation_timer)
 
         if self.rotation_timer_state == TIMER_STATE_ON_RANDOM_SEARCH_BOTTLE_ALIGNMENT:
-            print("Robot is in front of bottle")
+            print("    Robot is in front of bottle")
             # change timer state and go to bottle picking mode.
             self.rotation_timer_state = TIMER_STATE_OFF
             self.start_bottle_reaching_mode()
 
         if self.rotation_timer_state == TIMER_STATE_ON_RANDOM_SEARCH_DELTA_ROTATION:
-            print("Robot finished his delta rotation")
+            print("    Robot finished his delta rotation")
             self.rotation_timer_state = TIMER_STATE_OFF
             self.uart_publisher.publish(String(data="x"))
             # start detection again
@@ -261,14 +261,14 @@ class Controller1(Node):
         if self.rotation_timer_state == TIMER_STATE_ON_TRAVEL_MODE:
             # change timer state and start moving forward.
             self.rotation_timer_state = TIMER_STATE_OFF
-            print("Rotated time reached. Let's move forward.")
+            print("    Rotated time reached. Let's move forward.")
             self.uart_publisher.publish(String(data="w"))
 
     def no_bottle_detected_callback(self):
         """Timer called after 2 seconds and destroyed immeditaly when a bottle is detected.
         If the calback is called, it means no bottle were detected during its period.
         """
-        print("No bottle detected during time interval")
+        print("    No bottle detected during time interval")
         self.destroy_timer(self.wait_for_detectnet_timer)
         # lets start a rotation
         self.cam_publisher.publish(String(data="destroy"))
@@ -414,7 +414,7 @@ class Controller1(Node):
     def start_random_search_mode(self):
         """Will start the random search and increase by 1 the stepper
         """
-        print("Random search activated - n = ", self.n_random_search)
+        print("* Random search activated, n = ", self.n_random_search)
         self.state = RANDOM_SEARCH_MODE
         self.n_random_search += 1
 
@@ -463,7 +463,7 @@ class Controller1(Node):
             self.destroy_timer(self.rotation_timer)
 
         # 2. send the rotation motor control
-        print("starting rotation now")
+        print("        (starting rotation now)")
         msg = String()
         if angle > 0: msg.data = "d"
         else: msg.data = "a"
