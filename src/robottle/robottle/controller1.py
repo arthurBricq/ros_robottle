@@ -386,6 +386,7 @@ class Controller1(Node):
 
         path_orientation = controller_utils.get_path_orientation(self.path)
         diff = (path_orientation - self.theta + 180) % 360 - 180
+        print(diff, path_orientation, self.rotation_timer_state)
         if abs(diff) > MIN_ANGLE_DIFF:
             ## ROTATION CORRECTION SUB-STATE
             print("Rotation correction with diff = ", diff)
