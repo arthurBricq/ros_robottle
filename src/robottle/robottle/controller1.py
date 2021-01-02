@@ -286,7 +286,7 @@ class Controller1(Node):
         ### I. Path planning
         # Once in a while, start the path planning logic
         if int(map_message.index) % CONTROLLER_TIME_CONSTANT == 0:
-            print("    - map analysis")
+            print("    map analysis")
 
             ## Handling timer problem
             if self.rotation_timer_state == TIMER_STATE_ON_TRAVEL_MODE:
