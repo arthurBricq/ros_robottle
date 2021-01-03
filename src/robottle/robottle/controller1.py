@@ -243,7 +243,6 @@ class Controller1(Node):
         if self.is_flipped:
             # we are waiting for a flipped image.
             # let's verify that it is actually flipped
-            print(msg)
             source_img = msg.detections[0].source_img
             is_actually_flipped = source_img.height > source_img.width
             if not is_actually_flipped:
