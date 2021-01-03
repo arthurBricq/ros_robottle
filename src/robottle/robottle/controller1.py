@@ -92,6 +92,8 @@ class Controller1(Node):
 
         # create publisher for flipping camera
         self.camera_flip_topic = self.create_publisher(String, 'video_source/flip_topic', 1000)
+        self.camera_flip_topic.publish(String(data="normal"))
+        self.is_flipped = False 
 
         # keep track of where is the robot within the class
         self.x = 0
@@ -111,7 +113,6 @@ class Controller1(Node):
         self.n_random_search = 0
         self.state = INITIAL_ROTATION_MODE
         self.rotation_timer_state = TIMER_STATE_OFF
-        self.is_flipped = False 
 
         # DEBUG
         # set saving state (if True, then it will save some maps to a folder when they can be analysed)
