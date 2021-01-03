@@ -29,12 +29,14 @@ class TeleopRobotController(Node):
         print("Type 'm' to start the Motors")
         print("Type 'n' to stop the Motors")
         print("Type 'f' to flip the camera")
+        print("Type '1' to change the map quality")
         print("--name = ", self.name)
 
         self.uart_publisher = self.create_publisher(String, 'uart_commands', 1000)
         self.cam_control_publisher = self.create_publisher(String, 'detectnet/camera_control', 1000)
         self.camera_flip_topic = self.create_publisher(String, 'video_source/flip_topic', 1000)
         self.map_corner_client = self.create_client(FindMapCorner, "find_map_corner")
+        self.map_quality_control = self.create_publisher(String, 'map_quality_control', 1000)
 
         try:
             while(1):
@@ -58,6 +60,9 @@ class TeleopRobotController(Node):
                 elif key == 'f':
                     # flip the camera
                     self.camera_flip_topic.publish(String(data="flip"))
+                elif key == '1':
+                    # change map quality
+                    self.map_quality_control.publish(String(data="nimportequoi"))
                 elif key == 'q':
                     break
                 else:

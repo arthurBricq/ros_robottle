@@ -6,6 +6,7 @@ from rclpy.node import Node
 
 # imports the interfaces
 from vision_msgs.msg import Detection2DArray
+from std_msgs.msg import String
 from interfaces.msg import Nums, LidarData, Position, Map, MotorsSpeed
 
 # imports things for slam
@@ -25,7 +26,7 @@ MAP_QUALITY = 50
 OFFSET_MM = 175
 DETECTION_MARGIN = 65
 OBSTACLE_WIDTH_MM = 600
-
+DEFAULT_SIGMA_XY_MM = 100
 
 class Slam(Node):
     """
@@ -62,24 +63,44 @@ class Slam(Node):
             1000)
         self.subscription3  # prevent unused variable warning
 
+        # create subscription to control map_quality
+        self.subscription_map_quality = self.create_subscription(String, 'map_quality_control', self.map_quality_control_callback, 1000)
+
         # Create publisher for the position of the robot, and for the map 
         self.publisher_position = self.create_publisher(Position, 'robot_pos', 10)
         self.publisher_map = self.create_publisher(Map, 'world_map', 10)
 
         # Initialize parameters for slam 
         laser = LaserModel(detection_margin = DETECTION_MARGIN, offset_mm = OFFSET_MM)
-        self.slam = RMHC_SLAM(laser, MAP_SIZE_PIXELS, MAP_SIZE_METERS, map_quality = MAP_QUALITY, hole_width_mm = OBSTACLE_WIDTH_MM, x0_mm = 3000, y0_mm = 3000, theta0 = 0)
+        self.slam = RMHC_SLAM(laser, MAP_SIZE_PIXELS, MAP_SIZE_METERS, map_quality = MAP_QUALITY, hole_width_mm = OBSTACLE_WIDTH_MM, x0_mm = 3000, y0_mm = 3000, theta0 = 0, sigma_xy_mm = DEFAULT_SIGMA_XY_MM)
         self.trajectory = []
         self.mapbytes = bytearray(MAP_SIZE_PIXELS * MAP_SIZE_PIXELS)
         self.previous_distances = None
         self.previous_angles    = None
         self.robot_pose_change = np.array([0.0,0.0,0.0])
+        self.is_map_quality_high = True
 
         # DEBUG parameters
         self.map_index = 0
         self.previous_pos = (0,0,0)
         self.s = time.time()
         print("SLAM is starting")
+
+    def map_quality_control_callback(self, msg):
+        """Called to changed the map quality
+        """
+        print("changing quality")
+        if self.is_map_quality_high: 
+            self.previous_map = self.mapbytes.copy()
+            # self.slam.map_quality = 0
+            self.slam.sigma_xy_mm = 1 * DEFAULT_SIGMA_XY_MM
+        else:
+            self.slam.map_quality = MAP_QUALITY
+            self.slam.sigma_xy_mm = DEFAULT_SIGMA_XY_MM
+            self.slam.setmap(self.previous_map)
+        self.is_map_quality_high = not self.is_map_quality_high
+
+
 
     def listener_callback_motorsspeed(self, msg):
         """
