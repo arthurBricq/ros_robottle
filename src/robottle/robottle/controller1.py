@@ -235,17 +235,24 @@ class Controller1(Node):
 
     def listener_callback_detectnet(self, msg):
         """Called when a bottle is detected by neuron network
-        This function can only be called when the neuron network is active
+        This function can only be called when the neuron network is active, 
         i.e. only in RANDOM_SEARCH_MODE when the robot is still and waiting for detection
         """
-        if self.rotation_timer_state == TIMER_STATE_OFF and self.state == RANDOM_SEARCH_MODE:
-            # 1. extract the detection
-            print("    Detections successful")
-            new_detections = [(d.bbox.center.x, d.bbox.center.y, d.bbox.size_x, d.bbox.size_y, self.is_flipped) for d in msg.detections]
-            print(new_detections)
-            self.detections += new_detections
-            # 2. flip the camera
-            self.flip_camera_and_reset_detectnet_timer()
+        # 1. extract the detection
+        print("    Detections successful")
+        if self.is_flipped:
+            # we are waiting for a flipped image.
+            # let's verify that it is actually flipped
+            is_actually_flipped = msg.detections.source_img.height > msg.detections.source_img.width
+            if not is_actually_flipped:
+                print("Image was still not flipped !")
+                return
+        
+        new_detections = [(d.bbox.center.x, d.bbox.center.y, d.bbox.size_x, d.bbox.size_y, self.is_flipped) for d in msg.detections]
+        print(new_detections)
+        self.detections += new_detections
+        # 2. flip the camera
+        self.flip_camera_and_reset_detectnet_timer()
 
     def detection_timer_callback(self):
         """Timer called after 2 seconds and destroyed immeditaly when a bottle is detected.
