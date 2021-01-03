@@ -58,8 +58,11 @@ class VisionAnalyser(Node):
             vision_utils.save_picture(pixels, rows, cols, dim, self.name, FOLDER)
 
     def detection_callback(self, msg):
-        detections = [(d.bbox.center.x, d.bbox.center.y, d.bbox.size_x, d.bbox.size_y) for d in msg.detections]
-        angle = vision_utils.get_angle_of_closest_bottle(detections)
+        detections = [(d.bbox.center.x, d.bbox.center.y, d.bbox.size_x, d.bbox.size_y, False) for d in msg.detections]
+        # get best detection
+        detection = vision_utils.get_best_detections(detections)
+        # move to bottle
+        angle = vision_utils.get_angle_of_detection(detection)
         print("Angle = ", angle)
         if self.detection_to_receive:
             self.detection_to_receive -= 1
