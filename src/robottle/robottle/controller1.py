@@ -171,11 +171,11 @@ class Controller1(Node):
         self.theta = pos.theta % 360
 
     def lidar_callback(self, msg):
-        if self.state == TRAVEL_MODE:
-            if self.robot_pos is None or self.zones is None or not len(self.robot_pos) or self.theta is None:
-                return
-            is_rock, angle = controller_utils.is_obstacle_a_rock(np.concatenate((self.robot_pos, [self.theta]), axis = 0), 
-                    self.zones)
+        #if self.state == TRAVEL_MODE:
+            #if self.robot_pos is None or self.zones is None or not len(self.robot_pos) or self.theta is None:
+             #   return
+            #is_rock, angle = controller_utils.is_obstacle_a_rock(np.concatenate((self.robot_pos, [self.theta]), axis = 0), 
+            #        self.zones)
         if self.state == BOTTLE_REACHING_MODE:
             obstacle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, self.lidar_save_index) 
             if self.lidar_save_index is not None:
