@@ -171,7 +171,6 @@ class Controller1(Node):
 
     def lidar_callback(self, msg):
         if self.state == BOTTLE_REACHING_MODE:
-            # TODO : check if there is no obstacles
             obstacle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, self.lidar_save_index) 
             if self.lidar_save_index is not None:
                 self.lidar_save_index += 1 
@@ -235,7 +234,9 @@ class Controller1(Node):
         """
         if self.rotation_timer_state == TIMER_STATE_OFF and self.state == RANDOM_SEARCH_MODE:
             # 1. extract the detection
+            print("    Detections successful")
             new_detections = [(d.bbox.center.x, d.bbox.center.y, d.bbox.size_x, d.bbox.size_y, self.is_flipped) for d in msg.detections]
+            print(new_detections)
             self.detections += new_detections
             # 2. flip the camera
             self.flip_camera_and_reset_detectnet_timer()
@@ -262,18 +263,17 @@ class Controller1(Node):
             self.take_bottle_decision()
 
     def take_bottle_decision(self):
+        self.cam_publisher.publish(String(data="destroy"))
         if len(self.detections):
             # get best detection
             detection = vision_utils.get_best_detections(self.detections)
             # move to bottle
             angle = vision_utils.get_angle_of_detection(detection)
             print("starting timer after detection of bottle, with angle:",angle)
-            self.cam_publisher.publish(String(data="destroy"))
             self.start_rotation_timer(angle, TIMER_STATE_ON_RANDOM_SEARCH_BOTTLE_ALIGNMENT)
         else:
             # lets start a rotation of 30 degrees again
             print("    No bottle detected at all --> start again a rotation")
-            self.cam_publisher.publish(String(data="destroy"))
             self.start_rotation_timer(DELTA_RANDOM_SEARCH, TIMER_STATE_ON_RANDOM_SEARCH_DELTA_ROTATION)
 
     def rotation_timer_callback(self):
