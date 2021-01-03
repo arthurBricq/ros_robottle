@@ -141,6 +141,10 @@ void img_callback( const sensor_msgs::ImageConstPtr input )
 			detMsg.bbox.center.x = cx;
 			detMsg.bbox.center.y = cy;
 
+            // fill data about input image
+            detMsg.source_img.height = input->width ; 
+            detMsg.source_img.width = input->height ; 
+
 			detMsg.bbox.center.theta = 0.0f;		// TODO optionally output object image
 
 			// create classification hypothesis
