@@ -265,7 +265,7 @@ class Controller1(Node):
     def take_bottle_decision(self):
         if len(self.detections):
             # get best detection
-            detection = controller_utils.get_best_detections(self.detections)
+            detection = vision_utils.get_best_detections(self.detections)
             # move to bottle
             angle = vision_utils.get_angle_of_detection(detection)
             print("starting timer after detection of bottle, with angle:",angle)
