@@ -272,7 +272,6 @@ class Controller1(Node):
         self.destroy_timer(self.wait_for_detectnet_timer)
         self.is_flipped = not self.is_flipped
         if self.is_flipped:
-            msg = "normal"
             # = first lap is finished 
             # create a callback in some time to observe bottles around robot
             print("    Trying to detect again with a new flip")
