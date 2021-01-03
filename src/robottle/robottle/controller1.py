@@ -27,6 +27,9 @@ TIMER_STATE_ON_RANDOM_SEARCH_BOTTLE_ALIGNMENT = "2"
 TIMER_STATE_ON_RANDOM_SEARCH_DELTA_ROTATION = "3"
 TIMER_STATE_ON_BOTTLE_RELEASE = "4"
 
+DETECTNET_ON = "ON"
+DETECTNET_OFF = "OFF"
+
 ### HYPERPARAMETERS
 
 # min area that a rotated rectangle must contain to be considered as valid
@@ -85,7 +88,7 @@ class Controller1(Node):
 
         # create publisher for controlling the camera
         self.cam_publisher = self.create_publisher(String, 'detectnet/camera_control', 1000)
-        self.cam_publisher.publish(String(data="destroy"))
+        self.set_detectnet_state(DETECTNET_OFF)
 
         # create publisher for flipping camera
         self.camera_flip_topic = self.create_publisher(String, 'video_source/flip_topic', 1000)
@@ -238,6 +241,7 @@ class Controller1(Node):
         This function can only be called when the neuron network is active, 
         i.e. only in RANDOM_SEARCH_MODE when the robot is still and waiting for detection
         """
+        if self.detectnet_state == DETECTNET_OFF: return 
         # 1. extract the detection
         print("    Detections successful")
         if self.is_flipped:
@@ -277,7 +281,7 @@ class Controller1(Node):
             self.take_bottle_decision()
 
     def take_bottle_decision(self):
-        self.cam_publisher.publish(String(data="destroy"))
+        self.set_detectnet_state(DETECTNET_OFF)
         if len(self.detections):
             # get best detection
             detection = vision_utils.get_best_detections(self.detections)
@@ -321,6 +325,13 @@ class Controller1(Node):
 
     ### STATE MACHINE METHODS
 
+    def set_detectnet_state(self, new_state):
+        self.detectnet_state = new_state
+        if new_state == DETECTNET_ON:
+            self.cam_publisher.publish(String(data="create"))
+        if new_state == DETECTNET_OFF:
+            self.cam_publisher.publish(String(data="destroy"))
+
     def start_random_search_detection(self):
         """Will start the random search and increase by 1 the stepper
         """
@@ -332,7 +343,7 @@ class Controller1(Node):
         if self.n_random_search == N_RANDOM_SEARCH_MAX:
             # no more random walk can happen
             # let's enter travel mode again
-            self.cam_publisher.publish(String(data="destroy"))
+            self.set_detectnet_state(DETECTNET_OFF)
             self.start_travel_mode()
             return
 
@@ -340,7 +351,7 @@ class Controller1(Node):
         self.uart_publisher.publish(String(data = "m2"))
 
         # create subscription for detection
-        self.cam_publisher.publish(String(data="create"))
+        self.set_detectnet_state(DETECTNET_ON)
 
         # create a callback in some time to observe bottles around robot
         self.detections = []
