@@ -267,10 +267,12 @@ class Controller1(Node):
         self.flip_camera_and_reset_detectnet_timer()
 
     def flip_camera_and_reset_detectnet_timer(self):
-        self.camera_flip_topic.publish(String(data="flip"))
+        msg = "normal" if self.is_flipped else "flip"
+        self.camera_flip_topic.publish(String(data=msg))
         self.destroy_timer(self.wait_for_detectnet_timer)
         self.is_flipped = not self.is_flipped
         if self.is_flipped:
+            msg = "normal"
             # = first lap is finished 
             # create a callback in some time to observe bottles around robot
             print("    Trying to detect again with a new flip")
