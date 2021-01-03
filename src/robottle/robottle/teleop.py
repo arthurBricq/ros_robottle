@@ -37,6 +37,7 @@ class TeleopRobotController(Node):
         self.camera_flip_topic = self.create_publisher(String, 'video_source/flip_topic', 1000)
         self.map_corner_client = self.create_client(FindMapCorner, "find_map_corner")
         self.map_quality_control = self.create_publisher(String, 'map_quality_control', 1000)
+        self.flip = True
 
         try:
             while(1):
@@ -59,7 +60,9 @@ class TeleopRobotController(Node):
                     lidar.stop_motor()
                 elif key == 'f':
                     # flip the camera
-                    self.camera_flip_topic.publish(String(data="flip"))
+                    msg = "normal" if self.flip else "flip"
+                    self.flip = not self.flip
+                    self.camera_flip_topic.publish(String(data=msg))
                 elif key == '1':
                     # change map quality
                     self.map_quality_control.publish(String(data="nimportequoi"))
