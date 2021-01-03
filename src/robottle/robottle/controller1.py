@@ -45,6 +45,8 @@ N_RANDOM_SEARCH_MAX = 40
 TARGETS_TO_VISIT = [1,0,2,0] # = grass, recycling, rocks, recycling
 # delta degree for little random search rotations
 DELTA_RANDOM_SEARCH = 30
+# time to wait for detections on each flip of the camera
+TIME_FOR_VISION_DETECTION = 1.5 # [s]
 
 class Controller1(Node):
     """
@@ -84,6 +86,9 @@ class Controller1(Node):
         self.cam_publisher = self.create_publisher(String, 'detectnet/camera_control', 1000)
         self.cam_publisher.publish(String(data="destroy"))
 
+        # create publisher for flipping camera
+        self.camera_flip_topic = self.create_publisher(String, 'video_source/flip_topic', 1000)
+
         # keep track of where is the robot within the class
         self.x = 0
         self.y = 0
@@ -102,6 +107,7 @@ class Controller1(Node):
         self.n_random_search = 0
         self.state = INITIAL_ROTATION_MODE
         self.rotation_timer_state = TIMER_STATE_OFF
+        self.is_flipped = False 
 
         # DEBUG
         # set saving state (if True, then it will save some maps to a folder when they can be analysed)
@@ -133,7 +139,7 @@ class Controller1(Node):
 
         if "--search" in args:
             self.state = RANDOM_SEARCH_MODE
-            self.start_random_search_mode()
+            self.start_random_search_detection()
 
         if "--reach" in args:
             self.state = BOTTLE_REACHING_MODE
@@ -153,7 +159,6 @@ class Controller1(Node):
 
     def listener_callback_map(self, map_message):
         if self.state == TRAVEL_MODE:
-
             self.travel_mode(map_message)
 
     def listener_callback_position(self, pos):
@@ -218,7 +223,7 @@ class Controller1(Node):
                 pass
             elif status == 1 or status == 0: # robot picked the bottle 
                 print("Bottle picked")
-                self.start_random_search_mode()
+                self.start_random_search_detection()
 
         if self.state == BOTTLE_RELEASE_MODE:
             if status == 1:
@@ -230,16 +235,47 @@ class Controller1(Node):
         i.e. only in RANDOM_SEARCH_MODE when the robot is still and waiting for detection
         """
         if self.rotation_timer_state == TIMER_STATE_OFF and self.state == RANDOM_SEARCH_MODE:
-            # 1. destroy the timer 
-            self.destroy_timer(self.wait_for_detectnet_timer)
-            # 2. find the angle of the closest detected bottle
-            detections = [(d.bbox.center.x, d.bbox.center.y, d.bbox.size_x, d.bbox.size_y) for d in msg.detections]
-            angle = vision_utils.get_angle_of_closest_bottle(detections)
-            # 3. rotation timer
-            if angle is not None:
-                print("starting timer after detection of bottle, with angle:",angle)
-                self.cam_publisher.publish(String(data="destroy"))
-                self.start_rotation_timer(angle, TIMER_STATE_ON_RANDOM_SEARCH_BOTTLE_ALIGNMENT)
+            # 1. extract the detection
+            new_detections = [(d.bbox.center.x, d.bbox.center.y, d.bbox.size_x, d.bbox.size_y, self.is_flipped) for d in msg.detections]
+            self.detections += new_detections
+            # 2. flip the camera
+            self.flip_camera_and_reset_detectnet_timer()
+
+    def detection_timer_callback(self):
+        """Timer called after 2 seconds and destroyed immeditaly when a bottle is detected.
+        If the calback is called, it means no bottle were detected during its period.
+        """
+        print("    No bottle detected during time interval")
+        self.flip_camera_and_reset_detectnet_timer()
+
+    def flip_camera_and_reset_detectnet_timer(self):
+        self.camera_flip_topic.publish(String(data="flip"))
+        self.destroy_timer(self.wait_for_detectnet_timer)
+        self.is_flipped = not self.is_flipped
+        if self.is_flipped:
+            # = first lap is finished 
+            # create a callback in some time to observe bottles around robot
+            print("    Trying to detect again with a new flip")
+            self.wait_for_detectnet_timer = self.create_timer(TIME_FOR_VISION_DETECTION, self.detection_timer_callback)
+        else:
+            # = nothing was detected during the second lap
+            # get the best bottle to go to
+            self.take_bottle_decision()
+
+    def take_bottle_decision(self):
+        if len(self.detections):
+            # get best detection
+            detection = controller_utils.get_best_detections(self.detections)
+            # move to bottle
+            angle = vision_utils.get_angle_of_detection(detection)
+            print("starting timer after detection of bottle, with angle:",angle)
+            self.cam_publisher.publish(String(data="destroy"))
+            self.start_rotation_timer(angle, TIMER_STATE_ON_RANDOM_SEARCH_BOTTLE_ALIGNMENT)
+        else:
+            # lets start a rotation of 30 degrees again
+            print("No bottle detected at all --> start again a rotation")
+            self.cam_publisher.publish(String(data="destroy"))
+            self.start_rotation_timer(DELTA_RANDOM_SEARCH, TIMER_STATE_ON_RANDOM_SEARCH_DELTA_ROTATION)
 
     def rotation_timer_callback(self):
         """Called when robot has turned enough to pick the bottle"""
@@ -256,7 +292,7 @@ class Controller1(Node):
             self.rotation_timer_state = TIMER_STATE_OFF
             self.uart_publisher.publish(String(data="x"))
             # start detection again
-            self.start_random_search_mode()
+            self.start_random_search_detection()
 
         if self.rotation_timer_state == TIMER_STATE_ON_TRAVEL_MODE:
             # change timer state and start moving forward.
@@ -264,17 +300,33 @@ class Controller1(Node):
             print("    Rotated time reached. Let's move forward.")
             self.uart_publisher.publish(String(data="w"))
 
-    def no_bottle_detected_callback(self):
-        """Timer called after 2 seconds and destroyed immeditaly when a bottle is detected.
-        If the calback is called, it means no bottle were detected during its period.
-        """
-        print("    No bottle detected during time interval")
-        self.destroy_timer(self.wait_for_detectnet_timer)
-        # lets start a rotation
-        self.cam_publisher.publish(String(data="destroy"))
-        self.start_rotation_timer(DELTA_RANDOM_SEARCH, TIMER_STATE_ON_RANDOM_SEARCH_DELTA_ROTATION)
 
     ### STATE MACHINE METHODS
+
+    def start_random_search_detection(self):
+        """Will start the random search and increase by 1 the stepper
+        """
+        print("* Random search activated, n = ", self.n_random_search)
+        self.state = RANDOM_SEARCH_MODE
+        self.n_random_search += 1
+
+        # ending criterion (1)
+        if self.n_random_search == N_RANDOM_SEARCH_MAX:
+            # no more random walk can happen
+            # let's enter travel mode again
+            self.cam_publisher.publish(String(data="destroy"))
+            self.start_travel_mode()
+            return
+
+        # set lower speed
+        self.uart_publisher.publish(String(data = "m2"))
+
+        # create subscription for detection
+        self.cam_publisher.publish(String(data="create"))
+
+        # create a callback in some time to observe bottles around robot
+        self.detections = []
+        self.wait_for_detectnet_timer = self.create_timer(TIME_FOR_VISION_DETECTION, self.detection_timer_callback)
 
     def travel_mode(self, map_message):
         """Travel mode of the controller.
@@ -376,7 +428,7 @@ class Controller1(Node):
             print("Robot reached zone ", reached)
             if reached in [1,2]: # robot in zone 2 or zone 3
                 # travel_mode --> random_search mode
-                self.start_random_search_mode()
+                self.start_random_search_detection()
             elif reached == 0:
                 # travel_mode --> release_bottle_mode
                 self.start_bottle_release_mode()
@@ -409,32 +461,6 @@ class Controller1(Node):
                 print("Will update path: ", self.path)
                 del self.path[-1]
                 print("Updated path: ", self.path)
-
-
-    def start_random_search_mode(self):
-        """Will start the random search and increase by 1 the stepper
-        """
-        print("* Random search activated, n = ", self.n_random_search)
-        self.state = RANDOM_SEARCH_MODE
-        self.n_random_search += 1
-
-        # ending criterion (1)
-        if self.n_random_search == N_RANDOM_SEARCH_MAX:
-            # no more random walk can happen
-            # let's enter travel mode again
-            self.cam_publisher.publish(String(data="destroy"))
-            self.start_travel_mode()
-            return
-
-        # set lower speed
-        self.uart_publisher.publish(String(data = "m2"))
-
-        # create subscription for detection
-        self.cam_publisher.publish(String(data="create"))
-
-        # create a callback in 2 seconds in the case that no bottle were detected
-        self.wait_for_detectnet_timer = self.create_timer(3, self.no_bottle_detected_callback)
-
 
     def start_bottle_reaching_mode(self):
         """Will start the bottle picking mode"""
