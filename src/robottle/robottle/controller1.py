@@ -196,8 +196,7 @@ class Controller1(Node):
             if status == 0: 
                 # = max distance reached
                 print("Robot advanced maximum distance in 'y' mode")
-                # TODO
-                pass
+                self.start_random_search_detection()
             elif status == 1:
                 # = there is a small obstacle ahead of the robot
                 if TARGETS_TO_VISIT[self.current_target_index] == 2: 
