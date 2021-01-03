@@ -273,7 +273,7 @@ class Controller1(Node):
             self.start_rotation_timer(angle, TIMER_STATE_ON_RANDOM_SEARCH_BOTTLE_ALIGNMENT)
         else:
             # lets start a rotation of 30 degrees again
-            print("No bottle detected at all --> start again a rotation")
+            print("    No bottle detected at all --> start again a rotation")
             self.cam_publisher.publish(String(data="destroy"))
             self.start_rotation_timer(DELTA_RANDOM_SEARCH, TIMER_STATE_ON_RANDOM_SEARCH_DELTA_ROTATION)
 
