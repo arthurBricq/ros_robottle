@@ -25,6 +25,7 @@ TIMER_STATE_OFF = "0"
 TIMER_STATE_ON_TRAVEL_MODE = "1"
 TIMER_STATE_ON_RANDOM_SEARCH_BOTTLE_ALIGNMENT = "2"
 TIMER_STATE_ON_RANDOM_SEARCH_DELTA_ROTATION = "3"
+TIMER_STATE_ON_BOTTLE_RELEASE = "4"
 
 ### HYPERPARAMETERS
 
@@ -298,6 +299,11 @@ class Controller1(Node):
             print("    Rotated time reached. Let's move forward.")
             self.uart_publisher.publish(String(data="w"))
 
+        if self.rotation_timer_state == TIMER_STATE_ON_BOTTLE_RELEASE:
+            # TODO
+            # = robot is aligned with the recycling area
+            pass
+
 
     ### STATE MACHINE METHODS
 
@@ -474,7 +480,11 @@ class Controller1(Node):
     def start_bottle_release_mode(self):
         """Will start the bottle picking mode"""
         self.state = BOTTLE_RELEASE_MODE
-        # todo !!!
+        # 1. get angle to rotate to align robot to correct position
+        # TODO
+        angle = 0 
+        # 2. make the rotation
+        self.start_rotation_timer(angle, TIMER_STATE_ON_BOTTLE_RELEASE)
 
     ### HELPER FUNCTIONS
 
@@ -491,7 +501,6 @@ class Controller1(Node):
         msg = String()
         if angle > 0: msg.data = "d"
         else: msg.data = "a"
-        self.uart_publisher.publish(String(data="h"))
         self.uart_publisher.publish(msg)
 
         # 3. estimate remaining time of rotation and start new timer
