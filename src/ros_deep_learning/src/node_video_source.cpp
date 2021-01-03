@@ -36,6 +36,8 @@ Publisher<sensor_msgs::Image> image_pub = NULL;
 videoOptions video_options;
 std::string resource_str;
 
+bool is_flip = false ;
+
 // aquire and publish camera frame
 bool aquireFrame()
 {
@@ -80,10 +82,12 @@ void flip_topic_callback(const std_msgs::msg::String::SharedPtr input) {
 
     std::string s = input->data.c_str();
     ROS_ERROR("flipping camera");
-    if (s == "normal"){
+    if (s == "normal" && is_flip){
+        is_flip = false ; 
         video_options.flipMethod = videoOptions::FlipMethodFromStr("rotate-180");
     }
-    else if (s == "flip"){
+    else if (s == "flip" && !is_flip) {
+        is_flip = true ; 
         video_options.flipMethod = videoOptions::FlipMethodFromStr("counterclockwise");
     }
     // delete the stream and create a new one imediatly
