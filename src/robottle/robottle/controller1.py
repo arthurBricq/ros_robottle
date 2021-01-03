@@ -247,7 +247,7 @@ class Controller1(Node):
             return 
         source_img = msg.detections[0].source_img
         is_actually_flipped = source_img.height > source_img.width
-        print("flip state, observed state = ", self.is_flipped, is_actually_flipped)
+        print("flip state, observed state = ", self.is_flipped, is_actually_flipped, source_img.width)
         if is_actually_flipped != self.is_flipped:
             print("Image not correct")
             return
