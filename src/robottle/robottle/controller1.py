@@ -50,7 +50,7 @@ TARGETS_TO_VISIT = [1,0,2,0] # = grass, recycling, rocks, recycling
 # delta degree for little random search rotations
 DELTA_RANDOM_SEARCH = 30
 # time to wait for detections on each flip of the camera
-TIME_FOR_VISION_DETECTION = 2 # [s]
+TIME_FOR_VISION_DETECTION = 10 # [s]
 
 class Controller1(Node):
     """
