@@ -250,7 +250,7 @@ class Controller1(Node):
                 return
         
         new_detections = [(d.bbox.center.x, d.bbox.center.y, d.bbox.size_x, d.bbox.size_y, self.is_flipped) for d in msg.detections]
-        print(new_detections)
+        print(new_detections, msg.detections[0].source_img.width)
         self.detections += new_detections
         # 2. flip the camera
         self.flip_camera_and_reset_detectnet_timer()
