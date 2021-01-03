@@ -91,7 +91,6 @@ bool publish_overlay( detectNet::Detection* detections, int numDetections )
 void img_callback( const sensor_msgs::ImageConstPtr input )
 {
 
-    ROS_ERROR("IMAGE RECEIVED !") ; 
     if (!should_detect) {
         return;
     }
