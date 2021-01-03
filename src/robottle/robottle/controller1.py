@@ -243,16 +243,14 @@ class Controller1(Node):
         i.e. only in RANDOM_SEARCH_MODE when the robot is still and waiting for detection
         """
         if self.detectnet_state == DETECTNET_OFF: return 
+        source_img = msg.detections[0].source_img
+        is_actually_flipped = source_img.height > source_img.width
+        if is_actually_flipped != self.is_flipped:
+            print("Image not correct")
+            return
+
         # 1. extract the detection
         print("    Detections successful")
-        if self.is_flipped:
-            # we are waiting for a flipped image.
-            # let's verify that it is actually flipped
-            source_img = msg.detections[0].source_img
-            is_actually_flipped = source_img.height > source_img.width
-            if not is_actually_flipped:
-                print("Image was still not flipped !")
-                return
         
         new_detections = [(d.bbox.center.x, d.bbox.center.y, d.bbox.size_x, d.bbox.size_y, self.is_flipped) for d in msg.detections]
         print(new_detections, msg.detections[0].source_img.width)
