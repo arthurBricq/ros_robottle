@@ -154,7 +154,7 @@ class Controller1(Node):
         # STATE MACHINE
         # send a request for continuous rotation after waiting 1 second for UART node to be ready
         # todo: change '0' to '3' when launching controller1 within launch file
-        time.sleep(0)
+        time.sleep(3)
         if self.state == INITIAL_ROTATION_MODE:
             self.uart_publisher.publish(String(data = "r"))
 
