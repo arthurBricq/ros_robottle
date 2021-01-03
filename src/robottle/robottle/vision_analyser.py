@@ -58,7 +58,7 @@ class VisionAnalyser(Node):
             vision_utils.save_picture(pixels, rows, cols, dim, self.name, FOLDER)
 
     def detection_callback(self, msg):
-        detections = [(d.bbox.center.x, d.bbox.center.y, d.bbox.size_x, d.bbox.size_y, False) for d in msg.detections]
+        detections = [(d.bbox.center.x, d.bbox.center.y, d.bbox.size_x, d.bbox.size_y, True) for d in msg.detections]
         # get best detection
         detection = vision_utils.get_best_detections(detections)
         # move to bottle
