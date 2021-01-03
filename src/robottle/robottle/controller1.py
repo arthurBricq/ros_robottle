@@ -154,7 +154,7 @@ class Controller1(Node):
         # STATE MACHINE
         # send a request for continuous rotation after waiting 1 second for UART node to be ready
         # todo: change '0' to '3' when launching controller1 within launch file
-        time.sleep(3)
+        time.sleep(0)
         if self.state == INITIAL_ROTATION_MODE:
             self.uart_publisher.publish(String(data = "r"))
 
@@ -242,7 +242,9 @@ class Controller1(Node):
         This function can only be called when the neuron network is active, 
         i.e. only in RANDOM_SEARCH_MODE when the robot is still and waiting for detection
         """
-        if self.detectnet_state == DETECTNET_OFF: return 
+        if self.detectnet_state == DETECTNET_OFF: 
+            print("goobye fuckers")
+            return 
         source_img = msg.detections[0].source_img
         is_actually_flipped = source_img.height > source_img.width
         print("flip state, observed state = ", self.is_flipped, is_actually_flipped)
