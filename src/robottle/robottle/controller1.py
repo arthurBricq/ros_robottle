@@ -288,7 +288,6 @@ class Controller1(Node):
             self.start_bottle_reaching_mode()
 
         if self.rotation_timer_state == TIMER_STATE_ON_RANDOM_SEARCH_DELTA_ROTATION:
-            print("    Robot finished his delta rotation")
             self.rotation_timer_state = TIMER_STATE_OFF
             self.uart_publisher.publish(String(data="x"))
             # start detection again
