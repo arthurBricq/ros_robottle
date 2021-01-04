@@ -367,6 +367,7 @@ class Controller1(Node):
         # ending criterion 
         has_to_stop_search = (self.n_random_search == N_RANDOM_SEARCH_MAX) or (self.bottles_picked == MAX_BOTTLE_PICKED)
         if has_to_stop_search:
+            print("Leaving random search")
             # no more random walk can happen
             # let's enter travel mode again
             self.set_detectnet_state(DETECTNET_OFF)
@@ -484,6 +485,7 @@ class Controller1(Node):
             print("Robot reached zone ", reached)
             self.current_target_index += 1
             self.is_traveling_forward = False
+            self.path = []
             if reached in [1,2]: # robot in zone 2 or zone 3
                 # travel_mode --> random_search mode
                 self.start_random_search_detection()
@@ -528,6 +530,7 @@ class Controller1(Node):
 
     def start_travel_mode(self):
         self.uart_publisher.publish(String(data = "m1"))
+        self.has_to_find_new_path = True
         self.state = TRAVEL_MODE
 
     def start_bottle_release_mode(self):
