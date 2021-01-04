@@ -43,7 +43,7 @@ CONTROLLER_TIME_CONSTANT = 40
 # path-tracker min angle diff for directing the robot
 MIN_ANGLE_DIFF = 15 # [deg]
 # maximum number of times controller enters random search mode inside 1 zone
-N_RANDOM_SEARCH_MAX = 40
+N_RANDOM_SEARCH_MAX = 20
 # Array containing indices of zones to visit: note that zones = [r, z2, z3, z4]
 # z2 = grass, z3 = rocks
 TARGETS_TO_VISIT = [1,0,2,0] # = grass, recycling, rocks, recycling
