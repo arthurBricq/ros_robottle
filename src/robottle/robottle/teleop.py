@@ -39,6 +39,7 @@ class TeleopRobotController(Node):
         self.camera_flip_topic = self.create_publisher(String, 'video_source/flip_topic', 1000)
         self.map_corner_client = self.create_client(FindMapCorner, "find_map_corner")
         self.map_quality_control = self.create_publisher(String, 'map_quality_control', 1000)
+        self.log_line_printer = self.create_publisher(String, 'log_line', 5)
         self.flip = True
 
         try:
@@ -69,7 +70,7 @@ class TeleopRobotController(Node):
                     # change map quality
                     self.map_quality_control.publish(String(data="nimportequoi"))
                 elif key == '2':
-
+                    self.log_line_printer.publish(String(data="pinguing"))
                 elif key == 'q':
                     break
                 else:

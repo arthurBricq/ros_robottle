@@ -95,6 +95,8 @@ class Controller1(Node):
         self.camera_flip_topic.publish(String(data="normal"))
         self.is_flipped = False 
 
+        # subscription for debugng
+
         # keep track of where is the robot within the class
         self.x = 0
         self.y = 0
