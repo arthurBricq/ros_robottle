@@ -39,7 +39,7 @@ MIN_DIST_TO_GOAL = 50 # [pixels]
 # min distance between robot and point in the path to consider the robot as passed it
 MIN_DIST_TO_POINT = 0.2 # [m]
 # time constant of path computation update (the bigger, the less often the path is updated)
-CONTROLLER_TIME_CONSTANT = 20
+CONTROLLER_TIME_CONSTANT = 30
 # path-tracker min angle diff for directing the robot
 MIN_ANGLE_DIFF = 15 # [deg]
 # maximum number of times controller enters random search mode inside 1 zone

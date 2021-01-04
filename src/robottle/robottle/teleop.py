@@ -23,15 +23,14 @@ class TeleopRobotController(Node):
         print("Teleop Running: ")
         print("Type(w,a,s,d,x) to move ")
         print("Type 'q' to quit the node")
-        print("Type 'p' to take a picture now")
         print("Type 'k' to activate image detection")
         print("Type 'l' to de-activate image detection")
-        print("Type 'm' to start the Motors")
+        print("Type 'b' to start the Motors")
         print("Type 'n' to stop the Motors")
         print("Type 'f' to flip the camera")
-        print("Type '1' to change the map quality")
-        print("Type '1' to change the map quality")
-        print("Type '2' to draw a line in the controller 1 logs")
+        print("Type '5' to change the map quality")
+        print("Type '6' to draw a line in the controller 1 logs")
+        print("Type '7' to take a picture now")
         print("--name = ", self.name)
 
         self.uart_publisher = self.create_publisher(String, 'uart_commands', 1000)
@@ -45,15 +44,13 @@ class TeleopRobotController(Node):
         try:
             while(1):
                 key = self.getKey()
-                if key == 'p':
-                    self.send_service()
                 elif key == 'l':
                     # stop detection
                     self.cam_control_publisher.publish(String(data="destroy"))
                 elif key == 'k':
                     # activate detection
                     self.cam_control_publisher.publish(String(data="create"))
-                elif key == 'm':
+                elif key == 'b':
                     # start the motor
                     lidar = Lidar('/dev/ttyUSB0')
                     lidar.start_motor()
@@ -66,11 +63,13 @@ class TeleopRobotController(Node):
                     msg = "normal" if self.flip else "flip"
                     self.flip = not self.flip
                     self.camera_flip_topic.publish(String(data=msg))
-                elif key == '1':
+                elif key == '5':
                     # change map quality
                     self.map_quality_control.publish(String(data="nimportequoi"))
-                elif key == '2':
+                elif key == '6':
                     self.log_line_printer.publish(String(data="pinguing"))
+                if key == '7':
+                    self.send_service()
                 elif key == 'q':
                     break
                 else:
