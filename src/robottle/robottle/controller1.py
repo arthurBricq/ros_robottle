@@ -204,6 +204,7 @@ class Controller1(Node):
         elif self.state == TRAVEL_MODE and self.is_traveling_forward:
             obstacle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, self.lidar_save_index) 
             if obstacle_detected:
+                print("Obstacle detected AHEAD of lidar. Let's STOP.")
                 self.uart_publisher.publish(String(data="x"))
                 self.has_to_find_new_path = True
 
@@ -455,7 +456,7 @@ class Controller1(Node):
         if (self.is_saving or self.is_plotting) and int(map_message.index) % self.SAVE_TIME_CONSTANT == 0:
             name = self.map_name+str(self.saving_index)
             save_name = "/home/arthur/dev/ros/data/maps/rects/"+name+".png" if self.is_saving else ""
-            text = str(diff)
+            text = ""
             try:
                 img = map_utils.make_nice_plot(self.binary, save_name, self.robot_pos,
                         self.theta, self.contours, self.corners,
