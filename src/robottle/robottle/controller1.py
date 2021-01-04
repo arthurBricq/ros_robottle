@@ -191,7 +191,8 @@ class Controller1(Node):
                 self.lidar_save_index += 1 
             if obstacle_detected: 
                 print("Obstacle detected AHEAD of lidar. Let's STOP.")
-                self.start_rotation_timer(DELTA_RANDOM_SEARCH, TIMER_STATE_ON_RANDOM_SEARCH_DELTA_ROTATION)
+                self.uart_publisher.publish(String(data="x"))
+                #self.start_rotation_timer(DELTA_RANDOM_SEARCH, TIMER_STATE_ON_RANDOM_SEARCH_DELTA_ROTATION)
 
 
     def listener_arduino_status(self, status_msg):
