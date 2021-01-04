@@ -83,6 +83,9 @@ class Controller1(Node):
         self.subscription_lidar = self.create_subscription(LidarData, 'lidar_data',
             self.lidar_callback, 1000)
 
+        # subscription for debugng
+        self.loging_ling_sub = self.create_subscription(String, 'log_line', 5, self.log_line)
+
         # Create a publication for uart commands
         self.uart_publisher = self.create_publisher(String, 'uart_commands', 1000)
 
@@ -95,7 +98,6 @@ class Controller1(Node):
         self.camera_flip_topic.publish(String(data="normal"))
         self.is_flipped = False 
 
-        # subscription for debugng
 
         # keep track of where is the robot within the class
         self.x = 0
@@ -538,6 +540,9 @@ class Controller1(Node):
         self.rotation_timer_state = state
         time_to_rotate = controller_utils.get_rotation_time(np.abs(angle))
         self.rotation_timer = self.create_timer(time_to_rotate, self.rotation_timer_callback)
+
+    def log_line(self,msg):
+        print("---------------------------")
 
 def main(args=None):
     rclpy.init(args=args)
