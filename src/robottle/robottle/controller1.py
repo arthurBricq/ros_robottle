@@ -479,9 +479,9 @@ class Controller1(Node):
         # 1. state transition condition
         dist = controller_utils.get_distance(self.robot_pos, self.goal)
         if dist < MIN_DIST_TO_GOAL:
-            print("Robot reached zone ", reached)
             # robot arrived to destination
             reached = TARGETS_TO_VISIT[self.current_target_index]
+            print("Robot reached zone ", reached)
             self.current_target_index += 1
             self.is_traveling_forward = False
             if reached in [1,2]: # robot in zone 2 or zone 3
