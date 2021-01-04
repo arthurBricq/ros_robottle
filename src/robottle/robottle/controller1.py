@@ -36,6 +36,8 @@ DETECTNET_OFF = "OFF"
 AREA_THRESHOLD = 60000
 # distance at which, if the robot is closer than the goal, travel_mode ends
 MIN_DIST_TO_GOAL = 50 # [pixels]
+# distance to recycling
+MIN_DIST_TO_RECYCLING = 5
 # min distance between robot and point in the path to consider the robot as passed it
 MIN_DIST_TO_POINT = 0.2 # [m]
 # time constant of path computation update (the bigger, the less often the path is updated)
@@ -491,9 +493,10 @@ class Controller1(Node):
 
         # 1. state transition condition
         dist = controller_utils.get_distance(self.robot_pos, self.goal)
-        if dist < MIN_DIST_TO_GOAL:
+        reached = TARGETS_TO_VISIT[self.current_target_index]
+        min_dist = MIN_DIST_TO_RECYCLING if reached == 0 else MIN_DIST_TO_GOAL
+        if dist < min_dist:
             # robot arrived to destination
-            reached = TARGETS_TO_VISIT[self.current_target_index]
             print("Robot reached zone ", reached)
             self.current_target_index += 1
             self.is_traveling_forward = False
