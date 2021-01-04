@@ -366,7 +366,7 @@ class Controller1(Node):
             return
 
         # set lower speed
-        self.uart_publisher.publish(String(data = "m2"))
+        self.uart_publisher.publish(String(data = "xm2"))
 
         # create subscription for detection
         self.set_detectnet_state(DETECTNET_ON)
