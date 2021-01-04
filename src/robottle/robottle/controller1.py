@@ -203,7 +203,7 @@ class Controller1(Node):
                 print("* Initial Rotation Mode --> Travel Mode")
                 self.start_travel_mode()
 
-        if self.state == BOTTLE_REACHING_MODE:
+        elif self.state == BOTTLE_REACHING_MODE:
             if status == 0: 
                 # = max distance reached
                 print("Robot advanced maximum distance in 'y' mode")
@@ -229,7 +229,7 @@ class Controller1(Node):
                     self.uart_publisher.publish(String(data="p"))
 
 
-        if self.state == BOTTLE_PICKING_MODE:
+        elif self.state == BOTTLE_PICKING_MODE:
             if status == 0:
                 # = no bottle were detected by the robot arm 
                 # TODO
@@ -238,7 +238,7 @@ class Controller1(Node):
                 print("Bottle picked")
                 self.start_random_search_detection()
 
-        if self.state == BOTTLE_RELEASE_MODE:
+        elif self.state == BOTTLE_RELEASE_MODE:
             if status == 1:
                 self.start_travel_mode()
 
