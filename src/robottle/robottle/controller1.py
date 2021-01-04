@@ -153,7 +153,7 @@ class Controller1(Node):
 
         if "--reach" in args:
             self.state = BOTTLE_REACHING_MODE
-            self.lidar_save_index = 0
+            #self.lidar_save_index = 0
 
 
         # STATE MACHINE
