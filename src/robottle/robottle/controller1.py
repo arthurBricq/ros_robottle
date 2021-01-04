@@ -44,8 +44,6 @@ MIN_DIST_TO_POINT = 0.2 # [m]
 CONTROLLER_TIME_CONSTANT = 20
 # path-tracker min angle diff for directing the robot
 MIN_ANGLE_DIFF = 15 # [deg]
-# maximum number of times controller enters random search mode inside 1 zone
-N_RANDOM_SEARCH_MAX = 20
 # Array containing indices of zones to visit: note that zones = [r, z2, z3, z4]
 # z2 = grass, z3 = rocks
 TARGETS_TO_VISIT = [1,0,2,0] # = grass, recycling, rocks, recycling
@@ -55,7 +53,9 @@ DELTA_RANDOM_SEARCH = 30
 # time to wait for detections on each flip of the camera
 TIME_FOR_VISION_DETECTION = 2 # [s]
 # maximum number of bottles robot can pick
-MAX_BOTTLE_PICKED = 0
+MAX_BOTTLE_PICKED = 5
+# maximum number of times controller enters random search mode inside 1 zone
+N_RANDOM_SEARCH_MAX = 20
 
 class Controller1(Node):
     """
@@ -211,7 +211,7 @@ class Controller1(Node):
                 self.has_to_find_new_path = True
 
         elif self.state == BOTTLE_RELEASE_MODE and self.is_traveling_forward:
-            obstacle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, self.lidar_save_index, length_to_check = 500) 
+            obstacle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, self.lidar_save_index, length_to_check = 700) 
             if obstacle_detected:
                 print("Obstacle detected AHEAD of lidar. HOME DETECTED ! ")
                 self.uart_publisher.publish(String(data="x"))
