@@ -117,6 +117,7 @@ class Controller1(Node):
         # DEBUG
         # set saving state (if True, then it will save some maps to a folder when they can be analysed)
         args = sys.argv
+        self.args = args
         self.is_saving = "--save" in args
         self.is_plotting = "--plot" in args
         self.saving_index = 0
@@ -175,16 +176,17 @@ class Controller1(Node):
         self.theta = pos.theta % 360
 
     def lidar_callback(self, msg):
-        #if self.state == TRAVEL_MODE:
-            #if self.robot_pos is None or self.zones is None or not len(self.robot_pos) or self.theta is None:
-             #   return
-            #is_rock, angle = controller_utils.is_obstacle_a_rock(np.concatenate((self.robot_pos, [self.theta]), axis = 0), 
-            #        self.zones)
+        if "--travel" in self.args: 
+            if self.robot_pos is None or self.zones is None or not len(self.robot_pos) or self.theta is None:
+                return
+            is_rock, angle = controller_utils.is_obstacle_a_rock(np.concatenate((self.robot_pos, [self.theta]), axis = 0), 
+                    self.zones)
         if self.state == BOTTLE_REACHING_MODE:
             obstacle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, self.lidar_save_index) 
             if self.lidar_save_index is not None:
                 self.lidar_save_index += 1 
             if obstacle_detected: 
+                print("Obstacle detected AHEAD of lidar. Let's STOP.")
                 self.start_rotation_timer(DELTA_RANDOM_SEARCH, TIMER_STATE_ON_RANDOM_SEARCH_DELTA_ROTATION)
 
 
@@ -209,17 +211,20 @@ class Controller1(Node):
             elif status == 1:
                 # = there is a small obstacle ahead of the robot
                 if TARGETS_TO_VISIT[self.current_target_index] == 2: 
+                    print("Picking bottle inside rocks")
                     # robot is inside the rocks zone
                     # verify that robot is not in front of the rocks 
                     self.uart_publisher.publish(String(data="x"))
                     is_rock, angle = controller_utils.is_obstacle_a_rock(self.robot_pos, self.zones)
                     if is_rock:
+                        # TODO: what the fuck is this
                         self.state = RANDOM_SEARCH_MODE
                         self.start_rotation_timer(angle, TIMER_STATE_ON_RANDOM_SEARCH_DELTA_ROTATION)
                     else:
                         self.state = BOTTLE_PICKING_MODE
                         self.uart_publisher.publish(String(data="p"))
                 else:
+                    print("Picking bottle outside of rocks")
                     self.state = BOTTLE_PICKING_MODE
                     self.uart_publisher.publish(String(data="p"))
 
@@ -242,22 +247,21 @@ class Controller1(Node):
         This function can only be called when the neuron network is active, 
         i.e. only in RANDOM_SEARCH_MODE when the robot is still and waiting for detection
         """
+        # we must verify that the detectnet is really suppose to be turned ON
         if self.detectnet_state == DETECTNET_OFF: 
-            print("goobye fuckers")
             return 
+        # we must verify that actual flip state is the same as expected flip state
         source_img = msg.detections[0].source_img
         is_actually_flipped = source_img.height < source_img.width
-        print("flip state, observed state = ", self.is_flipped, is_actually_flipped, source_img.width)
         if is_actually_flipped != self.is_flipped:
-            print("Image not correct")
             return
 
         # 1. extract the detection
         print("    Detections successful")
-        
         new_detections = [(d.bbox.center.x, d.bbox.center.y, d.bbox.size_x, d.bbox.size_y, self.is_flipped) for d in msg.detections]
         print(new_detections, msg.detections[0].source_img.width)
         self.detections += new_detections
+
         # 2. flip the camera
         self.flip_camera_and_reset_detectnet_timer()
 
@@ -497,8 +501,6 @@ class Controller1(Node):
     def start_bottle_reaching_mode(self):
         """Will start the bottle picking mode"""
         self.state = BOTTLE_REACHING_MODE
-        # would be nice to go slower here
-        # lets start a rotation
         self.uart_publisher.publish(String(data = "y"))
 
     def start_travel_mode(self):
