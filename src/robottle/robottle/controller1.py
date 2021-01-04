@@ -39,7 +39,7 @@ MIN_DIST_TO_GOAL = 50 # [pixels]
 # min distance between robot and point in the path to consider the robot as passed it
 MIN_DIST_TO_POINT = 0.2 # [m]
 # time constant of path computation update (the bigger, the less often the path is updated)
-CONTROLLER_TIME_CONSTANT = 40
+CONTROLLER_TIME_CONSTANT = 20
 # path-tracker min angle diff for directing the robot
 MIN_ANGLE_DIFF = 15 # [deg]
 # maximum number of times controller enters random search mode inside 1 zone
@@ -385,7 +385,7 @@ class Controller1(Node):
         ### I. Path planning
         # Once in a while, start the path planning logic
         if int(map_message.index) % CONTROLLER_TIME_CONSTANT == 0:
-            print("    map analysis")
+            print("    map analysis", int(map_message.index))
 
             ## Handling timer problem
             if self.rotation_timer_state == TIMER_STATE_ON_TRAVEL_MODE:
@@ -436,6 +436,7 @@ class Controller1(Node):
                 # e. rrt_star path planning
                 self.goal = self.targets[TARGETS_TO_VISIT[self.current_target_index]]
                 random_area = map_utils.get_random_area(self.zones)
+                print("    - will find path")
                 rrt = RRTStar(start = self.robot_pos, goal = self.goal, binary_obstacle = binary, 
                         rand_area = random_area, expand_dis = 50, path_resolution = 1,
                         goal_sample_rate = 5, max_iter = 500)
@@ -483,12 +484,11 @@ class Controller1(Node):
                         text = text)
                 if self.is_plotting:
                     self.live_vizualiser.display(np.array(img))
-                print("-----> saving index: ", self.saving_index)
+                print("-----> saving index: ", self.saving_index, int(map_message.index))
                 self.saving_index += 1
             except:
                 print("Could not save")
 
-        print(diff)
         if abs(diff) > MIN_ANGLE_DIFF:
             ## ROTATION CORRECTION SUB-STATE
             print("    rotation correction with diff = ", diff)
@@ -502,7 +502,7 @@ class Controller1(Node):
             # compute distance to next point of the path
             p = self.path[-2]
             dist_to_next_point = controller_utils.get_distance(self.robot_pos, p)
-            print("    going foward for a distance {:.2f}".format(dist_to_next_point))
+            print("    going foward for a distance {:.2f}, diff = {:.2f}".format(dist_to_next_point, diff))
             if dist_to_next_point < MIN_DIST_TO_POINT:
                 # remove first point of the path
                 print("Will update path: ", self.path)
