@@ -208,6 +208,14 @@ class Controller1(Node):
                 self.uart_publisher.publish(String(data="x"))
                 self.has_to_find_new_path = True
 
+        elif self.state == BOTTLE_RELEASE_MODE and self.is_traveling_forward:
+            obstacle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, self.lidar_save_index, length_to_check = 500) 
+            if obstacle_detected:
+                print("Obstacle detected AHEAD of lidar. HOME DETECTED ! ")
+                self.uart_publisher.publish(String(data="x"))
+                self.uart_publisher.publish(String(data="q"))
+
+
     def listener_arduino_status(self, status_msg):
         """Called when Arduino send something to Jetson
         Messages type
@@ -258,6 +266,7 @@ class Controller1(Node):
 
         elif self.state == BOTTLE_RELEASE_MODE:
             if status == 1:
+                self.is_traveling_forward = False
                 self.start_travel_mode()
 
     def listener_callback_detectnet(self, msg):
@@ -343,8 +352,11 @@ class Controller1(Node):
             self.uart_publisher.publish(String(data="w"))
 
         if self.rotation_timer_state == TIMER_STATE_ON_BOTTLE_RELEASE:
-            # TODO
             # = robot is aligned with the recycling area
+            print("Ready to move forward")
+            self.is_traveling_forward = True
+            self.uart_publisher.publish(String(data="m2"))
+            self.uart_publisher.publish(String(data="w"))
             pass
 
 
@@ -499,7 +511,7 @@ class Controller1(Node):
             return
 
         path_orientation = controller_utils.get_path_orientation(self.path)
-        diff = (path_orientation - self.theta + 180) % 360 - 180
+        diff = controller_utils.angle_diff(path_orientation, self.theta)
 
         if abs(diff) > MIN_ANGLE_DIFF:
             ## ROTATION CORRECTION SUB-STATE
@@ -537,9 +549,11 @@ class Controller1(Node):
         """Will start the bottle picking mode"""
         self.state = BOTTLE_RELEASE_MODE
         # 1. get angle to rotate to align robot to correct position
-        # TODO
-        angle = 0 
+        diagonal_orientation = controller_utils.get_path_orientation([self.zones[3], self.zones[0]])
+        angle = controller_utils.angle_diff(diagonal_orientation, self.theta)
+        print("BOTTLE RELEASE with angle diff: ", angle, "values ", self.theta, diagonal_orientation)
         # 2. make the rotation
+        self.is_traveling_forward = False
         self.start_rotation_timer(angle, TIMER_STATE_ON_BOTTLE_RELEASE)
 
     ### HELPER FUNCTIONS
