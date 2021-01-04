@@ -46,11 +46,14 @@ MIN_ANGLE_DIFF = 15 # [deg]
 N_RANDOM_SEARCH_MAX = 40
 # Array containing indices of zones to visit: note that zones = [r, z2, z3, z4]
 # z2 = grass, z3 = rocks
-TARGETS_TO_VISIT = [1,0,2,0] # = grass, recycling, rocks, recycling
+TARGETS_TO_VISIT = [2,0,2,0] # = grass, recycling, rocks, recycling
+ROCKS_ZONE_INDEX = 1
 # delta degree for little random search rotations
 DELTA_RANDOM_SEARCH = 30
 # time to wait for detections on each flip of the camera
 TIME_FOR_VISION_DETECTION = 2 # [s]
+# maximum number of bottles robot can pick
+MAX_BOTTLE_PICKED = 5
 
 class Controller1(Node):
     """
@@ -115,6 +118,7 @@ class Controller1(Node):
         self.rotation_timer = None
         self.lidar_save_index = None
         self.n_random_search = 0
+        self.bottles_picked = 0
         self.state = INITIAL_ROTATION_MODE
         self.rotation_timer_state = TIMER_STATE_OFF
 
@@ -215,7 +219,7 @@ class Controller1(Node):
                 self.start_random_search_detection()
             elif status == 1:
                 # = there is a small obstacle ahead of the robot
-                if TARGETS_TO_VISIT[self.current_target_index] == 2: 
+                if TARGETS_TO_VISIT[self.current_target_index] == ROCKS_ZONE_INDEX: 
                     print("Picking bottle inside rocks")
                     # robot is inside the rocks zone
                     # verify that robot is not in front of the rocks 
@@ -240,6 +244,7 @@ class Controller1(Node):
                 self.start_random_search_detection()
             elif status == 1: # robot picked the bottle 
                 print("Bottle picked")
+                self.bottles_picked += 1
                 self.start_random_search_detection()
 
         elif self.state == BOTTLE_RELEASE_MODE:
@@ -350,8 +355,9 @@ class Controller1(Node):
         self.state = RANDOM_SEARCH_MODE
         self.n_random_search += 1
 
-        # ending criterion (1)
-        if self.n_random_search == N_RANDOM_SEARCH_MAX:
+        # ending criterion 
+        has_to_stop_search = (self.n_random_search == N_RANDOM_SEARCH_MAX) or (self.bottles_picked == MAX_BOTTLE_PICKED)
+        if has_to_stop_search:
             # no more random walk can happen
             # let's enter travel mode again
             self.set_detectnet_state(DETECTNET_OFF)
