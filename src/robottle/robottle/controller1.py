@@ -121,6 +121,8 @@ class Controller1(Node):
         self.bottles_picked = 0
         self.state = INITIAL_ROTATION_MODE
         self.rotation_timer_state = TIMER_STATE_OFF
+        self.is_traveling_forward = False
+        self.has_to_find_new_path = False
 
         # DEBUG
         # set saving state (if True, then it will save some maps to a folder when they can be analysed)
@@ -199,6 +201,11 @@ class Controller1(Node):
                 self.uart_publisher.publish(String(data="x"))
                 self.start_rotation_timer(DELTA_RANDOM_SEARCH, TIMER_STATE_ON_RANDOM_SEARCH_DELTA_ROTATION)
 
+        elif self.state == TRAVEL_MODE and self.is_traveling_forward:
+            obstacle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, self.lidar_save_index) 
+            if obstacle_detected:
+                self.uart_publisher.publish(String(data="x"))
+                self.has_to_find_new_path = True
 
     def listener_arduino_status(self, status_msg):
         """Called when Arduino send something to Jetson
@@ -384,7 +391,7 @@ class Controller1(Node):
 
         ### I. Path planning
         # Once in a while, start the path planning logic
-        if int(map_message.index) % CONTROLLER_TIME_CONSTANT == 0:
+        if int(map_message.index) % CONTROLLER_TIME_CONSTANT == 0 or self.has_to_find_new_path:
             print("    map analysis", int(map_message.index))
 
             ## Handling timer problem
@@ -441,36 +448,8 @@ class Controller1(Node):
                         rand_area = random_area, expand_dis = 50, path_resolution = 1,
                         goal_sample_rate = 5, max_iter = 500)
                 self.path = np.array(rrt.planning(animation = False))
+                self.has_to_find_new_path = False
                 print("    - path found")
-
-
-        ### II. Path Tracking
-        # 0. end condition
-        if len(self.path) == 0 or self.goal is None: 
-            print("...")
-            return
-
-        # 1. state transition condition
-        dist = controller_utils.get_distance(self.robot_pos, self.goal)
-        if dist < MIN_DIST_TO_GOAL:
-            # robot arrived to destination
-            reached = TARGETS_TO_VISIT[self.current_target_index]
-            self.current_target_index += 1
-            print("Robot reached zone ", reached)
-            if reached in [1,2]: # robot in zone 2 or zone 3
-                # travel_mode --> random_search mode
-                self.start_random_search_detection()
-            elif reached == 0:
-                # travel_mode --> release_bottle_mode
-                self.start_bottle_release_mode()
-            return
-
-        # 2. Else, compute motors commands
-        if self.rotation_timer_state == TIMER_STATE_ON_TRAVEL_MODE: 
-            return
-
-        path_orientation = controller_utils.get_path_orientation(self.path)
-        diff = (path_orientation - self.theta + 180) % 360 - 180
 
         # (make and save the nice figure)
         if (self.is_saving or self.is_plotting) and int(map_message.index) % self.SAVE_TIME_CONSTANT == 0:
@@ -489,9 +468,40 @@ class Controller1(Node):
             except:
                 print("Could not save")
 
+
+        ### II. Path Tracking
+        # 0. end condition
+        if len(self.path) == 0 or self.goal is None: 
+            print("...")
+            return
+
+        # 1. state transition condition
+        dist = controller_utils.get_distance(self.robot_pos, self.goal)
+        if dist < MIN_DIST_TO_GOAL:
+            print("Robot reached zone ", reached)
+            # robot arrived to destination
+            reached = TARGETS_TO_VISIT[self.current_target_index]
+            self.current_target_index += 1
+            self.is_traveling_forward = False
+            if reached in [1,2]: # robot in zone 2 or zone 3
+                # travel_mode --> random_search mode
+                self.start_random_search_detection()
+            elif reached == 0:
+                # travel_mode --> release_bottle_mode
+                self.start_bottle_release_mode()
+            return
+
+        # 2. Else, compute motors commands
+        if self.rotation_timer_state == TIMER_STATE_ON_TRAVEL_MODE: 
+            return
+
+        path_orientation = controller_utils.get_path_orientation(self.path)
+        diff = (path_orientation - self.theta + 180) % 360 - 180
+
         if abs(diff) > MIN_ANGLE_DIFF:
             ## ROTATION CORRECTION SUB-STATE
             print("    rotation correction with diff = ", diff)
+            self.is_traveling_forward = False
             self.start_rotation_timer(diff, TIMER_STATE_ON_TRAVEL_MODE)
 
         else:
@@ -499,6 +509,7 @@ class Controller1(Node):
             # in theory, robot should be going forward.
             # send a forward message just in case it wasn't lunched before
             self.uart_publisher.publish(String(data = "w"))
+            self.is_traveling_forward = True
             # compute distance to next point of the path
             p = self.path[-2]
             dist_to_next_point = controller_utils.get_distance(self.robot_pos, p)
