@@ -84,7 +84,7 @@ class Controller1(Node):
             self.lidar_callback, 1000)
 
         # subscription for debugng
-        self.loging_ling_sub = self.create_subscription(String, 'log_line', 5, self.log_line)
+        self.loging_ling_sub = self.create_subscription(String, 'log_line', self.log_line, 5)
 
         # Create a publication for uart commands
         self.uart_publisher = self.create_publisher(String, 'uart_commands', 1000)
@@ -542,7 +542,7 @@ class Controller1(Node):
         time_to_rotate = controller_utils.get_rotation_time(np.abs(angle))
         self.rotation_timer = self.create_timer(time_to_rotate, self.rotation_timer_callback)
 
-    def log_line(self,msg):
+    def log_line(self, msg):
         print("---------------------------")
 
 def main(args=None):
