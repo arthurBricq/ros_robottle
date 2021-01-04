@@ -53,7 +53,7 @@ DELTA_RANDOM_SEARCH = 30
 # time to wait for detections on each flip of the camera
 TIME_FOR_VISION_DETECTION = 2 # [s]
 # maximum number of bottles robot can pick
-MAX_BOTTLE_PICKED = 2
+MAX_BOTTLE_PICKED = 0
 
 class Controller1(Node):
     """
