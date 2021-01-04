@@ -46,8 +46,8 @@ MIN_ANGLE_DIFF = 15 # [deg]
 N_RANDOM_SEARCH_MAX = 40
 # Array containing indices of zones to visit: note that zones = [r, z2, z3, z4]
 # z2 = grass, z3 = rocks
-TARGETS_TO_VISIT = [2,0,2,0] # = grass, recycling, rocks, recycling
-ROCKS_ZONE_INDEX = 1
+TARGETS_TO_VISIT = [1,0,2,0] # = grass, recycling, rocks, recycling
+ROCKS_ZONE_INDEX = 2
 # delta degree for little random search rotations
 DELTA_RANDOM_SEARCH = 30
 # time to wait for detections on each flip of the camera
@@ -189,6 +189,7 @@ class Controller1(Node):
                 return
             is_rock, angle = controller_utils.is_obstacle_a_rock(np.concatenate((self.robot_pos, [self.theta]), axis = 0), 
                     self.zones)
+
         if self.state == BOTTLE_REACHING_MODE:
             obstacle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, self.lidar_save_index) 
             if self.lidar_save_index is not None:
