@@ -232,9 +232,8 @@ class Controller1(Node):
         elif self.state == BOTTLE_PICKING_MODE:
             if status == 0:
                 # = no bottle were detected by the robot arm 
-                # TODO
-                pass
-            elif status == 1 or status == 0: # robot picked the bottle 
+                self.start_random_search_detection()
+            elif status == 1: # robot picked the bottle 
                 print("Bottle picked")
                 self.start_random_search_detection()
 

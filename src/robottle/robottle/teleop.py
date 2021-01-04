@@ -30,6 +30,8 @@ class TeleopRobotController(Node):
         print("Type 'n' to stop the Motors")
         print("Type 'f' to flip the camera")
         print("Type '1' to change the map quality")
+        print("Type '1' to change the map quality")
+        print("Type '2' to draw a line in the controller 1 logs")
         print("--name = ", self.name)
 
         self.uart_publisher = self.create_publisher(String, 'uart_commands', 1000)
@@ -66,6 +68,8 @@ class TeleopRobotController(Node):
                 elif key == '1':
                     # change map quality
                     self.map_quality_control.publish(String(data="nimportequoi"))
+                elif key == '2':
+
                 elif key == 'q':
                     break
                 else:
