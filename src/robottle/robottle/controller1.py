@@ -483,7 +483,7 @@ class Controller1(Node):
                         text = text)
                 if self.is_plotting:
                     self.live_vizualiser.display(np.array(img))
-                print("-----> saving index: ", saving_index)
+                print("-----> saving index: ", self.saving_index)
                 self.saving_index += 1
             except:
                 print("Could not save")
