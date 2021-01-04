@@ -44,7 +44,7 @@ class TeleopRobotController(Node):
         try:
             while(1):
                 key = self.getKey()
-                elif key == 'l':
+                if key == 'l':
                     # stop detection
                     self.cam_control_publisher.publish(String(data="destroy"))
                 elif key == 'k':
