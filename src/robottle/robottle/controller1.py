@@ -442,23 +442,6 @@ class Controller1(Node):
                 self.path = np.array(rrt.planning(animation = False))
                 print("    - path found")
 
-        # finally. make and save the nice figure
-        if (self.is_saving or self.is_plotting) and int(map_message.index) % self.SAVE_TIME_CONSTANT == 0:
-            name = self.map_name+str(self.saving_index)
-            save_name = "/home/arthur/dev/ros/data/maps/rects/"+name+".png" if self.is_saving else ""
-            text = "robot pos = {}".format(int(map_message.index),
-                    (self.robot_pos, self.theta))
-            try:
-                img = map_utils.make_nice_plot(self.binary, save_name, self.robot_pos,
-                        self.theta, self.contours, self.corners,
-                        self.zones, self.targets, self.path.astype(int),
-                        text = text)
-                if self.is_plotting:
-                    self.live_vizualiser.display(np.array(img))
-                # np.save("/home/arthur/dev/ros/data/maps/"+name+".npy", img)
-                self.saving_index += 1
-            except:
-                print("Could not save")
 
         ### II. Path Tracking
         # 0. end condition
@@ -487,11 +470,27 @@ class Controller1(Node):
 
         path_orientation = controller_utils.get_path_orientation(self.path)
         diff = (path_orientation - self.theta + 180) % 360 - 180
+
+        # (make and save the nice figure)
+        if (self.is_saving or self.is_plotting) and int(map_message.index) % self.SAVE_TIME_CONSTANT == 0:
+            name = self.map_name+str(self.saving_index)
+            save_name = "/home/arthur/dev/ros/data/maps/rects/"+name+".png" if self.is_saving else ""
+            text = str(diff)
+            try:
+                img = map_utils.make_nice_plot(self.binary, save_name, self.robot_pos,
+                        self.theta, self.contours, self.corners,
+                        self.zones, self.targets, self.path.astype(int),
+                        text = text)
+                if self.is_plotting:
+                    self.live_vizualiser.display(np.array(img))
+                self.saving_index += 1
+            except:
+                print("Could not save")
+
+        print(diff)
         if abs(diff) > MIN_ANGLE_DIFF:
             ## ROTATION CORRECTION SUB-STATE
             print("    rotation correction with diff = ", diff)
-            # a. send the rotation message
-            # b. rotation timer
             self.start_rotation_timer(diff, TIMER_STATE_ON_TRAVEL_MODE)
 
         else:
