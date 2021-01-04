@@ -424,7 +424,7 @@ class Controller1(Node):
             # c. find zones
             # zones are ordered the following way: (recycling area, zone2, zone3, zone4)
             if not self.initial_zones_found and area > AREA_THRESHOLD:
-                if area > 2250000:
+                if area > 240000:
                     raise RuntimeError("Zones were not found properly")
 
                # corners found are valid and we can find the 'initial zones'
