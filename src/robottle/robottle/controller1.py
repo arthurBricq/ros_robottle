@@ -549,7 +549,7 @@ class Controller1(Node):
         """Will start the bottle picking mode"""
         self.state = BOTTLE_RELEASE_MODE
         # 1. get angle to rotate to align robot to correct position
-        diagonal_orientation = controller_utils.get_path_orientation([self.zones[3], self.zones[0]])
+        diagonal_orientation = controller_utils.get_path_orientation([self.zones[0], self.zones[3]])
         angle = controller_utils.angle_diff(diagonal_orientation, self.theta)
         print("BOTTLE RELEASE with angle diff: ", angle, "values ", self.theta, diagonal_orientation)
         # 2. make the rotation
