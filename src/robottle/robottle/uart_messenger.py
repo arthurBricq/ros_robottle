@@ -29,7 +29,8 @@ class UARTSender(Node):
 
         # setup the uart port and wait a second for it
         self.serial_port = serial.Serial(
-            port="/dev/ttyTHS1",
+            # port="/dev/ttyTHS1",
+            port="/dev/ttyUSB0",
             baudrate=9600)
             
         time.sleep(1)
