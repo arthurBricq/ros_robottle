@@ -33,7 +33,7 @@ DETECTNET_OFF = "OFF"
 ### HYPERPARAMETERS
 
 # min area that a rotated rectangle must contain to be considered as valid
-AREA_THRESHOLD = 60000
+AREA_THRESHOLD = 110000
 # distance at which, if the robot is closer than the goal, travel_mode ends
 MIN_DIST_TO_GOAL = 25 # [pixels]
 # distance to recycling
@@ -196,36 +196,36 @@ class Controller1(Node):
                     self.zones)
 
         if self.state == BOTTLE_REACHING_MODE:
-            obstacle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, self.lidar_save_index) 
-            if self.lidar_save_index is not None:
-                self.lidar_save_index += 1 
-            if obstacle_detected: 
-                print("Obstacle detected AHEAD of lidar. Let's STOP.")
-                self.uart_publisher.publish(String(data="x"))
-                self.start_rotation_timer(DELTA_RANDOM_SEARCH, TIMER_STATE_ON_RANDOM_SEARCH_DELTA_ROTATION)
+            print("Robot is ready")
+            if self.lidar_should_detect_bottles:
+                print("Lidar will analyse obstacles ahead")
+                self.lidar_should_detect_bottles = False
+                # look if there is a standing bottle ahead of lidar
+                bottle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, threshold_low = 1, threshold_high = 8, length_to_check = 250)
+                # send the message to the arduino accordingly
+                self.state == BOTTLE_PICKING_MODE
+                self.uart_publisher.publish(String(data="P" if bottle_detected else "p"))
+            else:
+                obstacle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles) 
+                if obstacle_detected: 
+                    print("Obstacle detected AHEAD of lidar. Let's STOP.")
+                    self.uart_publisher.publish(String(data="x"))
+                    self.start_rotation_timer(DELTA_RANDOM_SEARCH, TIMER_STATE_ON_RANDOM_SEARCH_DELTA_ROTATION)
 
         elif self.state == TRAVEL_MODE and self.is_traveling_forward:
-            obstacle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, self.lidar_save_index) 
+            print("checking with LIDAR")
+            obstacle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles) 
             if obstacle_detected:
                 print("Obstacle detected AHEAD of lidar. Let's STOP.")
                 self.uart_publisher.publish(String(data="x"))
                 self.has_to_find_new_path = True
 
         elif self.state == BOTTLE_RELEASE_MODE and self.is_traveling_forward:
-            obstacle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, self.lidar_save_index, length_to_check = 700) 
+            obstacle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, length_to_check = 700) 
             if obstacle_detected:
                 print("Obstacle detected AHEAD of lidar. HOME DETECTED ! ")
                 self.uart_publisher.publish(String(data="x"))
                 self.uart_publisher.publish(String(data="q"))
-
-        elif self.state == BOTTLE_REACHING_MODE and self.lidar_should_detect_bottles:
-            print("Lidar will analyse obstacles ahead")
-            self.lidar_should_detect_bottles = False
-            # look if there is a standing bottle ahead of lidar
-            bottle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, threshold_low = 1, threshold_high = 8, length_to_check = 250)
-            # send the message to the arduino accordingly
-            self.state == BOTTLE_PICKING_MODE
-            self.uart_publisher.publish(String(data="P" if bottle_detected else "p"))
 
 
 
@@ -248,6 +248,7 @@ class Controller1(Node):
                 print("Robot advanced maximum distance in 'y' mode")
                 self.start_random_search_detection()
             elif status == 1:
+                print("Robot finished reaching")
                 # = there is a small obstacle ahead of the robot, lets find out more about this obstacle
                 # 1. is it bottle ? it will be detected by the lidar
                 self.lidar_should_detect_bottles = True
@@ -417,7 +418,7 @@ class Controller1(Node):
             # a. filter the map
             map_data = bytearray(map_message.map_data)
             m = map_utils.get_map(map_data)
-            binary = map_utils.filter_map(m, dilation_kernel_size = 14)
+            binary_dilated, binary = map_utils.filter_map(m, dilation_kernel_size = 14)
 
             # b. get rectangle around the map
             try:
@@ -428,7 +429,7 @@ class Controller1(Node):
 
             # save binary if we are going to make some plots
             if self.is_saving or self.is_plotting:
-                self.binary = binary
+                self.binary = binary_dilated
                 self.contours = contours
                 self.corners = corners
 
@@ -443,6 +444,7 @@ class Controller1(Node):
                 self.initial_zones_found = True
                 print("    - initial zones found with area: ", area)
 
+
             if self.initial_zones_found:
                 # update zones with new map
                 new_zones = map_utils.get_zones_from_previous(corners, self.zones)
@@ -456,7 +458,7 @@ class Controller1(Node):
                 self.goal = self.targets[TARGETS_TO_VISIT[self.current_target_index]]
                 random_area = map_utils.get_random_area(self.zones)
                 print("    - will find path")
-                rrt = RRTStar(start = self.robot_pos, goal = self.goal, binary_obstacle = binary, 
+                rrt = RRTStar(start = self.robot_pos, goal = self.goal, binary_obstacle = binary_dilated, 
                         rand_area = random_area, expand_dis = 50, path_resolution = 1,
                         goal_sample_rate = 5, max_iter = 500)
                 self.path = np.array(rrt.planning(animation = False))
@@ -477,6 +479,7 @@ class Controller1(Node):
                     self.live_vizualiser.display(np.array(img))
                 print("-----> saving index: ", self.saving_index, int(map_message.index))
                 self.saving_index += 1
+                np.save("/home/arthur/dev/ros/data/maps/"+name+".npy", m)
             except:
                 print("Could not save")
 
