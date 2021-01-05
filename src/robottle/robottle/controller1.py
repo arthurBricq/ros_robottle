@@ -241,7 +241,7 @@ class Controller1(Node):
                 print("Robot finished reaching")
                 # = there is a small obstacle ahead of the robot, lets pick it ! 
                 self.state == BOTTLE_PICKING_MODE
-                self.uart_publisher.publish(String("p"))
+                self.uart_publisher.publish(String(data="p"))
 
         elif self.state == BOTTLE_PICKING_MODE:
             if status == 0:
