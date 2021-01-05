@@ -125,6 +125,7 @@ class Controller1(Node):
         self.rotation_timer_state = TIMER_STATE_OFF
         self.is_traveling_forward = False
         self.has_to_find_new_path = False
+        self.lidar_should_detect_bottles = False
 
         # DEBUG
         # set saving state (if True, then it will save some maps to a folder when they can be analysed)
@@ -217,6 +218,15 @@ class Controller1(Node):
                 self.uart_publisher.publish(String(data="x"))
                 self.uart_publisher.publish(String(data="q"))
 
+        elif self.state == BOTTLE_REACHING_MODE and self.lidar_should_detect_bottles:
+            self.lidar_should_detect_bottles = False
+            # look if there is a standing bottle ahead of lidar
+            bottle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, threshold_low = 1, threshold_high = 8)
+            # send the message to the arduino accordingly
+            self.state == BOTTLE_PICKING_MODE
+            self.uart_publisher.publish(String(data="P" if bottle_detected else "p"))
+
+
 
     def listener_arduino_status(self, status_msg):
         """Called when Arduino send something to Jetson
@@ -237,25 +247,10 @@ class Controller1(Node):
                 print("Robot advanced maximum distance in 'y' mode")
                 self.start_random_search_detection()
             elif status == 1:
-                # = there is a small obstacle ahead of the robot
-                if TARGETS_TO_VISIT[self.current_target_index] == ROCKS_ZONE_INDEX: 
-                    print("Picking bottle inside rocks")
-                    # robot is inside the rocks zone
-                    # verify that robot is not in front of the rocks 
-                    self.uart_publisher.publish(String(data="x"))
-                    is_rock, angle = controller_utils.is_obstacle_a_rock(self.robot_pos, self.zones)
-                    if is_rock:
-                        # TODO: what the fuck is this
-                        self.state = RANDOM_SEARCH_MODE
-                        self.start_rotation_timer(angle, TIMER_STATE_ON_RANDOM_SEARCH_DELTA_ROTATION)
-                    else:
-                        self.state = BOTTLE_PICKING_MODE
-                        self.uart_publisher.publish(String(data="p"))
-                else:
-                    print("Picking bottle outside of rocks")
-                    self.state = BOTTLE_PICKING_MODE
-                    self.uart_publisher.publish(String(data="p"))
-
+                # = there is a small obstacle ahead of the robot, lets find out more about this obstacle
+                # 1. is it bottle ? it will be detected by the lidar
+                self.lidar_should_detect_bottles = True
+                # NEXT IS IN THE LIDAR CALLBACK
 
         elif self.state == BOTTLE_PICKING_MODE:
             if status == 0:
