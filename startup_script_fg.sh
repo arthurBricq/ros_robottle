@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # source ROS2
-. install/setup.sh
+source /home/arthur/dev/ros/ros.sh
+. /home/arthur/dev/ros/workspace1/install/setup.sh
 
 # launch all the nodes
 # ros2 run robottle teleop & 
