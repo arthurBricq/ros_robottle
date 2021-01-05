@@ -6,9 +6,6 @@ from std_msgs.msg import String
 import time
 import serial
 
-MAP_SIZE_PIXELS         = 500
-MAP_SIZE_METERS         = 10
-
 class UARTSender(Node):
     """
     This node is in charge of the UART communication with the Arduino Mega
@@ -33,7 +30,7 @@ class UARTSender(Node):
         # setup the uart port and wait a second for it
         self.serial_port = serial.Serial(
             port="/dev/ttyTHS1",
-            baudrate=9600)
+            baudrate=2400)
             
         time.sleep(1)
         
