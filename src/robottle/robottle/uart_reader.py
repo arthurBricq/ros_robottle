@@ -27,7 +27,7 @@ class UARTReader(Node):
 
         # setup the uart port and wait a second for it
         self.serial_port = serial.Serial(
-            port="/dev/ttyACM1",
+            port="/dev/ttyACM0",
             baudrate=9600)
         time.sleep(1)
         
