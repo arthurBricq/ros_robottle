@@ -64,7 +64,15 @@ or
 
 ## Start-up script
 
-The startup scripts will launch all the ROS2 nodes by (1) placing the **detectnet nodes** in the **background** and all the **Robottle nodes** in the foreground.
+The startup scripts will launch all the ROS2 nodes by (1) placing the **detectnet nodes** in the **background** and all the **Robottle nodes** in the foreground. 
+
+Users can use 
+- the `jobs` command to list the jobs currently launched. 
+- the `fg` command to open the first background job into the foreground
+- (or the `fg 2` command to put the second job in the foreground)
+- Once a job is in the foreground, all the associated ROS nodes can be killed by pressing **CTRL-C**
+
+
 
 
 ## How to use it 
