@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # source ROS2
 . install/setup.sh
 
