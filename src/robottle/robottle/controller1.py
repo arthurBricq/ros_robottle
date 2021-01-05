@@ -196,7 +196,6 @@ class Controller1(Node):
                     self.zones)
 
         if self.state == BOTTLE_REACHING_MODE:
-            print("Robot is ready")
             if self.lidar_should_detect_bottles:
                 print("Lidar will analyse obstacles ahead")
                 self.lidar_should_detect_bottles = False
