@@ -588,6 +588,7 @@ def main(args=None):
     rclpy.init(args=args)
     node = Controller1()
     rclpy.spin(node)
+    print("Leaving code !")
     rclpy.shutdown()
 
 if __name__ == '__main__':

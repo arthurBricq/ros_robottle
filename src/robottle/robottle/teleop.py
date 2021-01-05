@@ -119,6 +119,7 @@ def main(args=None):
     rclpy.init(args=args)
     node = TeleopRobotController()
     rclpy.spin(node)
+    print("Leaving code !")
     rclpy.shutdown()
 
 
