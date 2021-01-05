@@ -196,26 +196,11 @@ class Controller1(Node):
                     self.zones)
 
         if self.state == BOTTLE_REACHING_MODE:
-            bottle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, threshold_low = 1, threshold_high = 8, length_to_check = 250)
             obstacle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, threshold_low = 15) 
-            print("Results: ", bottle_detected, obstacle_detected)
-            return 
-
-            if self.lidar_should_detect_bottles:
-                print("Lidar will analyse obstacles ahead")
-                self.lidar_should_detect_bottles = False
-                # look if there is a standing bottle ahead of lidar
-                bottle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, threshold_low = 1, threshold_high = 8, length_to_check = 250)
-                print(bottle_detected)
-                # send the message to the arduino accordingly
-                self.state == BOTTLE_PICKING_MODE
-                self.uart_publisher.publish(String(data="P" if bottle_detected else "p"))
-            else:
-                obstacle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, threshold_low = 15) 
-                if obstacle_detected: 
-                    print("Obstacle detected AHEAD of lidar. Let's STOP.")
-                    self.uart_publisher.publish(String(data="x"))
-                    self.start_rotation_timer(DELTA_RANDOM_SEARCH, TIMER_STATE_ON_RANDOM_SEARCH_DELTA_ROTATION)
+            if obstacle_detected: 
+                print("Obstacle detected AHEAD of lidar. Let's STOP.")
+                self.uart_publisher.publish(String(data="x"))
+                self.start_rotation_timer(DELTA_RANDOM_SEARCH, TIMER_STATE_ON_RANDOM_SEARCH_DELTA_ROTATION)
 
         elif self.state == TRAVEL_MODE and self.is_traveling_forward:
             print("checking with LIDAR")
@@ -254,10 +239,9 @@ class Controller1(Node):
                 self.start_random_search_detection()
             elif status == 1:
                 print("Robot finished reaching")
-                # = there is a small obstacle ahead of the robot, lets find out more about this obstacle
-                # 1. is it bottle ? it will be detected by the lidar
-                self.lidar_should_detect_bottles = True
-                # NEXT IS IN THE LIDAR CALLBACK
+                # = there is a small obstacle ahead of the robot, lets pick it ! 
+                self.state == BOTTLE_PICKING_MODE
+                self.uart_publisher.publish(String("p"))
 
         elif self.state == BOTTLE_PICKING_MODE:
             if status == 0:
