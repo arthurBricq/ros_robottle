@@ -72,6 +72,10 @@ Users can use
 - (or the `fg 2` command to put the second job in the foreground)
 - Once a job is in the foreground, all the associated ROS nodes can be killed by pressing **CTRL-C**
 
+The script is launched using Systemd at boot. Once the script is launched, all the ros nodes can be killed (in SSH) with the command 
+
+`sudo systemctl stop autostart`
+
 
 
 
