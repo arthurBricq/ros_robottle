@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # source ROS2
+source /home/arthur/dev/ros/ros.sh
 . /home/arthur/dev/ros/worspace1/install/setup.sh
 
 # launch all the nodes
