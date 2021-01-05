@@ -10,7 +10,7 @@ from rplidar import RPLidar as Lidar
 
 MAP_SIZE_PIXELS         = 500
 MAP_SIZE_METERS         = 10
-LIDAR_DEVICE = '/dev/ttyUSB0'
+LIDAR_DEVICE = '/dev/ttyUSB1'
 
 class LidarPublisher(Node):
 
