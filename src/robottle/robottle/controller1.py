@@ -199,6 +199,8 @@ class Controller1(Node):
             bottle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, threshold_low = 1, threshold_high = 8, length_to_check = 250)
             obstacle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, threshold_low = 15) 
             print("Results: ", bottle_detected, obstacle_detected)
+            return 
+
             if self.lidar_should_detect_bottles:
                 print("Lidar will analyse obstacles ahead")
                 self.lidar_should_detect_bottles = False
