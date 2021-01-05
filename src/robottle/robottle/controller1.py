@@ -196,16 +196,20 @@ class Controller1(Node):
                     self.zones)
 
         if self.state == BOTTLE_REACHING_MODE:
+            bottle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, threshold_low = 1, threshold_high = 8, length_to_check = 250)
+            obstacle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, threshold_low = 15) 
+            print("Results: ", bottle_detected, obstacle_detected)
             if self.lidar_should_detect_bottles:
                 print("Lidar will analyse obstacles ahead")
                 self.lidar_should_detect_bottles = False
                 # look if there is a standing bottle ahead of lidar
                 bottle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, threshold_low = 1, threshold_high = 8, length_to_check = 250)
+                print(bottle_detected)
                 # send the message to the arduino accordingly
                 self.state == BOTTLE_PICKING_MODE
                 self.uart_publisher.publish(String(data="P" if bottle_detected else "p"))
             else:
-                obstacle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles) 
+                obstacle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, threshold_low = 15) 
                 if obstacle_detected: 
                     print("Obstacle detected AHEAD of lidar. Let's STOP.")
                     self.uart_publisher.publish(String(data="x"))
