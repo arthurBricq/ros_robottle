@@ -91,13 +91,13 @@ class Slam(Node):
         """
         print("changing quality")
         if self.is_map_quality_high: 
-            self.previous_map = self.mapbytes.copy()
-            # self.slam.map_quality = 0
-            self.slam.sigma_xy_mm = 1 * DEFAULT_SIGMA_XY_MM
+            #self.previous_map = self.mapbytes.copy()
+            self.slam.map_quality = 0
+            self.slam.sigma_xy_mm = 5 * DEFAULT_SIGMA_XY_MM
         else:
+            #self.slam.setmap(self.previous_map)
             self.slam.map_quality = MAP_QUALITY
             self.slam.sigma_xy_mm = DEFAULT_SIGMA_XY_MM
-            self.slam.setmap(self.previous_map)
         self.is_map_quality_high = not self.is_map_quality_high
 
 
