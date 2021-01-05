@@ -2,12 +2,72 @@
 
 This repo contains the ROS source code to run the project, that was writen by myself. It is the ROS2 workspace of our project!
 
+## Some useful commands 
+
+Here are some commands quite useful with the ROS setup
+
+- commands to compile code
+
+`cd $PYTHON_PATH ; git pull ; sudo python3 setup.py install`
+
+`cd $ROS_PATH ; git pull ; colcon build --packages-select robottle`
+
+- ssh command to open a shell, go to proper directory, and open ros
+
+`ssh arthur@M00e04c3fd2f6.dyn.epfl.ch`
+
+`cd dev/ros/workspace1 ; . install/setup.bash ; `
+
+- ssh copy file
+
+`scp -r arthur@M00e04c3fd2f6.dyn.epfl.ch:/home/arthur/dev/ros/workspace1/bag_files/freq_test /home/arthur/dev/ros/ros_robottle/bag_files/` 
+
+- scp copy file for many files
+
+`scp -r arthur@M00e04c3fd2f6.dyn.epfl.ch:/home/arthur/dev/ros/data/maps/rects/name* /home/arthur/dev/ros/data/from_jetson/`
+
+- bag files recording sensor inputs (lidar data + motors speed so far)
+
+`ros2 bag record -o name /lidar_data /motors_speed`
+
+- run the teleop controller
+
+`ros2 run robottle teleop`
+
+- launch the other ROS nodes (LIDAR, Motors Speed Reader, SLAM, Motors Commands)
+
+`ros2 launch robottle launch_nocontroller.launch.py`
+
+`ros2 launch robottle bottle_picking.launch.py`
+
+- launch the detectnet node (*with its own launch files*)
+
+`ros2 launch ros_deep_learning detectnet.ros2.launch input:=csi://0 output:=display://0`
+
+*It's possible to have (or not) an output when this node is launched, but for it we must change the launch file. Later, I will integrate this in my own launch nodes*
+
+- topic publication to move the robot somewhere
+
+`ros2 topic pub --once /uart_commands std_msgs/msg/String "data: w"`
+
+- copy the bag files to the flashdrive
+
+`ros2 bag record -o name /lidar_data /motors_speed`
+
+- mount the file with all the pictures
+
+`sshfs arthur@M00e04c3fd2f6.dyn.epfl.ch:/home/arthur/dev/ros/data/maps/rects/ /home/arthur/dev/ros/ros_robottle/mount`
+
+or 
+
+`xdg-open dev/ros/data/maps/rects/`
+
+## Start-up script
+
+The startup scripts will launch all the ROS2 nodes by (1) placing the **detectnet nodes** in the **background** and all the **Robottle nodes** in the foreground.
+
 
 ## How to use it 
-
-ROS directory: ~/dev/ros/workspace1
-
-Source code of ROS directory: ~/dev/ros/workspace1/src/robottle/robottle
 
 Setup to take pictures
 1. turn on jetson and connect using SSH (as explained below): open 3 terminals
@@ -80,64 +140,6 @@ As the code is rather complex, there are several hyperparameters and it is somet
 - area_threshold: minimum area of a rotated rectangle to be considered as valid.
 
 
-
-## Some useful commands 
-
-Here are some commands quite useful with the ROS setup
-
-- commands to compile code
-
-`cd $PYTHON_PATH ; git pull ; sudo python3 setup.py install`
-
-`cd $ROS_PATH ; git pull ; colcon build --packages-select robottle`
-
-- ssh command to open a shell, go to proper directory, and open ros
-
-`ssh arthur@M00e04c3fd2f6.dyn.epfl.ch`
-
-`cd dev/ros/workspace1 ; . install/setup.bash ; `
-
-- ssh copy file
-
-`scp -r arthur@M00e04c3fd2f6.dyn.epfl.ch:/home/arthur/dev/ros/workspace1/bag_files/freq_test /home/arthur/dev/ros/ros_robottle/bag_files/` 
-
-- scp copy file for many files
-
-`scp -r arthur@M00e04c3fd2f6.dyn.epfl.ch:/home/arthur/dev/ros/data/maps/rects/name* /home/arthur/dev/ros/data/from_jetson/`
-
-- bag files recording sensor inputs (lidar data + motors speed so far)
-
-`ros2 bag record -o name /lidar_data /motors_speed`
-
-- run the teleop controller
-
-`ros2 run robottle teleop`
-
-- launch the other ROS nodes (LIDAR, Motors Speed Reader, SLAM, Motors Commands)
-
-`ros2 launch robottle launch_nocontroller.launch.py`
-
-- launch the detectnet node (*with its own launch files*)
-
-`ros2 launch ros_deep_learning detectnet.ros2.launch input:=csi://0 output:=display://0`
-
-*It's possible to have (or not) an output when this node is launched, but for it we must change the launch file. Later, I will integrate this in my own launch nodes*
-
-- topic publication to move the robot somewhere
-
-`ros2 topic pub --once /uart_commands std_msgs/msg/String "data: w"`
-
-- copy the bag files to the flashdrive
-
-`ros2 bag record -o name /lidar_data /motors_speed`
-
-- mount the file with all the pictures
-
-`sshfs arthur@M00e04c3fd2f6.dyn.epfl.ch:/home/arthur/dev/ros/data/maps/rects/ /home/arthur/dev/ros/ros_robottle/mount`
-
-or 
-
-`xdg-open dev/ros/data/maps/rects/`
 
 ## Differences between Jetson and Personal Computer
 
