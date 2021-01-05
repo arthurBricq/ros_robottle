@@ -35,7 +35,7 @@ DETECTNET_OFF = "OFF"
 # min area that a rotated rectangle must contain to be considered as valid
 AREA_THRESHOLD = 60000
 # distance at which, if the robot is closer than the goal, travel_mode ends
-MIN_DIST_TO_GOAL = 50 # [pixels]
+MIN_DIST_TO_GOAL = 25 # [pixels]
 # distance to recycling
 MIN_DIST_TO_RECYCLING = 5
 # min distance between robot and point in the path to consider the robot as passed it
