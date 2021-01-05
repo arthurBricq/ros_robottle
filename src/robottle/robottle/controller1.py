@@ -219,9 +219,10 @@ class Controller1(Node):
                 self.uart_publisher.publish(String(data="q"))
 
         elif self.state == BOTTLE_REACHING_MODE and self.lidar_should_detect_bottles:
+            print("Lidar will analyse obstacles ahead")
             self.lidar_should_detect_bottles = False
             # look if there is a standing bottle ahead of lidar
-            bottle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, threshold_low = 1, threshold_high = 8)
+            bottle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, threshold_low = 1, threshold_high = 8, length_to_check = 250)
             # send the message to the arduino accordingly
             self.state == BOTTLE_PICKING_MODE
             self.uart_publisher.publish(String(data="P" if bottle_detected else "p"))
