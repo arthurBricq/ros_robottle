@@ -64,7 +64,7 @@ class Slam(Node):
         self.subscription3  # prevent unused variable warning
 
         # create subscription to control map_quality
-        self.subscription_map_quality = self.create_subscription(String, 'map_quality_control', self.map_quality_control_callback, 1000)
+        self.slam_control_sub = self.create_subscription(String, 'slam_control', self.slam_control_callback, 1000)
 
         # Create publisher for the position of the robot, and for the map 
         self.publisher_position = self.create_publisher(Position, 'robot_pos', 10)
@@ -86,9 +86,19 @@ class Slam(Node):
         self.s = time.time()
         print("SLAM is starting")
 
-    def map_quality_control_callback(self, msg):
+    def slam_control_callback(self, msg):
         """Called to changed the map quality
         """
+        if msg.data == "save_state":
+            print("Slam is saving current state")
+            self.last_valid_map = self.mapbytes.copy()
+            self.last_valid_pos = self.slam.getpos()
+        elif msg.data == "recover_state": 
+            # METHOD 1
+            self.slam.setmap(self.last_valid_map)
+            self.slam.setpos(self.last_valid_pos)
+        return 
+        ##########################
         print("changing quality")
         if self.is_map_quality_high: 
             #self.previous_map = self.mapbytes.copy()

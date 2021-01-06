@@ -20,6 +20,7 @@ RANDOM_SEARCH_MODE = "random_search_mode"
 BOTTLE_PICKING_MODE = "bottle_picking_mode"
 BOTTLE_RELEASE_MODE = "bottle_release_mode"
 BOTTLE_REACHING_MODE = "bottle_reaching_mode"
+RECOVERY_MODE = "recovery_mode"
 
 TIMER_STATE_OFF = "0"
 TIMER_STATE_ON_TRAVEL_MODE = "1"
@@ -46,12 +47,11 @@ CONTROLLER_TIME_CONSTANT = 20
 MIN_ANGLE_DIFF = 15 # [deg]
 # Array containing indices of zones to visit: note that zones = [r, z2, z3, z4]
 # z2 = grass, z3 = rocks
-TARGETS_TO_VISIT = [1,0,2,0] # = grass, recycling, rocks, recycling
-ROCKS_ZONE_INDEX = 2
+TARGETS_TO_VISIT = [1,0,2,0,4,0] # = grass, recycling, rocks, recycling
 # delta degree for little random search rotations
 DELTA_RANDOM_SEARCH = 30
 # time to wait for detections on each flip of the camera
-TIME_FOR_VISION_DETECTION = 2 # [s]
+TIME_FOR_VISION_DETECTION = 1 # [s]
 # maximum number of bottles robot can pick
 MAX_BOTTLE_PICKED = 5
 # maximum number of times controller enters random search mode inside 1 zone
@@ -68,17 +68,14 @@ class Controller1(Node):
         # Create subscription for the map
         self.subscription1 = self.create_subscription(Position,'robot_pos',
             self.listener_callback_position,1000)
-        self.subscription1
 
         # Create subscription for the robot position
         self.subscription2 = self.create_subscription(Map,'world_map',
             self.listener_callback_map,1000)
-        self.subscription2
 
         # Create subscription for the UART reader (get signals from MC)
         self.subscription3 = self.create_subscription(Status,'arduino_status',
             self.listener_arduino_status,1000)
-        self.subscription3
 
         # Create subscription for detectnet
         self.subscription_camera = self.create_subscription(Detection2DArray, '/detectnet/detections',
@@ -102,6 +99,9 @@ class Controller1(Node):
         self.camera_flip_topic = self.create_publisher(String, 'video_source/flip_topic', 1000)
         self.camera_flip_topic.publish(String(data="normal"))
         self.is_flipped = False 
+
+        # publisher to control slam
+        self.slam_control_publisher = self.create_publisher(String, 'slam_control', 1000)
 
 
         # keep track of where is the robot within the class
@@ -212,6 +212,7 @@ class Controller1(Node):
 
         elif self.state == BOTTLE_RELEASE_MODE and self.is_traveling_forward:
             obstacle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, length_to_check = 700) 
+            self.is_traveling_forward = False
             if obstacle_detected:
                 print("Obstacle detected AHEAD of lidar. HOME DETECTED ! ")
                 self.uart_publisher.publish(String(data="x"))
@@ -254,7 +255,14 @@ class Controller1(Node):
 
         elif self.state == BOTTLE_RELEASE_MODE:
             if status == 1:
-                self.is_traveling_forward = False
+                print("Release is finished")
+                self.start_travel_mode()
+
+        elif self.state == RECOVERY_MODE:
+            if status == 1:
+                # we assume that arduino could handle properly the rescue
+                self.slam_control_publisher.publish(String(data="recover_state"))
+                # go back to travel mode
                 self.start_travel_mode()
 
     def listener_callback_detectnet(self, msg):
@@ -326,26 +334,25 @@ class Controller1(Node):
             self.rotation_timer_state = TIMER_STATE_OFF
             self.start_bottle_reaching_mode()
 
-        if self.rotation_timer_state == TIMER_STATE_ON_RANDOM_SEARCH_DELTA_ROTATION:
+        elif self.rotation_timer_state == TIMER_STATE_ON_RANDOM_SEARCH_DELTA_ROTATION:
             print("    Robot delta rotation finished")
             self.rotation_timer_state = TIMER_STATE_OFF
             self.uart_publisher.publish(String(data="x"))
             # start detection again
             self.start_random_search_detection()
 
-        if self.rotation_timer_state == TIMER_STATE_ON_TRAVEL_MODE:
+        elif self.rotation_timer_state == TIMER_STATE_ON_TRAVEL_MODE:
             # change timer state and start moving forward.
             self.rotation_timer_state = TIMER_STATE_OFF
             print("    Rotated time reached. Let's move forward.")
             self.uart_publisher.publish(String(data="w"))
 
-        if self.rotation_timer_state == TIMER_STATE_ON_BOTTLE_RELEASE:
+        elif self.rotation_timer_state == TIMER_STATE_ON_BOTTLE_RELEASE:
             # = robot is aligned with the recycling area
             print("Ready to move forward")
             self.is_traveling_forward = True
             self.uart_publisher.publish(String(data="m2"))
             self.uart_publisher.publish(String(data="w"))
-            pass
 
 
     ### STATE MACHINE METHODS
@@ -437,7 +444,15 @@ class Controller1(Node):
             if self.initial_zones_found:
                 # update zones with new map
                 new_zones = map_utils.get_zones_from_previous(corners, self.zones)
-                self.zones = new_zones
+                are_valid = map_utils.are_new_zones_valid(new_zones, self.zones)
+                if are_valid:
+                    self.slam_control_publisher.publish(String(data="save_state"))
+                    self.zones = new_zones
+                else:
+                    print("RECOVERY MODE STARTED")
+                    self.state = RECOVERY_MODE
+                    self.uart_publisher.publish(String(data="R"))
+                    return 
 
                 ## Path Planing
                 # d. get targets positions for each zones

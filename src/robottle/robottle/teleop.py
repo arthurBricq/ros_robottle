@@ -37,7 +37,7 @@ class TeleopRobotController(Node):
         self.cam_control_publisher = self.create_publisher(String, 'detectnet/camera_control', 1000)
         self.camera_flip_topic = self.create_publisher(String, 'video_source/flip_topic', 1000)
         self.map_corner_client = self.create_client(FindMapCorner, "find_map_corner")
-        self.map_quality_control = self.create_publisher(String, 'map_quality_control', 1000)
+        self.map_quality_control = self.create_publisher(String, 'slam_control', 1000)
         self.log_line_printer = self.create_publisher(String, 'log_line', 5)
         self.flip = True
 
