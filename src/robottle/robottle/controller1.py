@@ -20,7 +20,8 @@ RANDOM_SEARCH_MODE = "random_search_mode"
 BOTTLE_PICKING_MODE = "bottle_picking_mode"
 BOTTLE_RELEASE_MODE = "bottle_release_mode"
 BOTTLE_REACHING_MODE = "bottle_reaching_mode"
-RECOVERY_MODE = "recovery_mode"
+RECOVERY_SLAM = "recovery_mode"
+RECOVERY_ROTATION = "recovery_rotation"
 
 TIMER_STATE_OFF = "0"
 TIMER_STATE_ON_TRAVEL_MODE = "1"
@@ -212,9 +213,9 @@ class Controller1(Node):
 
         elif self.state == BOTTLE_RELEASE_MODE and self.is_traveling_forward:
             obstacle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, length_to_check = 700) 
-            self.is_traveling_forward = False
             if obstacle_detected:
                 print("Obstacle detected AHEAD of lidar. HOME DETECTED ! ")
+                self.is_traveling_forward = False
                 self.uart_publisher.publish(String(data="x"))
                 self.uart_publisher.publish(String(data="q"))
 
@@ -258,12 +259,18 @@ class Controller1(Node):
                 print("Release is finished")
                 self.start_travel_mode()
 
-        elif self.state == RECOVERY_MODE:
+        elif self.state == RECOVERY_SLAM:
             if status == 1:
                 # we assume that arduino could handle properly the rescue
                 self.slam_control_publisher.publish(String(data="recover_state"))
                 # go back to travel mode
                 self.start_travel_mode()
+
+        elif self.state == RECOVERY_ROTATION:
+            if status ==1:
+                # robot moved foward. 
+                # we must start again the rotation with was unsucessful
+                self.start_rotation_timer(self.rotation_asked, self.rotation_timer_state)
 
     def listener_callback_detectnet(self, msg):
         """Called when a bottle is detected by neuron network
@@ -327,6 +334,14 @@ class Controller1(Node):
     def rotation_timer_callback(self):
         """Called when robot has turned enough to pick the bottle"""
         self.destroy_timer(self.rotation_timer)
+
+        # verify that rotation actually happened
+        if self.rotation_asked > 10:
+            if np.abs(controller_utils.angle_diff(self.last_theta, self.theta)) < 5:
+                print("ROTATION ERROR !")
+                # ask arduino to move forward (just a little bit) and wait for answer
+                self.uart_publisher.publish(String(data="W"))
+                self.state = RECOVERY_ROTATION
 
         if self.rotation_timer_state == TIMER_STATE_ON_RANDOM_SEARCH_BOTTLE_ALIGNMENT:
             print("    Robot is in front of bottle")
@@ -450,7 +465,7 @@ class Controller1(Node):
                     self.zones = new_zones
                 else:
                     print("RECOVERY MODE STARTED")
-                    self.state = RECOVERY_MODE
+                    self.state = RECOVERY_SLAM
                     self.uart_publisher.publish(String(data="R"))
                     return 
 
@@ -564,7 +579,6 @@ class Controller1(Node):
         angle = controller_utils.angle_diff(diagonal_orientation, self.theta)
         print("BOTTLE RELEASE with angle diff: ", angle, "values ", self.theta, diagonal_orientation)
         # 2. make the rotation
-        self.is_traveling_forward = False
         self.start_rotation_timer(angle, TIMER_STATE_ON_BOTTLE_RELEASE)
 
     ### HELPER FUNCTIONS
@@ -585,9 +599,13 @@ class Controller1(Node):
         self.uart_publisher.publish(msg)
 
         # 3. estimate remaining time of rotation and start new timer
-        self.rotation_timer_state = state
         time_to_rotate = controller_utils.get_rotation_time(np.abs(angle))
         self.rotation_timer = self.create_timer(time_to_rotate, self.rotation_timer_callback)
+        
+        # 4. get current state of the robot (to make sure a real rotation happened)
+        self.rotation_timer_state = state
+        self.last_theta = self.theta
+        self.rotation_asked = angle
 
     def log_line(self, msg):
         print("---------------------------")
