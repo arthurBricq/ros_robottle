@@ -475,6 +475,11 @@ class Controller1(Node):
 
         ### II. Path Tracking
         # 0. end condition
+        if self.path is None: 
+            self.has_to_find_new_path = True
+            print("NO PATH FOUND.....")
+            return 
+
         if len(self.path) == 0 or self.goal is None: 
             print("...")
             return
