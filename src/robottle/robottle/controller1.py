@@ -201,7 +201,7 @@ class Controller1(Node):
         if self.state == BOTTLE_REACHING_MODE:
             obstacle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, threshold_low = 15) 
             if obstacle_detected: 
-                print("Obstacle detected AHEAD of lidar. Let's STOP.")
+                print("Obstacle detected AHEAD of lidar. Let's STOP. Bottle Picking Mode")
                 self.uart_publisher.publish(String(data="x"))
                 self.start_rotation_timer(DELTA_RANDOM_SEARCH, TIMER_STATE_ON_RANDOM_SEARCH_DELTA_ROTATION)
 
@@ -209,7 +209,7 @@ class Controller1(Node):
             print("checking with LIDAR")
             obstacle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, length_to_check = 350) 
             if obstacle_detected:
-                print("Obstacle detected AHEAD of lidar. Let's STOP.")
+                print("Obstacle detected AHEAD of lidar. Let's STOP. Travel MODE")
                 self.uart_publisher.publish(String(data="x"))
                 self.has_to_find_new_path = True
 
@@ -573,6 +573,7 @@ class Controller1(Node):
 
     def start_bottle_reaching_mode(self):
         """Will start the bottle picking mode"""
+        print("Robot starts bottle reaching mode")
         self.state = BOTTLE_REACHING_MODE
         self.uart_publisher.publish(String(data = "y"))
 
