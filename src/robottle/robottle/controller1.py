@@ -189,7 +189,6 @@ class Controller1(Node):
         self.x = pos.x / 1200
         self.y = pos.y / 1200
         self.theta = pos.theta % 360
-        print("position update", self.theta)
 
     def lidar_callback(self, msg):
         if "--travel" in self.args: 
