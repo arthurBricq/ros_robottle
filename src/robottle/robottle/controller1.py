@@ -463,7 +463,7 @@ class Controller1(Node):
                     raise RuntimeError("Zones were not found properly")
 
                # corners found are valid and we can find the 'initial zones'
-                self.zones = map_utils.get_initial_zones(corners, self.robot_pos)
+                self.zones = map_utils.get_initial_zones(corners, self.robot_pos, closest_zone = 1)
                 self.initial_zones_found = True
                 print("    - initial zones found with area: ", area)
 
