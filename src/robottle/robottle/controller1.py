@@ -192,6 +192,7 @@ class Controller1(Node):
         print("position update", self.theta)
 
     def lidar_callback(self, msg):
+        print("Lidar callback ", self.state)
         if "--travel" in self.args: 
             if self.robot_pos is None or self.zones is None or not len(self.robot_pos) or self.theta is None:
                 return
@@ -221,6 +222,8 @@ class Controller1(Node):
                 self.uart_publisher.publish(String(data="x"))
                 self.uart_publisher.publish(String(data="q"))
 
+        print("Lidar callback end", self.state)
+
 
 
     def listener_arduino_status(self, status_msg):
@@ -231,6 +234,7 @@ class Controller1(Node):
         2: IN PROGRESS
         """
         status = status_msg.status
+        print("Arduino callback", self.state)
         if self.state == INITIAL_ROTATION_MODE:
             if status == 1:
                 print("* Initial Rotation Mode --> Travel Mode")
@@ -274,6 +278,7 @@ class Controller1(Node):
                 # we must start again the rotation with was unsucessful
                 self.state = self.last_state
                 self.start_rotation_timer(self.rotation_asked, self.rotation_timer_state)
+        print("Arduino callback end", self.state)
 
     def listener_callback_detectnet(self, msg):
         """Called when a bottle is detected by neuron network
