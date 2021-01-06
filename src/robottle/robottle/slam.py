@@ -153,7 +153,6 @@ class Slam(Node):
         x, y, theta = self.slam.getpos()
         self.slam.getmap(self.mapbytes)
 
-        print("Updated position:", x, y, theta)
         # Send topics 
         pos = Position()
         pos.x = float(x)
