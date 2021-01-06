@@ -336,6 +336,7 @@ class Controller1(Node):
 
     def rotation_timer_callback(self):
         """Called when robot has turned enough to pick the bottle"""
+        print("ROTATION CALLBACK ", self.rotation_index)
         self.destroy_timer(self.rotation_timer)
 
         # verify that rotation actually happened
