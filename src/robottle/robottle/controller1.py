@@ -344,18 +344,6 @@ class Controller1(Node):
         print("ROTATION CALLBACK ", self.rotation_index)
         self.destroy_timer(self.rotation_timer)
 
-        # verify that rotation actually happened
-        if np.abs(self.rotation_asked) > 10:
-            if np.abs(controller_utils.angle_diff(self.last_theta, self.theta)) < 5:
-                print("ROTATION ERROR ! index: ", self.rotation_index)
-                print(self.last_theta)
-                print(self.theta)
-                print(controller_utils.angle_diff(self.last_theta, self.theta))
-                # ask arduino to move forward (just a little bit) and wait for answer
-                self.uart_publisher.publish(String(data="W"))
-                self.last_state = self.state
-                self.state = RECOVERY_ROTATION
-                return 
 
         if self.rotation_timer_state == TIMER_STATE_ON_RANDOM_SEARCH_BOTTLE_ALIGNMENT:
             print("    Robot is in front of bottle")
@@ -383,6 +371,19 @@ class Controller1(Node):
             self.uart_publisher.publish(String(data="m2"))
             self.uart_publisher.publish(String(data="w"))
 
+        # verify that rotation actually happened
+        if np.abs(self.rotation_asked) > 10:
+            if np.abs(controller_utils.angle_diff(self.last_theta, self.theta)) < 5:
+                return
+                print("ROTATION ERROR ! index: ", self.rotation_index)
+                print(self.last_theta)
+                print(self.theta)
+                print(controller_utils.angle_diff(self.last_theta, self.theta))
+                # ask arduino to move forward (just a little bit) and wait for answer
+                self.uart_publisher.publish(String(data="W"))
+                self.last_state = self.state
+                self.state = RECOVERY_ROTATION
+                return 
 
     ### STATE MACHINE METHODS
 
