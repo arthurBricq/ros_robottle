@@ -127,6 +127,7 @@ class Controller1(Node):
         self.is_traveling_forward = False
         self.has_to_find_new_path = False
         self.lidar_should_detect_bottles = False
+        self.rotation_index = 0
 
         # DEBUG
         # set saving state (if True, then it will save some maps to a folder when they can be analysed)
@@ -339,7 +340,7 @@ class Controller1(Node):
         # verify that rotation actually happened
         if np.abs(self.rotation_asked) > 10:
             if np.abs(controller_utils.angle_diff(self.last_theta, self.theta)) < 5:
-                print("ROTATION ERROR !")
+                print("ROTATION ERROR ! index: ", self.rotation_index)
                 print(self.last_theta)
                 print(self.theta)
                 print(controller_utils.angle_diff(self.last_theta, self.theta))
@@ -600,7 +601,7 @@ class Controller1(Node):
             self.destroy_timer(self.rotation_timer)
 
         # 2. send the rotation motor control
-        print("        (starting rotation now)", state, angle)
+        print("        (starting rotation now)", state, angle, self.rotation_index)
         msg = String()
         if angle > 0: msg.data = "d"
         else: msg.data = "a"
@@ -614,6 +615,7 @@ class Controller1(Node):
         self.rotation_timer_state = state
         self.last_theta = self.theta
         self.rotation_asked = angle
+        self.rotation_index += 1
 
     def log_line(self, msg):
         print("---------------------------")
