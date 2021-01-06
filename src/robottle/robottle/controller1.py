@@ -257,6 +257,8 @@ class Controller1(Node):
         elif self.state == BOTTLE_RELEASE_MODE:
             if status == 1:
                 print("Release is finished")
+                self.n_random_search = 0
+                self.bottles_picked = 0
                 self.start_travel_mode()
 
         elif self.state == RECOVERY_SLAM:
