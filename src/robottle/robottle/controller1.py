@@ -52,7 +52,7 @@ TARGETS_TO_VISIT = [1,0,2,0,4,0] # = grass, recycling, rocks, recycling
 # delta degree for little random search rotations
 DELTA_RANDOM_SEARCH = 30
 # time to wait for detections on each flip of the camera
-TIME_FOR_VISION_DETECTION = 1 # [s]
+TIME_FOR_VISION_DETECTION = 2 # [s]
 # maximum number of bottles robot can pick
 MAX_BOTTLE_PICKED = 5
 # maximum number of times controller enters random search mode inside 1 zone
