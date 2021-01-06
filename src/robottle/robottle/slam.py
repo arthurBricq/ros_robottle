@@ -20,6 +20,8 @@ from robottle_utils import lidar_utils
 # Constants for run time
 MAP_SIZE_PIXELS         = 500
 MAP_SIZE_METERS         = 12
+X0 = 3000
+Y0 = 3000
 
 MIN_SAMPLES = 100 
 MAP_QUALITY = 50
@@ -72,7 +74,7 @@ class Slam(Node):
 
         # Initialize parameters for slam 
         laser = LaserModel(detection_margin = DETECTION_MARGIN, offset_mm = OFFSET_MM)
-        self.slam = RMHC_SLAM(laser, MAP_SIZE_PIXELS, MAP_SIZE_METERS, map_quality = MAP_QUALITY, hole_width_mm = OBSTACLE_WIDTH_MM, x0_mm = 3000, y0_mm = 3000, theta0 = 0, sigma_xy_mm = DEFAULT_SIGMA_XY_MM)
+        self.slam = RMHC_SLAM(laser, MAP_SIZE_PIXELS, MAP_SIZE_METERS, map_quality = MAP_QUALITY, hole_width_mm = OBSTACLE_WIDTH_MM, x0_mm = X0, y0_mm = Y0, theta0 = 0, sigma_xy_mm = DEFAULT_SIGMA_XY_MM)
         self.trajectory = []
         self.mapbytes = bytearray(MAP_SIZE_PIXELS * MAP_SIZE_PIXELS)
         self.previous_distances = None
@@ -151,6 +153,7 @@ class Slam(Node):
         x, y, theta = self.slam.getpos()
         self.slam.getmap(self.mapbytes)
 
+        print("Updated position:", x, y, theta)
         # Send topics 
         pos = Position()
         pos.x = float(x)

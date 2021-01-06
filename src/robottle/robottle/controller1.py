@@ -267,9 +267,10 @@ class Controller1(Node):
                 self.start_travel_mode()
 
         elif self.state == RECOVERY_ROTATION:
-            if status ==1:
+            if status == 1:
                 # robot moved foward. 
                 # we must start again the rotation with was unsucessful
+                self.state = self.last_state
                 self.start_rotation_timer(self.rotation_asked, self.rotation_timer_state)
 
     def listener_callback_detectnet(self, msg):
@@ -336,12 +337,17 @@ class Controller1(Node):
         self.destroy_timer(self.rotation_timer)
 
         # verify that rotation actually happened
-        if self.rotation_asked > 10:
+        if np.abs(self.rotation_asked) > 10:
             if np.abs(controller_utils.angle_diff(self.last_theta, self.theta)) < 5:
                 print("ROTATION ERROR !")
+                print(self.last_theta)
+                print(self.theta)
+                print(controller_utils.angle_diff(self.last_theta, self.theta))
                 # ask arduino to move forward (just a little bit) and wait for answer
                 self.uart_publisher.publish(String(data="W"))
+                self.last_state = self.state
                 self.state = RECOVERY_ROTATION
+                return 
 
         if self.rotation_timer_state == TIMER_STATE_ON_RANDOM_SEARCH_BOTTLE_ALIGNMENT:
             print("    Robot is in front of bottle")
@@ -430,6 +436,8 @@ class Controller1(Node):
             map_data = bytearray(map_message.map_data)
             m = map_utils.get_map(map_data)
             binary_dilated, binary = map_utils.filter_map(m, dilation_kernel_size = 14)
+            
+            # np.save("/home/arthur/dev/ros/data/maps/test30m.npy", m)
 
             # b. get rectangle around the map
             try:
