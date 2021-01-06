@@ -204,7 +204,7 @@ class Controller1(Node):
 
         elif self.state == TRAVEL_MODE and self.is_traveling_forward:
             print("checking with LIDAR")
-            obstacle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles) 
+            obstacle_detected = lidar_utils.check_obstacle_ahead(msg.distances, msg.angles, length_to_check = 350) 
             if obstacle_detected:
                 print("Obstacle detected AHEAD of lidar. Let's STOP.")
                 self.uart_publisher.publish(String(data="x"))
@@ -441,7 +441,7 @@ class Controller1(Node):
 
                 ## Path Planing
                 # d. get targets positions for each zones
-                self.targets = map_utils.get_targets_from_zones(np.array(self.zones), target_weight = 0.6)
+                self.targets = map_utils.get_targets_from_zones(np.array(self.zones))
 
                 # e. rrt_star path planning
                 self.goal = self.targets[TARGETS_TO_VISIT[self.current_target_index]]
