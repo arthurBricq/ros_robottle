@@ -358,6 +358,9 @@ class Controller1(Node):
         print("ROTATION CALLBACK ", self.rotation_index)
         self.destroy_timer(self.rotation_timer)
 
+        if self.rotation_timer_state == TIMER_STATE_OFF:
+            print("Timer was OFF and yet trigered")
+
         # verify that rotation actually happened
         if np.abs(self.rotation_asked) > 29:
             if np.abs(controller_utils.angle_diff(self.last_theta, self.theta)) < 5:
@@ -393,6 +396,7 @@ class Controller1(Node):
         elif self.rotation_timer_state == TIMER_STATE_ON_BOTTLE_RELEASE:
             # = robot is aligned with the recycling area
             print("Ready to move forward")
+            self.rotation_timer_state = TIMER_STATE_OFF
             self.is_traveling_forward = True
             self.uart_publisher.publish(String(data="m2"))
             self.uart_publisher.publish(String(data="w"))
@@ -400,6 +404,7 @@ class Controller1(Node):
         elif self.rotation_timer_state == TIMER_STATE_ON_NO_ROTATION:
             # = SLAM has waited and it is now time to start again the random search
             print("Waiting time is finished, SLAM ready to go")
+            self.rotation_timer_state = TIMER_STATE_OFF
             dest = TARGETS_TO_VISIT[self.current_target_index]
             is_going_home = dest == 0
             if is_going_home:
@@ -413,6 +418,7 @@ class Controller1(Node):
 
         elif self.rotation_timer_state == TIMER_STATE_ON_KICK_ASS_MODE: 
             print("We are ready Arduino ! Take care of us.... (Sending 'Y')")
+            self.rotation_timer_state = TIMER_STATE_OFF
             # 2. start communication with Arduino 
             # the continuation is in arduino callback
             self.uart_publisher.publish(String(data="Y"))
