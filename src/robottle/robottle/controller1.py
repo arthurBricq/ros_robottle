@@ -557,7 +557,7 @@ class Controller1(Node):
                     self.live_vizualiser.display(np.array(img))
                 print("-----> saving index: ", self.saving_index, int(map_message.index))
                 self.saving_index += 1
-                np.save("/home/arthur/dev/ros/data/maps/"+name+".npy", m)
+                # np.save("/home/arthur/dev/ros/data/maps/"+name+".npy", m)
             except:
                 print("Could not save")
 
