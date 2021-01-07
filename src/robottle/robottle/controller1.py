@@ -266,6 +266,7 @@ class Controller1(Node):
 
         elif self.state == RECOVERY_SLAM:
             if status == 1:
+                print("Slam recovery arduino")
                 # we assume that arduino could handle properly the rescue
                 self.slam_control_publisher.publish(String(data="recover_state"))
                 # go back to travel mode
@@ -276,6 +277,7 @@ class Controller1(Node):
                 # robot moved foward. 
                 # we must start again the rotation with was unsucessful
                 self.state = self.last_state
+                print("Rotation recovery arduino")
                 self.start_rotation_timer(self.rotation_asked, self.rotation_timer_state)
 
         elif self.state == KICK_ASS_MODE:
@@ -368,7 +370,6 @@ class Controller1(Node):
                 self.last_state = self.state
                 self.state = RECOVERY_ROTATION
                 return 
-
 
         if self.rotation_timer_state == TIMER_STATE_ON_RANDOM_SEARCH_BOTTLE_ALIGNMENT:
             print("    Robot is in front of bottle")
@@ -649,6 +650,7 @@ class Controller1(Node):
     def start_rotation_timer(self, angle, state):
         """Will start a timer which has a period equals to the required rotation time
         to achieve the provided angle."""
+
         # 1. if required, delete previous timer
         if self.rotation_timer_state is not TIMER_STATE_OFF:
             # it means another timer was launched
@@ -660,7 +662,6 @@ class Controller1(Node):
         else:
             # 2. estimate remaining time of rotation and start new timer
             time_to_rotate = controller_utils.get_rotation_time(np.abs(angle))
-            
             # 3. send the rotation motor control
             print("        (starting rotation now)", state, angle, self.rotation_index)
             msg = String()
