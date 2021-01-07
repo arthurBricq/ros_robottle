@@ -254,7 +254,7 @@ class Controller1(Node):
                 # = no bottle were detected by the robot arm 
                 self.start_random_search_detection()
             elif status == 1: # robot picked the bottle 
-                print("Bottles picked: ", bottles_picked)
+                print("Bottles picked: ", self.bottles_picked)
                 self.bottles_picked += 1
                 self.start_random_search_detection()
 
