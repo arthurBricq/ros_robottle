@@ -52,7 +52,7 @@ CONTROLLER_TIME_CONSTANT = 30
 MIN_ANGLE_DIFF = 15 # [deg]
 # Array containing indices of zones to visit: note that zones = [r, z2, z3, z4]
 # z2 = grass, z3 = rocks
-TARGETS_TO_VISIT = [1,3,2,0,4,5,0] # = grass, recycling, rocks, recycling
+TARGETS_TO_VISIT = [1,2,0,3,4,0,5,6,0] # = grass, recycling, rocks, recycling
 # delta degree for little random search rotations
 DELTA_RANDOM_SEARCH = 40
 # time to wait for detections on each flip of the camera
@@ -593,17 +593,17 @@ class Controller1(Node):
             self.n_random_search = 0
             self.is_traveling_forward = False
             self.path = []
-            if reached in [1,2,3]: # robot in zone 2 or zone 3
+            if reached in [1,2,3,4]: # robot in zone 2 or zone 3
                 # travel_mode --> random_search mode
-                line_orientation = controller_utils.get_path_orientation([self.zones[1], self.zones[3]] if reached == 1 else [self.zones[3], self.zones[1]])
+                line_orientation = controller_utils.get_path_orientation([self.zones[3], self.zones[1]] if reached == 3 else [self.zones[1], self.zones[3]])
                 angle_diff = controller_utils.angle_diff(line_orientation, self.theta)
                 self.start_rotation_timer(angle_diff, TIMER_STATE_ON_TRAVEL_MODE_END)
             elif reached == 0:
                 # travel_mode --> release_bottle_mode
                 self.start_bottle_release_mode()
-            elif reached == 4 or reached == 5:
+            elif reached == 5 or reached == 6:
                 # travel_mode --> ROCKS KICK ASS MODE
-                self.start_kick_ass_mode(is_going_home = reached == 5)
+                self.start_kick_ass_mode(is_going_home = reached == 6)
             return
 
         # 2. Else, compute motors commands
