@@ -47,7 +47,7 @@ MIN_DIST_TO_RECYCLING = 5
 # min distance between robot and point in the path to consider the robot as passed it
 MIN_DIST_TO_POINT = 0.2 # [m]
 # time constant of path computation update (the bigger, the less often the path is updated)
-CONTROLLER_TIME_CONSTANT = 20
+CONTROLLER_TIME_CONSTANT = 30
 # path-tracker min angle diff for directing the robot
 MIN_ANGLE_DIFF = 15 # [deg]
 # Array containing indices of zones to visit: note that zones = [r, z2, z3, z4]
