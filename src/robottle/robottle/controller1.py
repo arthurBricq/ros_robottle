@@ -640,7 +640,7 @@ class Controller1(Node):
         self.state = KICK_ASS_MODE 
         # 1. find the angle to rotate the robot at
         line_orientation = controller_utils.get_path_orientation([self.zones[0], self.zones[2]] if is_going_home else [self.zones[2], self.zones[0]])
-        angle = controller_utils.angle_diff(diagonal_orientation, self.theta)
+        angle = controller_utils.angle_diff(line_orientation, self.theta)
         self.start_rotation_timer(angle, TIMER_STATE_ON_KICK_ASS_MODE)
 
 
