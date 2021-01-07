@@ -291,7 +291,21 @@ class Controller1(Node):
                 # robot has finished the kick ass mode.
                 # try to create SLAM again
                 self.slam_control_publisher.publish(String(data="unfreeze"))
-                self.start_rotation_timer(1, TIMER_STATE_ON_NO_ROTATION)
+            if status == 4:
+                ##### self.start_rotation_timer(1, TIMER_STATE_ON_NO_ROTATION)
+                # = SLAM has waited and it is now time to start again the random search
+                print("Waiting time is finished, SLAM ready to go")
+                dest = TARGETS_TO_VISIT[self.current_target_index]
+                is_going_home = dest == 0
+                if is_going_home:
+                    print("going home")
+                    self.start_travel_mode()
+                else:
+                    print("starting random seach inside rocks")
+                    self.n_random_search = N_RANDOM_SEARCH_MAX - 10
+                    self.bottles_picked = MAX_BOTTLE_PICKED - 3
+                    self.start_random_search_detection()
+
 
 
     def listener_callback_detectnet(self, msg):
@@ -402,19 +416,7 @@ class Controller1(Node):
             self.uart_publisher.publish(String(data="w"))
 
         elif self.rotation_timer_state == TIMER_STATE_ON_NO_ROTATION:
-            # = SLAM has waited and it is now time to start again the random search
-            print("Waiting time is finished, SLAM ready to go")
-            self.rotation_timer_state = TIMER_STATE_OFF
-            dest = TARGETS_TO_VISIT[self.current_target_index]
-            is_going_home = dest == 0
-            if is_going_home:
-                print("going home")
-                self.start_travel_mode()
-            else:
-                print("starting random seach inside rocks")
-                self.n_random_search = N_RANDOM_SEARCH_MAX - 10
-                self.bottles_picked = MAX_BOTTLE_PICKED - 3
-                self.start_random_search_detection()
+            print("Waiting time finished.")
 
         elif self.rotation_timer_state == TIMER_STATE_ON_KICK_ASS_MODE: 
             print("We are ready Arduino ! Take care of us.... (Sending 'Y')")
