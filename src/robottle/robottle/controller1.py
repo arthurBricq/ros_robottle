@@ -60,7 +60,7 @@ TIME_FOR_VISION_DETECTION = 1.1 # [s]
 # maximum number of bottles robot can pick
 MAX_BOTTLE_PICKED = 10
 # maximum number of times controller enters random search mode inside 1 zone
-N_RANDOM_SEARCH_MAX = 20
+N_RANDOM_SEARCH_MAX = 10
 
 class Controller1(Node):
     """
