@@ -294,7 +294,7 @@ class Controller1(Node):
             if status == 4:
                 ##### self.start_rotation_timer(1, TIMER_STATE_ON_NO_ROTATION)
                 # = SLAM has waited and it is now time to start again the random search
-                print("Waiting time is finished, SLAM ready to go")
+                print("[Arduino says]: Waiting time is finished, SLAM ready to go")
                 dest = TARGETS_TO_VISIT[self.current_target_index]
                 is_going_home = dest == 0
                 if is_going_home:
