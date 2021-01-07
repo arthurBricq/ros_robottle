@@ -1,8 +1,10 @@
 #!/bin/bash
 
 # source ROS2
+git pull
 source /home/arthur/dev/ros/ros.sh
-. /home/arthur/dev/ros/workspace1/install/setup.sh
+colcon build
+# . /home/arthur/dev/ros/workspace1/install/setup.sh
 
 # launch all the nodes
 # ros2 run robottle teleop & 
