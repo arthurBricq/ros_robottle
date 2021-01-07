@@ -52,15 +52,15 @@ CONTROLLER_TIME_CONSTANT = 30
 MIN_ANGLE_DIFF = 15 # [deg]
 # Array containing indices of zones to visit: note that zones = [r, z2, z3, z4]
 # z2 = grass, z3 = rocks
-TARGETS_TO_VISIT = [1,2,0,3,4,0,5,6,0] # = grass, recycling, rocks, recycling
+TARGETS_TO_VISIT = [3,1,0,2,4,0,5,6,0] # = grass, recycling, rocks, recycling
 # delta degree for little random search rotations
 DELTA_RANDOM_SEARCH = 40
 # time to wait for detections on each flip of the camera
 TIME_FOR_VISION_DETECTION = 1.1 # [s]
 # maximum number of bottles robot can pick
-MAX_BOTTLE_PICKED = 10
+MAX_BOTTLE_PICKED = 5
 # maximum number of times controller enters random search mode inside 1 zone
-N_RANDOM_SEARCH_MAX = 10
+N_RANDOM_SEARCH_MAX = 15
 
 class Controller1(Node):
     """
@@ -262,6 +262,7 @@ class Controller1(Node):
             if status == 1:
                 print("Release is finished")
                 self.bottles_picked = 0
+                self.n_random_search = 0
                 self.start_travel_mode()
 
         elif self.state == RECOVERY_SLAM:
@@ -591,11 +592,12 @@ class Controller1(Node):
             print("Robot reached zone ", reached)
             self.current_target_index += 1
             self.n_random_search = 0
+            self.bottles_picked = 0
             self.is_traveling_forward = False
             self.path = []
             if reached in [1,2,3,4]: # robot in zone 2 or zone 3
                 # travel_mode --> random_search mode
-                line_orientation = controller_utils.get_path_orientation([self.zones[3], self.zones[1]] if reached == 3 else [self.zones[1], self.zones[3]])
+                line_orientation = controller_utils.get_path_orientation([self.zones[1], self.zones[0]] if reached in [1, 2] else [self.zones[3], self.zones[1]])
                 angle_diff = controller_utils.angle_diff(line_orientation, self.theta)
                 self.start_rotation_timer(angle_diff, TIMER_STATE_ON_TRAVEL_MODE_END)
             elif reached == 0:
