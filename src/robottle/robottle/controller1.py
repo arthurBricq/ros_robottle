@@ -20,6 +20,7 @@ RANDOM_SEARCH_MODE = "random_search_mode"
 BOTTLE_PICKING_MODE = "bottle_picking_mode"
 BOTTLE_RELEASE_MODE = "bottle_release_mode"
 BOTTLE_REACHING_MODE = "bottle_reaching_mode"
+KICK_ASS_MODE = "rocks_will_die"
 RECOVERY_SLAM = "recovery_mode"
 RECOVERY_ROTATION = "recovery_rotation"
 
@@ -28,6 +29,8 @@ TIMER_STATE_ON_TRAVEL_MODE = "1"
 TIMER_STATE_ON_RANDOM_SEARCH_BOTTLE_ALIGNMENT = "2"
 TIMER_STATE_ON_RANDOM_SEARCH_DELTA_ROTATION = "3"
 TIMER_STATE_ON_BOTTLE_RELEASE = "4"
+TIMER_STATE_ON_NO_ROTATION = "5"
+TIMER_STATE_ON_KICK_ASS_MODE = "6"
 
 DETECTNET_ON = "ON"
 DETECTNET_OFF = "OFF"
@@ -48,7 +51,7 @@ CONTROLLER_TIME_CONSTANT = 20
 MIN_ANGLE_DIFF = 15 # [deg]
 # Array containing indices of zones to visit: note that zones = [r, z2, z3, z4]
 # z2 = grass, z3 = rocks
-TARGETS_TO_VISIT = [1,0,2,0,4,0] # = grass, recycling, rocks, recycling
+TARGETS_TO_VISIT = [4,5,0] # = grass, recycling, rocks, recycling
 # delta degree for little random search rotations
 DELTA_RANDOM_SEARCH = 30
 # time to wait for detections on each flip of the camera
@@ -275,6 +278,20 @@ class Controller1(Node):
                 self.state = self.last_state
                 self.start_rotation_timer(self.rotation_asked, self.rotation_timer_state)
 
+        elif self.state == KICK_ASS_MODE:
+            if status == 1:
+                print("[Arduino says]: we start the approach")
+                # robot reached the bottles and is ready to start the KICK ASS BACK ATTACK
+                self.slam_control_publisher.publish(String(data="freeze"))
+                self.uart_publisher.publish(String(data="c"))
+            if status == 3: 
+                print("[Arduino wonders]: mission successful (?)")
+                # robot has finished the kick ass mode.
+                # try to create SLAM again
+                self.slam_control_publisher.publish(String(data="unfreeze"))
+                self.start_rotation_timer(1, TIMER_STATE_ON_NO_ROTATION)
+
+
     def listener_callback_detectnet(self, msg):
         """Called when a bottle is detected by neuron network
         This function can only be called when the neuron network is active, 
@@ -379,6 +396,27 @@ class Controller1(Node):
             self.uart_publisher.publish(String(data="m2"))
             self.uart_publisher.publish(String(data="w"))
 
+        elif self.rotation_timer_state == TIMER_STATE_ON_NO_ROTATION:
+            # = SLAM has waited and it is now time to start again the random search
+            print("Waiting time is finished, SLAM ready to go")
+            dest = TARGETS_TO_VISIT[self.current_target_index]
+            is_going_home = dest == 0
+            if is_going_home:
+                print("going home")
+                self.start_travel_mode()
+            else:
+                print("starting random seach inside rocks")
+                self.n_random_search = N_RANDOM_SEARCH_MAX - 10
+                self.bottles_picked = MAX_BOTTLE_PICKED - 3
+                self.start_random_search_detection()
+
+        elif self.rotation_timer_state == TIMER_STATE_ON_KICK_ASS_MODE: 
+            print("We are ready Arduino ! Take care of us.... (Sending 'Y')")
+            # 2. start communication with Arduino 
+            # the continuation is in arduino callback
+            self.uart_publisher.publish(String(data="Y"))
+
+
 
     ### STATE MACHINE METHODS
 
@@ -463,7 +501,7 @@ class Controller1(Node):
                     raise RuntimeError("Zones were not found properly")
 
                # corners found are valid and we can find the 'initial zones'
-                self.zones = map_utils.get_initial_zones(corners, self.robot_pos, closest_zone = 1)
+                self.zones = map_utils.get_initial_zones(corners, self.robot_pos, closest_zone = 0)
                 self.initial_zones_found = True
                 print("    - initial zones found with area: ", area)
 
@@ -536,12 +574,15 @@ class Controller1(Node):
             self.current_target_index += 1
             self.is_traveling_forward = False
             self.path = []
-            if reached in [1,2]: # robot in zone 2 or zone 3
+            if reached in [1,2,3]: # robot in zone 2 or zone 3
                 # travel_mode --> random_search mode
                 self.start_random_search_detection()
             elif reached == 0:
                 # travel_mode --> release_bottle_mode
                 self.start_bottle_release_mode()
+            elif reached == 4 or reached == 5:
+                # travel_mode --> ROCKS KICK ASS MODE
+                self.start_kick_ass_mode(is_going_home = reached == 5)
             return
 
         # 2. Else, compute motors commands
@@ -594,6 +635,15 @@ class Controller1(Node):
         # 2. make the rotation
         self.start_rotation_timer(angle, TIMER_STATE_ON_BOTTLE_RELEASE)
 
+    def start_kick_ass_mode(self, is_going_home):
+        print("Kick the Rocks Asses")
+        self.state = KICK_ASS_MODE 
+        # 1. find the angle to rotate the robot at
+        line_orientation = controller_utils.get_path_orientation([self.zones[0], self.zones[2]] if is_going_home else [self.zones[2], self.zones[0]])
+        angle = controller_utils.angle_diff(diagonal_orientation, self.theta)
+        self.start_rotation_timer(angle, TIMER_STATE_ON_KICK_ASS_MODE)
+
+
     ### HELPER FUNCTIONS
 
     def start_rotation_timer(self, angle, state):
@@ -604,15 +654,21 @@ class Controller1(Node):
             # it means another timer was launched
             self.destroy_timer(self.rotation_timer)
 
-        # 2. send the rotation motor control
-        print("        (starting rotation now)", state, angle, self.rotation_index)
-        msg = String()
-        if angle > 0: msg.data = "d"
-        else: msg.data = "a"
-        self.uart_publisher.publish(msg)
+        if self.rotation_timer_state == TIMER_STATE_ON_NO_ROTATION:
+            # This is a 'fake' state to wait for an amount of time without doing anything
+            time_to_rotate = angle 
+        else:
+            # 2. estimate remaining time of rotation and start new timer
+            time_to_rotate = controller_utils.get_rotation_time(np.abs(angle))
+            
+            # 3. send the rotation motor control
+            print("        (starting rotation now)", state, angle, self.rotation_index)
+            msg = String()
+            if angle > 0: msg.data = "d"
+            else: msg.data = "a"
+            self.uart_publisher.publish(msg)
 
-        # 3. estimate remaining time of rotation and start new timer
-        time_to_rotate = controller_utils.get_rotation_time(np.abs(angle))
+        # launch the timer
         self.rotation_timer = self.create_timer(time_to_rotate, self.rotation_timer_callback)
         
         # 4. get current state of the robot (to make sure a real rotation happened)

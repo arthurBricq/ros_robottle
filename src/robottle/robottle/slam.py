@@ -99,6 +99,12 @@ class Slam(Node):
             # METHOD 1
             self.slam.setmap(self.last_valid_map)
             self.slam.setpos(self.last_valid_pos)
+        elif msg.data == "freeze":
+            self.last_valid_map = self.mapbytes.copy()
+            self.last_valid_pos = self.slam.getpos()
+        elif msg.data == "unfreeze":
+            self.slam.setmap(self.last_valid_map)
+            # self.slam.setpos(self.last_valid_pos)
         return 
         ##########################
         print("changing quality")
