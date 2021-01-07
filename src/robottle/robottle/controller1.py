@@ -43,7 +43,7 @@ AREA_THRESHOLD = 110000
 # distance at which, if the robot is closer than the goal, travel_mode ends
 MIN_DIST_TO_GOAL = 25 # [pixels]
 # distance to recycling
-MIN_DIST_TO_RECYCLING = 5
+MIN_DIST_TO_RECYCLING = 12
 # min distance between robot and point in the path to consider the robot as passed it
 MIN_DIST_TO_POINT = 0.2 # [m]
 # time constant of path computation update (the bigger, the less often the path is updated)
