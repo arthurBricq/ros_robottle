@@ -31,6 +31,7 @@ TIMER_STATE_ON_RANDOM_SEARCH_DELTA_ROTATION = "3"
 TIMER_STATE_ON_BOTTLE_RELEASE = "4"
 TIMER_STATE_ON_NO_ROTATION = "5"
 TIMER_STATE_ON_KICK_ASS_MODE = "6"
+TIMER_STATE_ON_TRAVEL_MODE_END = "7"
 
 DETECTNET_ON = "ON"
 DETECTNET_OFF = "OFF"
@@ -57,7 +58,7 @@ DELTA_RANDOM_SEARCH = 40
 # time to wait for detections on each flip of the camera
 TIME_FOR_VISION_DETECTION = 1.1 # [s]
 # maximum number of bottles robot can pick
-MAX_BOTTLE_PICKED = 5
+MAX_BOTTLE_PICKED = 10
 # maximum number of times controller enters random search mode inside 1 zone
 N_RANDOM_SEARCH_MAX = 20
 
@@ -253,14 +254,13 @@ class Controller1(Node):
                 # = no bottle were detected by the robot arm 
                 self.start_random_search_detection()
             elif status == 1: # robot picked the bottle 
-                print("Bottle picked")
+                print("Bottles picked: ", bottles_picked)
                 self.bottles_picked += 1
                 self.start_random_search_detection()
 
         elif self.state == BOTTLE_RELEASE_MODE:
             if status == 1:
                 print("Release is finished")
-                self.n_random_search = 0
                 self.bottles_picked = 0
                 self.start_travel_mode()
 
@@ -380,7 +380,7 @@ class Controller1(Node):
             print("Timer was OFF and yet trigered")
 
         # verify that rotation actually happened
-        if np.abs(self.rotation_asked) > 29:
+        if np.abs(self.rotation_asked) > 39:
             if np.abs(controller_utils.angle_diff(self.last_theta, self.theta)) < 5:
                 print("ROTATION ERROR ! index: ", self.rotation_index)
                 print(self.last_theta)
@@ -429,7 +429,9 @@ class Controller1(Node):
             # the continuation is in arduino callback
             self.uart_publisher.publish(String(data="Y"))
 
-
+        elif self.rotation_timer_state == TIMER_STATE_ON_TRAVEL_MODE_END:
+            self.rotation_timer_state = TIMER_STATE_OFF
+            self.start_random_search_detection()
 
     ### STATE MACHINE METHODS
 
@@ -585,11 +587,14 @@ class Controller1(Node):
             # robot arrived to destination
             print("Robot reached zone ", reached)
             self.current_target_index += 1
+            self.n_random_search = 0
             self.is_traveling_forward = False
             self.path = []
             if reached in [1,2,3]: # robot in zone 2 or zone 3
                 # travel_mode --> random_search mode
-                self.start_random_search_detection()
+                line_orientation = controller_utils.get_path_orientation([self.zones[1], self.zones[3]] if reached == 1 else [self.zones[3], self.zones[1]])
+                angle_diff = controller_utils.angle_diff(line_orientation, self.theta)
+                self.start_rotation_timer(angle_diff, TIMER_STATE_ON_TRAVEL_MODE_END)
             elif reached == 0:
                 # travel_mode --> release_bottle_mode
                 self.start_bottle_release_mode()
