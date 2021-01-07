@@ -4,7 +4,7 @@
 cd $ROS_PATH
 source /home/arthur/dev/ros/ros.sh
 git pull
-colcon build --packages-select robottle
+colcon build 
 
 # launch all the nodes
 # ros2 run robottle teleop & 
