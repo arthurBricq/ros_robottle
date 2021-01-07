@@ -52,7 +52,7 @@ CONTROLLER_TIME_CONSTANT = 30
 MIN_ANGLE_DIFF = 15 # [deg]
 # Array containing indices of zones to visit: note that zones = [r, z2, z3, z4]
 # z2 = grass, z3 = rocks
-TARGETS_TO_VISIT = [1,3,0,4,5,0] # = grass, recycling, rocks, recycling
+TARGETS_TO_VISIT = [1,3,2,0,4,5,0] # = grass, recycling, rocks, recycling
 # delta degree for little random search rotations
 DELTA_RANDOM_SEARCH = 40
 # time to wait for detections on each flip of the camera
@@ -475,6 +475,9 @@ class Controller1(Node):
         """
         # compute robot position (used a lot)
         self.robot_pos = map_utils.pos_to_gridpos(self.x, self.y)
+
+        if self.rotation_timer_state == TIMER_STATE_ON_TRAVEL_MODE_END:
+            return 
 
         ### I. Path planning
         # Once in a while, start the path planning logic
