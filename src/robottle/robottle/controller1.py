@@ -51,7 +51,7 @@ CONTROLLER_TIME_CONSTANT = 20
 MIN_ANGLE_DIFF = 15 # [deg]
 # Array containing indices of zones to visit: note that zones = [r, z2, z3, z4]
 # z2 = grass, z3 = rocks
-TARGETS_TO_VISIT = [4,5,0] # = grass, recycling, rocks, recycling
+TARGETS_TO_VISIT = [1,3,0,4,5,0] # = grass, recycling, rocks, recycling
 # delta degree for little random search rotations
 DELTA_RANDOM_SEARCH = 30
 # time to wait for detections on each flip of the camera
