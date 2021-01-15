@@ -2,11 +2,16 @@
 
 Robottle is an autonomous Robot that is able to collect bottles in a random environment with obstacles by constructing a map of its environment using SLAM with a RPLidar, and detecting bottles using Deep Neural Network ran on the GPU of a Jetson Nano Boad. 
 
-![](img/electronic_diagram.pdf)
+![](robottle.png)
+
 
 Here is a [youtube presentation](https://youtu.be/XJpJSuhSZN4) of the project ! It was done for a semester project at EPFL and we are not working on this anymore. All the code is well documented. 
 
+## Project Diagram 
+
 This repository contains the ROS source code to run the project, that was writen by myself. It is the ROS2 workspace of our project!
+
+![](img/electronic_diagram.png)
 
 ## Some useful commands 
 
