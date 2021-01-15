@@ -55,7 +55,7 @@ The 'decisions' that the controller includes
 
 The controller is actually a **state-machine** rather complexe and here is a description of the states it goes through. 
 
-![](img/state diagram jetson.png)
+![](img/state_diagram_jetson.png)
 
 What really matters is a succession of **travel phases** and of **bottle search mode**. 
 
