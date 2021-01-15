@@ -7,11 +7,21 @@ Robottle is an autonomous Robot that is able to collect bottles in a random envi
 
 Here is a [youtube presentation](https://youtu.be/XJpJSuhSZN4) of the project ! It was done for a semester project at EPFL and we are not working on this anymore. All the code is well documented. 
 
-## Project Diagram 
+There is a report that describes the entire project and is accessible [here](report.pdf)
 
-This repository contains the ROS source code to run the project, that was writen by myself. It is the ROS2 workspace of our project!
+## The project in more details 
+
+
+Readers are encouraged to give a look at the report. However it is really long and we provide here a smaller explanation of the project. 
+
+Robottle has 2 processing unit: a **Jetson Nano** that is in charge of all the high-level parts of the softwares (computation and control decisions), and a **Arduino Mega** which is in charge of all the low-level parts of the software (controlling the motors). Here is an diagram of the electrical componenents of Robottle. 
 
 ![](img/electronic_diagram.png)
+
+This repository contains the main components of the source code that the Jetson uses for controlling the robot. In this repository, you can find
+- all the ROS nodes to read sensors inputs, run the controller, and send orders to the Arduino
+- an implementation of SLAM using ROS2 in Python based on the Lidar measurements 
+- most importantly, the code of the [controller](src/robottle/robottle/controller1.py)
 
 ## Some useful commands 
 
