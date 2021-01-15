@@ -36,6 +36,10 @@ The following diagram provides a 'clear' view of the ROS diagram.
 
 ![](img/ROS_diagram.png)
 
+And this diagram was extracted with `rqt_graph` and provides all the real topics. 
+
+![](img/rqtgraph.png)
+
 ## More about the controller
 
 From the previous diagram, one understands that everything is turning around the **controller**. This controller is the part of the code in charge of taking the decisions given all the available data. 
