@@ -11,10 +11,10 @@ settings = termios.tcgetattr(sys.stdin)
 
 class TeleopRobotController(Node):
 
-    def __init__(self):	
+    def __init__(self):
         super().__init__("teleop_controller")
 
-        args= sys.argv 
+        args= sys.argv
         self.name = "teleop_default_name"
         self.save_index = 0
         if "--name" in args:
@@ -68,9 +68,9 @@ class TeleopRobotController(Node):
                     self.map_quality_control.publish(String(data="nimportequoi"))
                 elif key == '6':
                     self.log_line_printer.publish(String(data="pinguing"))
-                if key == '7':
+                elif key == '7':
                     self.send_service()
-                elif key == 'q':
+                elif key == '0':
                     break
                 else:
                     msg = String()
@@ -94,7 +94,7 @@ class TeleopRobotController(Node):
         # must take a picture with the picture service
         while not self.map_corner_client.wait_for_service(timeout_sec=0.1):
             print("Waiting for service")
-        # create the request and send it 
+        # create the request and send it
         request = FindMapCorner.Request()
         request.should_save = True
         request.name = self.name + "_" + str(self.save_index)
@@ -125,4 +125,3 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
-
