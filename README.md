@@ -11,17 +11,58 @@ There is a report that describes the entire project and is accessible [here](rep
 
 ## The project in more details 
 
-
 Readers are encouraged to give a look at the report. However it is really long and we provide here a smaller explanation of the project. 
+
+**Note 1**: All the algorithms are explained in the section 5.2 of the report. If there would be only 1 section to be read, it is this one. 
+
+**Note 2**: All the 2D plans of the robot are available at the end of the report. It can be completely built with a laser-cutter machine only using wood. 
+
+Robottle was designed for an academic competition at EPFL. For 10 minutes, the robot must autonomsouly collect bottle in an arena filled with bottles and bring them back to one of the corner of the arena, the recycling arena. 
 
 Robottle has 2 processing unit: a **Jetson Nano** that is in charge of all the high-level parts of the softwares (computation and control decisions), and a **Arduino Mega** which is in charge of all the low-level parts of the software (controlling the motors). Here is an diagram of the electrical componenents of Robottle. 
 
 ![](img/electronic_diagram.png)
 
-This repository contains the main components of the source code that the Jetson uses for controlling the robot. In this repository, you can find
+This repository contains the main components of the high-level code that the Jetson uses for controlling the robot. In this repository, you can find
 - all the ROS nodes to read sensors inputs, run the controller, and send orders to the Arduino
 - an implementation of SLAM using ROS2 in Python based on the Lidar measurements 
 - most importantly, the code of the [controller](src/robottle/robottle/controller1.py)
+
+The ROS code works in pair with the [Robottle Python Package](https://github.com/arthurBricq/robottle_python_packages) where there are some helper functions and algorithms. 
+
+As the code of this repository and the code of the **Robottle Python Package** are constituting the **high-level controller**, the code of the Arduino Mega **low-level controller** is accessible [here](https://github.com/ljacqueroud/Robottle-low-level). 
+
+The following diagram provides a 'clear' view of the ROS diagram. 
+
+![](img/ROS_diagram.png)
+
+## More about the controller
+
+From the previous diagram, one understands that everything is turning around the **controller**. This controller is the part of the code in charge of taking the decisions given all the available data. 
+
+The 'available' data includes
+1. the Lidar Data
+2. the SLAM outputs (map and position)
+3. the raw image
+4. the detected bottles by Neural Network (bouding box)
+5. the motor speeds
+6. the status sent by the arduino 
+
+The 'decisions' that the controller includes
+1. how to move the robot
+2. when to pick a bottle
+3. when to drop the bottles
+
+The controller is actually a **state-machine** rather complexe and here is a description of the states it goes through. 
+
+![](img/state diagram jetson.png)
+
+What really matters is a succession of **travel phases** and of **bottle search mode**. 
+
+## Other repositories used 
+
+For the *Cuda-Accelerated* code for the **Neuron Network** to detect bottles was based on the [Jetson-Inference](https://github.com/dusty-nv/jetson-inference) code (*NVidea*) and especially with their detectnet code. Their ROS repository has a [documentation](https://github.com/dusty-nv/ros_deep_learning) that is quite complete ! *However, it is writen all in C*
+
 
 ## Some useful commands 
 
@@ -96,17 +137,6 @@ Users can use
 The script is launched using Systemd at boot. Once the script is launched, all the ros nodes can be killed (in SSH) with the command 
 
 `sudo systemctl stop autostart`
-
-
-## Other repositories used 
-
-The ROS code works in pair with the [Robottle Python Package](https://github.com/arthurBricq/robottle_python_packages) where there are some helper functions and algorithms. 
-
-Here is the documentation of the [first controller](doc/controller1.md), which is still under implementation.
-
-As the code of this repository and the code of the **Robottle Python Package** are constituting the **high-level controller**, the code of the Arduino Mega **low-level controller** is accessible [here](https://github.com/ljacqueroud/Robottle-low-level). 
-
-For the *Cuda-Accelerated* code for the **Neuron Network** to detect bottles was based on the [Jetson-Inference](https://github.com/dusty-nv/jetson-inference) code (*NVidea*) and especially with their detectnet code. Their ROS repository has a [documentation](https://github.com/dusty-nv/ros_deep_learning) that is quite complete ! *However, it is writen all in C*
 
 ## Our ROS Nodes
 
