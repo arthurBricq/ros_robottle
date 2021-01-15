@@ -1,10 +1,16 @@
-# ROS for Robottle
+# The Robottle Project
 
-This repo contains the ROS source code to run the project, that was writen by myself. It is the ROS2 workspace of our project!
+Robottle is an autonomous Robot that is able to collect bottles in a random environment with obstacles by constructing a map of its environment using SLAM with a RPLidar, and detecting bottles using Deep Neural Network ran on the GPU of a Jetson Nano Boad. 
+
+![](img/electronic_diagram.pdf)
+
+Here is a [youtube presentation](https://youtu.be/XJpJSuhSZN4) of the project ! It was done for a semester project at EPFL and we are not working on this anymore. All the code is well documented. 
+
+This repository contains the ROS source code to run the project, that was writen by myself. It is the ROS2 workspace of our project!
 
 ## Some useful commands 
 
-Here are some commands quite useful with the ROS setup
+The setup to work with the Jetson Nano is rather difficult and it is really easy to loose time just to 'do simple tasks'. So here is a list of many simple linux / ROS commands that can help someone work in their project. 
 
 - commands to compile code
 
@@ -75,22 +81,6 @@ Users can use
 The script is launched using Systemd at boot. Once the script is launched, all the ros nodes can be killed (in SSH) with the command 
 
 `sudo systemctl stop autostart`
-
-
-
-
-## How to use it 
-
-Setup to take pictures
-1. turn on jetson and connect using SSH (as explained below): open 3 terminals
-2. On each terminal, press 'i'  (alias for 'cd dev/ros/workspace ; . install/setup.bash'
-3. If jetson says 'ros2 command not found', the reason is that you didn't source the code with (`source ../ros.sh`before you built the new ROS code with the commnad `colcon build` or `colcon build --packages-select robottle` )
-4. then, on ech terminal, do the commands
-    - launch detectnet: `ros2 launch ros_deep_learning detectnet.ros2.launch input:=csi://0 output:=display://0`
-    - run teleop with argument name: `ros2 run robottle teleop --name name_you_want`
-    - launch vision utils `ros2 launch robottle bottle_picking.launch.py` (will open 3 nodes, including `vision_analyser`
-5. When everything is ready, click on 'p' from teleop to ask to take a picture, verifiy on vision_analyser that the picture was taken and keep going. Make sure that you also pressed 'k' before pressing 'p' to TURN ON THE CAMERA (and press 'l' when you are finished to turn it off)
-6. folder where pictures and detections are writen: ~/dev/ros/pictures/f1
 
 
 ## Other repositories used 

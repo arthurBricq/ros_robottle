@@ -549,7 +549,7 @@ class Controller1(Node):
                 rrt = RRTStar(start = self.robot_pos, goal = self.goal, binary_obstacle = binary_dilated, 
                         rand_area = random_area, expand_dis = 50, path_resolution = 1,
                         goal_sample_rate = 5, max_iter = 500)
-                self.path = np.array(rrt.planning(animation = False))
+                self.path = np.array(rrt.planning(animation = True))
                 self.has_to_find_new_path = False
                 print("    - path found")
 
