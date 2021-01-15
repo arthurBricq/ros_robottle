@@ -63,6 +63,24 @@ The controller is actually a **state-machine** rather complexe and here is a des
 
 What really matters is a succession of **travel phases** and of **bottle search mode**. 
 
+### Travel Phase
+
+In travel mode, the controller uses the output of the SLAM and some metadata about the arena to extract targets. Once targets are found, the controller uses an **RRT** algorithm to find a path and a simple path tracking algorithm is applied to make the robot travel. 
+
+This is what the SLAM output looks like. A big, fat, matrix of 8 bits integers. It is really hard to work with this output and some image analysis must be applied to this matrix to extract relevant features. 
+
+![](img/slam0.png)
+
+Here is an illustration of the **image analysis pipeline** that is applied to the SLAM output (treated as a grayscale image, which is actually what it is) to extract from the SLAM output the targets of the arena.
+
+![](img/map_analysis_pipeline.png)
+
+Once this pipeline is finished comes (last picture) the path planner. It is a RRT Star algorithm. It's a random tree that grows in the non convex space of the arena until a path is found. An image is better than 1000 words to explain how it works. 
+
+![](path_planning_2.png)
+
+Curious readers are invited to visit section 5.2 of the report. 
+
 ## Other repositories used 
 
 For the *Cuda-Accelerated* code for the **Neuron Network** to detect bottles was based on the [Jetson-Inference](https://github.com/dusty-nv/jetson-inference) code (*NVidea*) and especially with their detectnet code. Their ROS repository has a [documentation](https://github.com/dusty-nv/ros_deep_learning) that is quite complete ! *However, it is writen all in C*
