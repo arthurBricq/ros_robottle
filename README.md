@@ -77,14 +77,29 @@ Here is an illustration of the **image analysis pipeline** that is applied to th
 
 Once this pipeline is finished comes (last picture) the path planner. It is a RRT Star algorithm. It's a random tree that grows in the non convex space of the arena until a path is found. An image is better than 1000 words to explain how it works. 
 
-![](path_planning_2.png)
+![](img/path_planning_2.png)
 
 Curious readers are invited to visit section 5.2 of the report. 
 
+### Bottle Picking Phase
+
+This phase corresponds to the blue states in the state diagram above. To explain in a few words what happens: the robot activate the neural network detections and turns around until bottles are detected (usually, this happens really quickly). Once a bottle is found, we estimate the angle at which the bottle is located using a regressive polynomial function on the bounding box of the image. The robot is going to align perfectly with the bottle and then move forward until the bottle is detected by the ultrasonic sensors. Then Robottle collects the bottle and start again rotating. 
+
+Just to illustrates, here is what Robottle sees with the neural network.
+
+![](img/bottles.jpeg)
+
 ## Other repositories used 
 
-For the *Cuda-Accelerated* code for the **Neuron Network** to detect bottles was based on the [Jetson-Inference](https://github.com/dusty-nv/jetson-inference) code (*NVidea*) and especially with their detectnet code. Their ROS repository has a [documentation](https://github.com/dusty-nv/ros_deep_learning) that is quite complete ! *However, it is writen all in C*
+All this work would not have been possible without all the open source contributions that we have found. 
 
+The *Cuda-Accelerated* code for the **Neuron Network** (to detect bottles) was based on the great [Jetson-Inference](https://github.com/dusty-nv/jetson-inference) code (from *NVidea*) and especially with their **detectnet** tool. They even provide a ROS repository, it has a great [documentation](https://github.com/dusty-nv/ros_deep_learning) that is quite complete ! We have done a few modifications to this code, to 
+- be able to flip the source image (read the report to understand why ! Section 5.2.4)
+- be able to turn OFF the detection without killing the ROS Node, to avoid over-heating
+
+The SLAM code is an implementation of the 'TinySLAM' algorithm, which is built locally from this brilliant repository: [BreezySLAM](https://github.com/simondlevy/BreezySLAM). Here too we have changed the code a little bit, most of which can be seen in our ROS [SLAM Node](src/robottle/robottle/slam.py).
+
+The LIDAR code to read from the Lidar was found under this very easy to use [librairy](https://github.com/SkoltechRobotics/rplidar).
 
 ## Some useful commands 
 
@@ -159,60 +174,4 @@ Users can use
 The script is launched using Systemd at boot. Once the script is launched, all the ros nodes can be killed (in SSH) with the command 
 
 `sudo systemctl stop autostart`
-
-## Our ROS Nodes
-
-Here is a description of the nodes we created for the robot. 
-
-### Input Nodes
-
-- **lidar_publisher.py**: Reads data from lidar as send them as collected in the topic `lidar_data`
-- **uart_speed_reader.py**: Reads the speed from the motors, using UART communications and send them in topic `uart_motors_speed`. 
-- **detectnet.py**: Reads the camera and returns the bounding boxes. This package was made by NVidea and here is its [documentation](https://github.com/dusty-nv/ros_deep_learning). Here are different topics one other node can subscribe to
-    - `image_in`: simply the raw image
-    - `detections`: the bounding boxes
-    - `vision_info`: vision metadata
-    - `overlay`: the image with the bounding boxes drawn on top of it
-
-### Internal Nodes (i.e. the brain)
-- **slam.py**: SLAM node (evaluate position and map). It outputs on topics `world_map` and `robot_pos`. It is an implementation of the 'TinySLAM' algorithm, which is built locally from this repository: [BreezySLAM](https://github.com/simondlevy/BreezySLAM). *Some portion of this code needs to be modified*
-- **controller_ol.py**: most basic controller, will avoid obstacles merely based on the SLAM output. It then communicates commands to the node *uart_messenger* (which then transfer them to the Arduino Mega)
-- **controller1.py**: it's going to be the first controller that makes the robot run autonomously. Work in progress. 
-- **vision_analyser.py**: service manager that can (i) take a picture on demand by subscribing to one of **detectnet** topics (to get 1 raw image input from the streamline) and (ii) analyse it straigth away. Offered services are the followings:
-    - 'find_map_corners': take a picture and return angle change from beacons present on the image. Work in progress.
-
-### OutputNodes 
-- **uart_messenger.py**: sends UART message containing desired motor actions to Arduino Mega. Reads from topic `uart_commands`
-
-### Debugging Nodes
-*Those nodes are not intended to be ran on the Jetson Nano*
-- **slam_vizualiser.py**: prints the map and the position in another window.
-- **teleop.py**: controls the robot remotely using keyboard.
-
-
-## ROS Hyperparameters
-
-As the code is rather complex, there are several hyperparameters and it is sometimes hard to keep track of what is tunnable and what is not. Here is a list of all the hyperparameters of our code. 
-
-**SLAM**
-- detection_margin: it's an angle which define the datapoints of the LIDAR to be excluded (because it sees the robot). It was found that the best (i.e. the min) value is 65.
-- offset_mm: It's the shift in the axis of the robot between the center of rotation and the center of the lidar.
-- map_quality: It's the speed of integration of the new measurements from LIDAR to SLAM, between 0 and 255. 
-- hole_width_mm: It's the width of obstacles that SLAM assumes when one is seen by the LIDAR. 
-- 'initial_angle': (TODO) it's the initial angle of the robot in the arena. Zero is when robot is parallel to the wall which goes to the zone 2.
-- MIN_SAMPLE: minimum number of datapoints that a LIDAR batch of data must contain so that the SLAM takes them into account. 
-
-**Map Analysis**
-- threshold: binary threshold applied to the SLAM occupancy grid. 
-- kernel_size: size of the kernel of a median filter applied to the binary grid
-- N_points_min: contour detection is performed above filtered binary grid. It's the minimum number of points a contour must have in order to be considered as 'valid' and kept for future analysis
-- area_threshold: minimum area of a rotated rectangle to be considered as valid.
-
-
-
-## Differences between Jetson and Personal Computer
-
-There are differences between the different setups, because the Jetson has to do things that I will not try to replicate at home (and just there results)
-
-- ros_deep_learning: this is the ROS package for CUDA realtime accelerated neuron network. It is present only on the Jetson and not on the shared code. The only thing one has to include are the interfaces : "vision_msgs" (https://github.com/Kukanani/vision_msgs)
 
